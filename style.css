@@ -1,0 +1,1194 @@
+* {
+	padding: 0px;
+	margin: 0px;
+	border: none;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+/* Links */
+
+a, a:link, a:visited  {
+    text-decoration: none;
+}
+
+a:hover  {
+    text-decoration: none;
+}
+
+/* Common */
+
+aside, nav, footer, header, section, main {
+	display: block;
+}
+
+h1, h2, h3, h4, h5, h6, p {
+    font-size: inherit;
+	font-weight: inherit;
+}
+
+ul, ul li {
+	list-style: none;
+}
+
+img {
+	vertical-align: top;
+}
+
+img, svg {
+	max-width: 100%;
+	height: auto;
+}
+
+address {
+  font-style: normal;
+}
+
+/* Form */
+
+input, textarea, button, select {
+	font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    background-color: transparent;
+}
+
+input::-ms-clear {
+	display: none;
+}
+
+button, input[type="submit"] {
+    display: inline-block;
+    box-shadow: none;
+    background-color: transparent;
+    background: none;
+    cursor: pointer;
+}
+
+input:focus, input:active,
+button:focus, button:active {
+    outline: none;
+}
+
+button::-moz-focus-inner {
+	padding: 0;
+	border: 0;
+}
+
+label {
+	cursor: pointer;
+}
+
+legend {
+	display: block;
+}
+body{
+    font-family: "Inter", serif;
+    background-image: url("./lasttest00005.png");
+    background-size: 100%;
+    height: auto;
+    overflow: auto;
+}
+.header-container{
+    width: 100%;
+    height: 60px;
+    background-color: rgba(25, 25, 25, 50%);
+    padding-top: 0px;
+}
+.age_middle_heder_text {
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 400;
+    z-index: 3;
+    margin-right: 40%;
+}
+.line_under_heder {
+    margin-right: 87%;
+    width: 3px;
+    height: 5%;
+    background-color: #529DD6;
+    z-index: 4;
+    position: fixed;
+    top: 2.1%;
+}
+.min_heder_main_btn {
+    padding-top: 2.5px;
+}
+.logoup{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 65px;
+}
+.rowcolich{
+    font-size: 3rem;
+    padding-top: 3.5px;
+    color: #FFFFFF;
+    text-align: center;
+}
+.ROWnumber1{
+    padding-left: 0px;
+    font-size: 1.7rem;
+    font-weight: 400;
+}
+.champrang{
+    color: #848484;
+    text-align: center;
+    padding-top: 10px;
+    font-size: 1rem;
+    -webkit-tap-highlight-color: transparent;
+}
+.header-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.buttonprofile {
+    width: 100px;
+    height: 35px;
+    border: 1.5px solid #3A3A3A;
+    background: rgba(13, 13, 13, 80%);
+    font-size: 12px;
+    padding: 24px 13px;
+    border-radius: 8px;
+    color: #FFFFFF;
+    position: fixed;
+    top: 67%;
+    left: 14px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    -webkit-tap-highlight-color: transparent;
+    font-size: 1rem;
+}
+.buttonprofile svg {
+    margin-right: 8px;
+}
+.buttonjoincommunity {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 290px;
+    height: 35px;
+    border: 1.5px solid #3A3A3A;
+    background: rgba(13, 13, 13, 80%);
+    font-size: 12px;
+    padding: 24px 13px;
+    border-radius: 8px;
+    color: #FFFFFF;
+    position: fixed;
+    top: 76%;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0 14px 0 14px;
+    -webkit-tap-highlight-color: transparent;
+}
+.buttonjoincommunity svg {
+    margin-right: 8px;
+}
+.arrowbutcom{
+    margin-left: 70px;
+}
+.bottombuttons {
+    position: fixed;
+    bottom: 0;
+    height: 13%;
+    padding-bottom: 0px;
+    width: 100%;
+    background-color: rgba(25, 25, 25, 50%);
+    z-index: 0;
+}
+.buttonhomeimg {
+    z-index: 2;
+    position: fixed;
+    bottom: 3%;
+    left: 6%;
+}
+.buttontaskimg {
+    z-index: 2;
+    position: fixed;
+    bottom: 3%;
+    left: 28%;
+}
+.buttonfriendsimg {
+    z-index: 2;
+    position: fixed;
+    bottom: 3%;
+    left: 51%;
+}
+.buttonairdropimg {
+    z-index: 2;
+    position: fixed;
+    bottom: 3%;
+    left: 76%;
+    right: 5%;
+}
+.accountage b {
+    color: #ffffff;
+}
+
+.age_top_panel {
+    display: flex;
+    width: 100%;
+    height: 60px;
+    background-color: rgba(25, 25, 25, 50%);
+    padding-top: 0px;
+    justify-content: center;
+}
+.age_top_text {
+    padding-top: 6px;
+    display: flex;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 600;
+    z-index: 3;
+    margin: 0 auto;
+}
+.usernameonAge {
+    position: fixed;
+    color: #939393;
+    left: 0px;
+    right: 0px;
+    display: block;
+    text-align: center;
+    top: 39%;
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+.usernameonAgeReward {
+    position: fixed;
+    color: #ffffff;
+    left: 0px;
+    right: 0px;
+    display: block;
+    text-align: center;
+    top: 45%;
+    font-size: 1.5rem;
+    font-weight: 400;
+}
+.line_under_text {
+    display: flex;
+    justify-content: center;
+    width: 70px;
+    height: 3px;
+    background-color: #529DD6;
+    z-index: 4;
+    position: fixed;
+    top: 45px;
+}
+.buttonbackage {
+    position: fixed;
+    left: 0px;
+    right: 0px;
+    display: block;
+    text-align: center;
+    bottom: 7%;
+}
+
+.rowLogoOnDaily{
+    position: fixed;
+    left: 0px;
+    right: 0px;
+    display: block;
+    text-align: center;
+    bottom: 22%;
+    z-index: 2;
+}
+.PaddleOnDayli {
+    position: fixed;
+    display: block;
+    text-align: center;
+    left: 0px;
+    right: 0px;
+    top: 33%;
+}
+.daily_claim_btn {
+    position: fixed;
+    display: block;
+    text-align: center;
+    left: 0px;
+    right: 0px;
+    bottom: 6.4%;
+    z-index: 8;
+}
+.day_number_class {
+    font-size: 8rem;
+    font-weight: 600;
+    display: block;
+    text-align: center;
+    color: #FFFFFF;
+    position: fixed;
+    z-index: 8;
+    top: 10%;
+    left: 0px;
+    right: 0px;
+}
+.days_text_class {
+    font-size: 1.9rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    position: fixed;
+    z-index: 8;
+    top: 37%;
+    left: 0px;
+    right: 0px;
+    text-align: center;
+    display: block
+}
+.rowdayly_text_class {
+    font-size: 1.9rem;
+    font-weight: 600;
+    padding-top: 3.5px;
+    color: #FFFFFF;
+    position: fixed;
+    top: 44%;
+    left: 0px;
+    right: 0px;
+    text-align: center;
+    z-index: 8;
+    display: block
+}
+.paddleOnDaily {
+    position: fixed;
+    right: 0px;
+    top: 32.5%
+}
+.TaskBlockTop {
+    display: flex;
+    width: 100%;
+    height: 95px;
+    background-color: rgba(25, 25, 25, 50%);
+    padding-top: 0px;
+    justify-content: center;
+}
+.taskclass {
+    position: fixed;
+    font-size: 2.3rem;
+    font-weight: 600;
+    z-index: 2;
+    top: 1.8%;
+    right: 9%;
+    color: #FFFFFF;
+}
+.lineUnderTxtTask {
+    display: flex;
+    justify-content: center;
+    width: 125px;
+    height: 3px;
+    background-color: #529DD6;
+    z-index: 4;
+    position: fixed;
+    top: 8.4%;
+    right: 7.4%;
+}
+.topText1Text {
+    position: fixed;
+    font-size: 1.2rem;
+    font-weight: 600;
+    z-index: 2;
+    top: 5.3%;
+    left: 6.2%;
+    color: #FFFFFF;
+}
+.top2TextText {
+    position: fixed;
+    font-size: 1.2rem;
+    font-weight: 500;
+    z-index: 2;
+    top: 9.2%;
+    left: 6.2%;
+    color: #7D7D7D;
+}
+.QS_TextTask {
+    position: fixed;
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: #FFFFFF;
+    top: 16%;
+    left: 9.2%;
+}
+.TaskBlockStart1 {
+    position: fixed;
+    width: 86.8%;
+    height: 13.7%;
+    background-color: #1C1C1C;
+    top: 20%;
+    left: 6.5%;
+    border-radius: 7px;
+    border: 2px solid #3A3A3A;
+}
+.SponsorTaskLogoClass {
+    position: fixed;
+    z-index: 5;
+    left: 10%;
+    top: 20%;
+    height: 13.7%;
+    display: flex;
+    align-items: center;
+}
+.TaskToBtn {
+    position: fixed;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #FFFFFF;
+    z-index: 5;
+    left: 35%;
+    top: 22%;
+}
+.arrowTaskBtn1 {
+    top: 20%;
+    right: 14%;
+    position: fixed;
+    height: 13.7%;
+    display: flex;
+    align-items: center;
+}
+.QuantityAddRow {
+    position: fixed;
+    font-size: 1rem;
+    color: #7D7D7D;
+    z-index: 5;
+    left: 35%;
+    top: 29%;
+}
+.RowOnTask1 {
+    font-weight: 400;
+    font-size: 0.7rem;
+}
+.RowOnTask1Bold {
+    font-weight: 600;
+}
+.SpecTaskText {
+    position: fixed;
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: #FFFFFF;
+    top: 36%;
+    left: 9.2%;
+}
+
+.TaskBlockStart2 {
+    position: fixed;
+    width: 86.8%;
+    height: 13.7%;
+    background-color: #1C1C1C;
+    top: 40%;
+    left: 6.5%;
+    border-radius: 7px;
+    border: 2px solid #3A3A3A;
+}
+.SponsorTaskLogoClass2 {
+    position: fixed;
+    z-index: 5;
+    left: 10%;
+    top: 40.5%;
+    height: 13.7%;
+    display: flex;
+    align-items: center;
+}
+.TaskToBtn2 {
+    position: fixed;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #FFFFFF;
+    z-index: 5;
+    left: 35%;
+    top: 42%;
+}
+.arrowTaskBtn2 {
+    top: 40%;
+    right: 14%;
+    position: fixed;
+    height: 13.7%;
+    display: flex;
+    align-items: center;
+}
+.QuantityAddRow2 {
+    position: fixed;
+    font-size: 1rem;
+    color: #7D7D7D;
+    z-index: 5;
+    left: 35%;
+    top: 45.7%;
+}
+.RowOnTask2 {
+    font-weight: 400;
+    font-size: 0.7rem;
+}
+.RowOnTask2Bold {
+    font-weight: 600;
+}
+.NoQuests1 {
+    position: fixed;
+    font-size: 1.2rem;
+    color: #464646;
+    z-index: 5;
+    left: 35%;
+    top: 21.4%;
+    font-weight: 600;
+    left: 0px;
+    right: 0px;
+    text-align: center;
+    display: block;
+}
+.lineLoad1 {
+    position: fixed;
+    width:40%;
+    height:2px;
+    bottom: 43.7%;
+    left: 30%;
+    right: 30%;
+    background:linear-gradient(white 0 0) center/0% 100% no-repeat;
+    animation:l 2s linear infinite alternate;
+}
+
+@keyframes l {
+  to {background-size:100% 100%}
+}
+
+.HederFriendsBlock {
+    display: flex;
+    width: 100%;
+    height: 95px;
+    background-color: rgba(25, 25, 25, 50%);
+    padding-top: 0px;
+    justify-content: center;
+}
+.HederFriendText {
+    position: fixed;
+    font-size: 2.3rem;
+    font-weight: 600;
+    z-index: 2;
+    top: 1.7%;
+    left: 0px;
+    right: 0px;
+    text-align: center;
+    display: block;
+    color: #FFFFFF;
+}
+.LineUnderFriendText {
+    position: fixed;
+    width: 50%;
+    height: 3px;
+    background-color: #529DD6;
+    z-index: 4;
+    top: 8.3%;
+    left: 25%;
+    right: 25%;
+    justify-content: center;
+}
+.HederFriendText2 {
+    position: fixed;
+    font-size: 0.97rem;
+    font-weight: 500;
+    z-index: 2;
+    top: 9.1%;
+    left: 0px;
+    right: 0px;
+    text-align: center;
+    display: block;
+    color: #7D7D7D;
+}
+.InvationMativationText {
+    position: fixed;
+    font-size: 1.45rem;
+    font-weight: 400;
+    z-index: 2;
+    top: 19%;
+    left: 0px;
+    right: 0px;
+    text-align: center;
+    display: block;
+    color: #727272;
+}
+.ShareMotFriendText {
+    color: #FFFFFF;
+    font-weight: 400;
+}
+.GetMotFriendText {
+    color: #FFFFFF;
+    font-weight: 400;
+}
+.ReferalcodeInput {
+    position: fixed;
+    width: 62.6%;
+    left: 6%;
+    border-radius: 7px;
+    border: 2px solid #515151;
+    height: 6%;
+    background-color: #191919;
+    top: 36%;
+    color: #727272;
+    padding-left: 6%;
+    font-size: 0.8rem;
+    font-weight: 400;
+    transition: font-size 0.5s ease, color 0.5s ease;
+}
+.ReferalcodeInput.enlarged {
+    font-size: 1rem;
+    color: #FFFFFF;
+}
+.SendReferalCode {
+    position: fixed;
+    right: 6%;
+    height: 6%;
+    width: 24%;
+    border: 2px solid #515151;
+    background-color: #191919;
+    text-align: center;
+    color: #358344;
+    top: 36%;
+    border-radius: 7px;
+    font-weight: 500;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+.SendReferalCode:active {
+    transform: scale(0.9); 
+}
+.RowTotalFriend {
+    position: fixed;
+    width: 88%;
+    height: 3%;
+    left: 6%;
+    right: 6%;
+    top: 44%;
+    background-color: #242323;
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    z-index: 2;
+}
+.TotalFriend {
+    position: fixed;
+    font-size: 0.7rem;
+    font-weight: 400;
+    height: 3%;
+    z-index: 2;
+    top: 44.4%;
+    left: 10%;
+    color: #FFFFFF;
+}
+.TotalNumberFriends {
+    position: fixed;
+    font-size: 0.7rem;
+    font-weight: 400;
+    height: 3%;
+    z-index: 2;
+    top: 44.4%;
+    right: 10%;
+    color: #FFFFFF;
+}
+.RowTotalFriendOver {
+    position: fixed;
+    width: 88%;
+    height: 30%;
+    left: 6%;
+    right: 6%;
+    bottom: 26%;
+    background-color: #191919;
+    border-radius: 7px;
+}
+.TextonDontHaveFriend {
+    position: fixed;
+    font-size: 0.8rem;
+    font-weight: 600;
+    z-index: 2;
+    left: 6%;
+    right: 6%;
+    bottom: 40%;
+    text-align: center;
+    display: block;
+    color: #7D7D7D;
+}
+.InvieButtonFriend {
+    position: fixed;
+    width: 88%;
+    height: 6.6%;
+    left: 6%;
+    right: 6%;
+    bottom: 16.6%;
+    background-color: #0098EA;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+.InvieButtonFriend:active {
+    transform: scale(0.9); 
+}
+.InvieButtonFriend p {
+    position: fixed;
+    font-size: 1.1rem;
+    font-weight: 500;
+    width: 88%;
+    height: 6.6%;
+    left: 6%;
+    right: 6%;
+    margin-top: 11px;
+    color: #FFFFFF;
+    text-align: center;
+    align-items:center;
+    justify-content:center;
+    vertical-align: middle;
+}
+.BlackDisblayFriend {
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.45);
+    z-index: 50;
+}
+.bottomInvitePanel {
+    position: fixed;
+    height: 24%;
+    width: 100%;
+    background-color: #191919;
+    bottom: 0px;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    z-index: 51;
+}
+.BtmPanInvText {
+    position: fixed;
+    color: #FFFFFF;
+    bottom: 18.2%;
+    left: 8%;
+    font-size: 1.1rem;
+    font-weight: 500;
+    z-index: 52;
+}
+.CrossFriendBtn {
+    position: fixed;
+    bottom: 18.2%;
+    right: 8%;
+    z-index: 52;
+}
+.AddFriendSentMessageBtn {
+    position: fixed;
+    width: 43%;
+    height: 8%;
+    border-radius: 7px;
+    border: 2px solid #3A3A3A;
+    z-index: 52;
+    bottom: 7.9%;
+    left: 4.4%;
+    color: #FFFFFF;
+    font-size: 0.8rem;
+    font-weight: 450;
+    display: flex;
+    align-items: center;
+    -webkit-tap-highlight-color: transparent;
+    text-align: center;
+    padding: 10px;
+    transition: transform 0.1s;
+}
+.AddFriendSentMessageBtn:active {
+    transform: scale(0.9); 
+}
+.AddFriendSentMessageBtn svg {
+    margin-right: 8px;
+    padding-top: 3%;
+}
+.AddFriendCopyLinkBtn {
+    position: fixed;
+    width: 43%;
+    height: 8%;
+    border-radius: 7px;
+    border: 2px solid #3A3A3A;
+    z-index: 52;
+    bottom: 7.9%;
+    right: 4.4%;
+    color: #FFFFFF;
+    font-size: 0.8rem;
+    font-weight: 450;
+    display: flex;
+    align-items: center;
+    -webkit-tap-highlight-color: transparent;
+    text-align: center;
+    padding: 25px;
+    transition: transform 0.1s;
+}
+.AddFriendCopyLinkBtn svg {
+    margin-right: 8px;
+    padding-top: 3%;
+}
+.AddFriendCopyLinkBtn:active {
+    transform: scale(0.9); 
+}
+.SecsessCopyOrSentMessage {
+    position: fixed;
+    width: 87%;
+    height: 6.2%;
+    background-color: #05D432;
+    border-radius: 40px;
+    z-index: 53;
+    text-align: center;
+    padding: 4%;
+    filter: drop-shadow(0 137 100px #00000000);
+    bottom: 6%;
+    left: 6.5%;
+    right: 6.5%;
+}
+
+
+.TopAirdropBackPanel {
+    display: flex;
+    width: 100%;
+    height: 95px;
+    background-color: rgba(25, 25, 25, 50%);
+    padding-top: 0px;
+    justify-content: center;
+}
+.AirdropTopText {
+    position: fixed;
+    font-size: 2.3rem;
+    font-weight: 600;
+    z-index: 2;
+    top: 3.4%;
+    left: 0px;
+    right: 0px;
+    text-align: center;
+    display: block;
+    color: #FFFFFF;
+}
+.AirdropLineUnderTextTop {
+    position: fixed;
+    width: 54%;
+    height: 3px;
+    background-color: #529DD6;
+    z-index: 4;
+    top: 10%;
+    left: 23%;
+    right: 23%;
+    justify-content: center;
+}
+.RowLogoOnAirdrop {
+    text-align: center;
+    position: fixed;
+    top: 17.5%;
+    position: fixed;
+    left: 0px;
+    right: 0px;
+    display: block;
+}
+.GoldPaddleOnAirdrop{
+    position: fixed;
+    display: block;
+    text-align: center;
+    left: 0px;
+    right: 0px;
+    top: 36%;
+}
+.AirdropMainText {
+    position: fixed;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 500;
+    top: 41%;
+    display: block;
+    left: 0px;
+    right: 0px;
+    width: 100%;
+    text-align: center;
+}
+.AirdropMainText b{
+    color: #8D8D8D;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: center;
+}
+.SettingsTopPanel {
+    width: 100%;
+    height: 60px;
+    background-color: rgba(25, 25, 25, 50%);
+    padding-top: 0px;
+}
+.BackBtnProfile {
+    margin-top: 10px;
+    width: 57px;
+    height: 31px;
+    background-color: #191919;
+    border-radius: 150px;
+    text-align: center;
+    margin-left: 6.4%;
+    vertical-align: middle;
+}
+.BackBtnProfile svg {
+    margin-top: 9px;
+    z-index: 2;
+}
+.TopPanelText {
+    position: absolute;
+    font-size: 2.3rem;
+    font-weight: 600;
+    z-index: 2;
+    top: 0.45%;
+    left: 0px;
+    right: 0px;
+    text-align: center;
+    display: block;
+    color: #FFFFFF;
+}
+.TopPanelLineUnderText {
+    position: absolute;
+    width: 50%;
+    height: 3px;
+    background-color: #529DD6;
+    z-index: 4;
+    top: 7%;
+    left: 25%;
+    right: 25%;
+    justify-content: center;
+} 
+.BtnSettingsOnProfile {
+    position: absolute;
+    margin-top: -31px;
+    width: 57px;
+    height: 31px;
+    background-color: #191919;
+    border-radius: 150px;
+    text-align: center;
+    right: 7%;
+    vertical-align: middle;
+    z-index: 3;
+}
+.BtnSettingsOnProfile svg{
+    margin-top: 5px;
+    z-index: 4;
+}
+.SkinSelectionPanel {
+    position: absolute;
+    width: 100%;
+    height: 47%;
+    background-color: #131313;
+    margin-top: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+}
+.TextUpdateOnSelection {
+    position: absolute;
+    font-size: 1rem;
+    font-weight: 600;
+    z-index: 2;
+    margin-top: 32px;
+    text-align: center;
+    color: #FFFFFF;
+    margin-left: 8%;
+    z-index: 2;
+}
+.textAfterSelectBlock {
+    position: absolute;
+    font-size: 0.8rem;
+    font-weight: 500;
+    z-index: 2;
+    top: 66.5%;
+    left: 0px;
+    right: 0px;
+    display: block;
+    text-align: center;
+    color: #FFFFFF;
+}
+.YourProfilePanel {
+    position: absolute;
+    width: 100%;
+    height: 47%;
+    background-color: #131313;
+    top: 72%;
+}
+.YourProfilePanelText {
+    position: absolute;
+    font-size: 1rem;
+    font-weight: 600;
+    z-index: 2;
+    top: 75.1%;
+    text-align: center;
+    color: #FFFFFF;
+    margin-left: 6.4%;
+    z-index: 2;
+}
+.ExtensionBlockProfile {
+    position: absolute;
+    top: 152%;
+    width: 10px;
+    height: 1px;
+}
+.TotalScoreProfileText {
+    position: absolute;
+    top: 122%;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin-left: 6.4%;
+    z-index: 2;
+}
+.TotalScoreProfileTextComing {
+    position: absolute;
+    top: 130%;
+    font-size: 1rem;
+    font-weight: 300;
+    color: #2A2A2A;
+    display: block;
+    left: 0px;
+    right: 0px;
+    text-align: center;
+    z-index: 2;
+}
+.BackPanelSkin1 {
+    position: absolute;
+    width: 36.8%;
+    height: 190px;
+    background-color: #1C1C1C;
+    border-radius: 10px;
+    left: 6.4%;
+    top: 20%;
+    z-index: 3;
+}
+.PanelNameSkin1 {
+    position: absolute;
+    width: 36.8%;
+    height: 30px;
+    left: 6.4%;
+    top: 20%;
+    background-color: #272727;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    z-index: 4;
+    text-align: center;
+}
+.PanelNameSkin1 p {
+    color: #FFFFFF;
+    font-size: 0.8rem;
+    font-weight: 400;
+    margin-top: 6%;
+}
+.SkinImgStandart1 {
+    position: absolute;
+    width: 34%;
+    height: 34%;
+    left: 6.4%;
+    top: 40%;
+    z-index: 5;
+}
+.BtnClaimSkin1 {
+    position: absolute;
+    background: linear-gradient(to right, #A40000, #272727);
+    border-radius: 10px;
+    width: 36.8%;
+    height: 30px;
+    left: 6.4%;
+    top: 260px;
+    z-index: 4;
+}
+.BtnClaimSkin1 p{
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: #FFFFFF;
+    margin-top: 6%;
+}
+.ScinSelectContent {
+    display: inline-block;
+    width: 70%;
+}
+.BackBlockProfileSkin {
+    position: absolute;
+    width: 70%;
+    height: 35%;
+    background-color: #272727;
+    z-index: 5;
+    border-radius: 7px;
+    top: 81%;
+    text-align: center;
+    left: 15%;
+}
+.SkinLabelName1 {
+    position: absolute;
+    width: 23.6%;
+    height: 4%;
+    background-color: #323232;
+    border-bottom-left-radius: 7px;
+    border-top-right-radius: 7px;
+    right: 15%;
+    top: 81%;
+    z-index: 6;
+    color: #FFFFFF;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 400;
+    vertical-align: middle;
+}
+.SkinLabelName1 p {
+    padding-top: 5.5%;
+}
+.youeScinSelectedStandart1 {
+    position: absolute;
+    width: 63.5%;
+    height: 33%;
+    left: 15%;
+    top: 82%;
+    z-index: 6;
+}
+
+.BackPanelSkin2 {
+    position: absolute;
+    width: 36.8%;
+    height: 190px;
+    background-color: #1C1C1C;
+    border-radius: 10px;
+    left: 48.5%;
+    top: 20%;
+    z-index: 3;
+}
+.PanelNameSkin2 {
+    position: absolute;
+    width: 36.8%;
+    height: 30px;
+    left: 48.5%;
+    top: 20%;
+    background-color: #272727;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    z-index: 4;
+    text-align: center;
+}
+.PanelNameSkin2 p {
+    color: #FFFFFF;
+    font-size: 0.8rem;
+    font-weight: 400;
+    margin-top: 6%;
+}
+.SkinImgStandart2 {
+    position: absolute;
+    width: 38%;
+    height: 38%;
+    left: 48.5%;
+    top: 40%;
+    z-index: 5;
+}
+.BtnClaimSkin2 {
+    position: absolute;
+    background: linear-gradient(to right, #0088CC, #272727);
+    border-radius: 10px;
+    width: 36.8%;
+    height: 30px;
+    left: 48.5%;
+    top: 260px;
+    z-index: 4;
+}
+.BtnClaimSkin2 p{
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: #FFFFFF;
+    margin-top: 6%;
+}
