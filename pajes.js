@@ -103,6 +103,7 @@ setInterval(function() {
     document.getElementById('taskMain').style.display = 'none';
     document.getElementById('FriendsMain').style.display = 'none';
     document.getElementById('ProfileMain').style.display = 'none';
+    document.getElementById('YourRank').style.display = 'none';
     AirdropMain = document.getElementById('AirdropMain').style.display='none';
 }, 120000);
 
@@ -135,7 +136,7 @@ TaskBtnMain.addEventListener('click', () => {
     document.querySelector('.buttonfriendsimg').style.bottom = '3.5%';
     document.getElementById('FriendBlueBtn').style.display = 'none';
     document.getElementById('FriendsMain').style.display = 'none'; 
-
+    document.getElementById('YourRank').style.display = 'none';
     document.getElementById('AirdropMain').style.display = 'none';
     document.getElementById('AirdropBtnGolg').style.display = 'none';
     document.getElementById('AirdropBtnGray').style.display = 'block';
@@ -459,3 +460,136 @@ const ReferalcodeInputClick = document.querySelector('.ReferalcodeInput');
 ReferalcodeInputClick.addEventListener('focus', () => {
     window.scrollTo(0, document.body.scrollHeight);
 });
+
+//Rank paje
+
+const YourRank = document.getElementById('YourRank').style.display = 'none';
+const champrangtitle = document.getElementById('champrangtitle');
+
+champrangtitle.addEventListener('click', () => {
+    document.getElementById('main').style.display = 'none';
+    document.getElementById('YourRank').style.display = 'block';
+});
+
+const BackBtnOnTonRank = document.querySelector('.BackBtnOnTonRank');
+
+BackBtnOnTonRank.addEventListener('click', () => {
+    document.getElementById('main').style.display = 'block';
+    document.getElementById('YourRank').style.display = 'none';
+});
+
+//rank image color function
+
+document.querySelector('.PathLine1').setAttribute('stroke', '#004C75');
+document.querySelector('.PathLine2').setAttribute('stroke', '#004C75');
+
+
+document.querySelector('.PathCircle3').setAttribute('fill', '#97DBFF');
+document.querySelector('.PathCircle3').setAttribute('stroke', '#0087CF');
+
+document.querySelector('.PathCircle2').setAttribute('fill', '#97DBFF');
+document.querySelector('.PathCircle2').setAttribute('stroke', '#0087CF');
+
+document.querySelector('.PathCircle1').setAttribute('fill', '#358344');
+document.querySelector('.PathCircle1').setAttribute('stroke', '#57E873');
+
+function RankImageColor() {
+    if (rowscore >= 0 && rowscore <= 1000) {
+        RankColor0();
+    } else if (rowscore >= 1000 && rowscore <= 5000) {
+        RankColor1();
+    } else if (rowscore >= 5000 && rowscore <= 15000) {
+        RankColor2();
+    } else if (rowscore >= 15000 && rowscore <= 50000) {
+        RankColor3();
+    } else if (rowscore >= 50000 && rowscore <= 100000) {
+        RankColor4()
+    }
+
+    setTimeout(RankImageColor, 500);
+}
+
+function RankColor0() {
+    document.getElementById('champrangtitle').innerHTML = ('NOOB 🐤 RANK');
+    document.getElementById('RankOnPath').innerHTML = ('NOOB 🐤 RANK');
+}
+
+let RankColor1Faslse = false;
+
+function RankColor1() {
+    document.querySelector('.PathCircle2').setAttribute('fill', '#358344');
+    document.querySelector('.PathCircle2').setAttribute('stroke', '#57E873');
+
+    document.querySelector('.PathCircle1').setAttribute('fill', '#BFBFBF');
+    document.querySelector('.PathCircle1').setAttribute('stroke', '#818181');
+
+    document.querySelector('.PathLine1').setAttribute('stroke', '#404040');
+    
+    if (!RankColor1Faslse) {
+        score.innerHTML = (rowscore += 100);
+        RankColor1Faslse = true;
+    }
+    document.getElementById('champrangtitle').innerHTML = ('AVERAGE 😐 RANK');
+    document.getElementById('RankOnPath').innerHTML = ('AVERAGE 😐 RANK');
+}
+
+let RankColor2Faslse = false;
+
+function RankColor2() {
+    document.querySelector('.PathCircle3').setAttribute('fill', '#358344');
+    document.querySelector('.PathCircle3').setAttribute('stroke', '#57E873');
+
+    document.querySelector('.PathCircle2').setAttribute('fill', '#BFBFBF');
+    document.querySelector('.PathCircle2').setAttribute('stroke', '#818181');
+
+    document.querySelector('.PathLine2').setAttribute('stroke', '#404040');
+
+    if (!RankColor2Faslse) {
+        score.innerHTML = (rowscore += 500);
+        RankColor2Faslse = true;
+    }
+    document.getElementById('champrangtitle').innerHTML = ('NORMAl 👍 RANK');
+    document.getElementById('RankOnPath').innerHTML = ('NORMAl 👍 RANK');
+}
+
+let RankColor3Faslse = false;
+
+function RankColor3() {
+    document.querySelector('.PathCircle4').setAttribute('fill', '#358344');
+    document.querySelector('.PathCircle4').setAttribute('stroke', '#57E873');
+
+    document.querySelector('.PathCircle3').setAttribute('fill', '#BFBFBF');
+    document.querySelector('.PathCircle3').setAttribute('stroke', '#818181');
+
+    document.querySelector('.PathLine3').setAttribute('stroke', '#404040');
+
+    if (!RankColor3Faslse) {
+        score.innerHTML = (rowscore += 1500);
+        RankColor3Faslse = true;
+    }
+    document.getElementById('champrangtitle').innerHTML = ('BETTER 💪 RANK');
+    document.getElementById('RankOnPath').innerHTML = ('BETTER 💪 RANK');
+}
+
+let RankColor4Faslse = false;
+
+function RankColor4() {
+    document.querySelector('.PathCircle5').setAttribute('fill', '#358344');
+    document.querySelector('.PathCircle5').setAttribute('stroke', '#57E873');
+
+    document.querySelector('.PathCircle4').setAttribute('fill', '#BFBFBF');
+    document.querySelector('.PathCircle4').setAttribute('stroke', '#818181');
+
+    document.querySelector('.PathLine4').setAttribute('stroke', '#404040');
+
+    if (!RankColor4Faslse) {
+        score.innerHTML = (rowscore += 5000);
+        RankColor4Faslse = true;
+    }
+    document.getElementById('champrangtitle').innerHTML = ('CHAMP 🏆 RANK');
+    document.getElementById('RankOnPath').innerHTML = ('CHAMP 🏆 RANK');
+}
+
+RankImageColor();
+
+
