@@ -714,5 +714,42 @@
         });
     </script>
     <script src="pajes.js"></script>
+
+
+
+
+        <div class="container">
+            <h1>Реферальная программа</h1>
+    
+            <!-- Блок для получения реферальной ссылки -->
+            <div>
+                <button onclick="getReferralLink()">Получить реферальную ссылку</button>
+                <div class="result" id="referralLinkResult"></div>
+            </div>
+    
+            <!-- Блок для проверки реферального кода -->
+            <div>
+                <input type="text" id="referralCodeInput" placeholder="Введите реферальный код">
+                <button onclick="checkReferralCode()">Проверить код</button>
+                <div class="result" id="referralCodeResult"></div>
+            </div>
+        </div>
+    
+        <script>
+            // Функция для получения реферальной ссылки
+            async function getReferralLink() {
+                const response = await fetch('http://localhost:3000/get-referral-link');
+                const data = await response.json();
+                document.getElementById('referralLinkResult').innerText = data.referralLink;
+            }
+    
+            // Функция для проверки реферального кода
+            async function checkReferralCode() {
+                const code = document.getElementById('referralCodeInput').value;
+                const response = await fetch(`http://localhost:3000/use-referral/${code}`);
+                const data = await response.json();
+                document.getElementById('referralCodeResult').innerText = data.message;
+            }
+        </script>
 </body>
 </html>
