@@ -143,10 +143,11 @@ TaskBtnMain.addEventListener('click', () => {
     document.querySelector('.buttonairdropimg').style.bottom = '3.5%';
 });
 
-window.onload = function() {
+document.addEventListener('DOMContentLoaded', function() {
     const HomeBtnGray = document.getElementById('HomeBtnGray');
+    const FriendGrayBtn = document.getElementById('FriendGrayBtn'); // Добавлено
 
-    if (HomeBtnGray) {
+    if (HomeBtnGray && FriendGrayBtn) {
         HomeBtnGray.addEventListener('click', () => {
             document.getElementById('mainmenu').style.display = 'block';
             document.getElementById('taskMain').style.display = 'none';
@@ -163,12 +164,11 @@ window.onload = function() {
             document.getElementById('AirdropBtnGolg').style.display = 'none';
             document.getElementById('AirdropBtnGray').style.display = 'block';
             document.querySelector('.buttonairdropimg').style.bottom = '3.5%';
-            
         });
     } else {
-        console.error('Элемент HomeBtnGray не найден на странице.');
+        console.error('Элемент HomeBtnGray или FriendGrayBtn не найден на странице.');
     }
-};
+});
 
 // completed task1
 
@@ -301,7 +301,6 @@ BlackDisblayFriend.addEventListener('click', () => {
 
 let SecsessCopyOrSentMessage = document.querySelector('.SecsessCopyOrSentMessage').style.display = 'none';
 
-
 var counter = 0;
 
 function CopySecsessFunc() {
@@ -313,23 +312,11 @@ function CopySecsessFunc() {
     }
 }
 
-var ReferalLink = 'Hi, join me play the game.' + '\n' + 'https://t.me/rowlivebot' + '\n' +'Enter the code and add me as a friend';
-
-function copyReferalLink() {
-    navigator.clipboard.writeText(ReferalLink)
-        .catch(err => {
-            console.error('Ошибка при копировании текста: ', err);
-        });
-}
-
 document.querySelector(".AddFriendCopyLinkBtn").addEventListener("click", () => {
     document.querySelector('.SecsessCopyOrSentMessage').style.display = 'block';
     setInterval(CopySecsessFunc, 1000);
     counter = 0;
 });
-document.querySelector(".AddFriendCopyLinkBtn").addEventListener("click", copyReferalLink);
-
-
 
 //Airdrop main
 
@@ -445,20 +432,6 @@ AddFriendCopyLinkBtn.addEventListener('mousedown', () => {
             timeoutNumber = 0;
         }, 100);
     };
-});
-
-
-// clear friend input on click
-
-const SendReferalCode = document.querySelector('.SendReferalCode');
-
-SendReferalCode.addEventListener('click', () => {
-    document.querySelector('.ReferalcodeInput').value = '';
-});
-
-const ReferalcodeInputClick = document.querySelector('.ReferalcodeInput');
-ReferalcodeInputClick.addEventListener('focus', () => {
-    window.scrollTo(0, document.body.scrollHeight);
 });
 
 //Rank paje
@@ -593,3 +566,198 @@ function RankColor4() {
 RankImageColor();
 
 
+//Referal prgogram
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Инициализация пользователя
+    let userId = localStorage.getItem('userId');
+    if (!userId) {
+        userId = generateUserId();
+        localStorage.setItem('userId', userId);
+    }
+
+    // 2. Обработка реферального кода из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const referralCode = urlParams.get('code');
+    if (referralCode) {
+        await handleReferralCode(referralCode, userId);
+    }
+
+    // 3. Основная настройка системы
+    await setupReferralSystem(userId);
+
+    // 4. Первоначальная проверка видимости
+    checkFriendsVisibility();
+});
+
+// Обработка реферального кода
+async function handleReferralCode(code, userId) {
+    try {
+        const response = await fetch(`/track-referral?code=${code}&currentUserId=${userId}`);
+        if (response.ok) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+            showNotification('Реферальная ссылка активирована!', 'success');
+        }
+    } catch (error) {
+        showNotification(error.message, 'error');
+    }
+}
+
+// Основная настройка реферальной системы
+async function setupReferralSystem(userId) {
+    try {
+        const response = await fetch(`/get-referral-code/${userId}`);
+        if (!response.ok) return;
+        
+        const data = await response.json();
+        if (!data.code) return;
+
+        // Настройка кнопок
+        setupReferralButtons(data.code);
+
+        // Загрузка друзей (но не показываем сразу)
+        await loadReferrals(data.code, false);
+    } catch (error) {
+        console.error('Ошибка настройки системы:', error);
+    }
+}
+
+// Настройка кнопок реферальной системы
+function setupReferralButtons(code) {
+    const referralLink = `${window.location.origin}/?code=${code}`;
+
+    // Кнопка копирования
+    const copyBtn = document.getElementById('AddFriendCopyLinkBtnID');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', () => copyToClipboard(referralLink));
+    }
+
+    // Кнопка Telegram
+    const telegramBtn = document.getElementById('AddFriendSentMessageBtnID');
+    if (telegramBtn) {
+        telegramBtn.href = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent('Присоединяйся!')}`;
+    }
+}
+
+// Загрузка списка рефералов
+async function loadReferrals(code, shouldShow = false) {
+    try {
+        const response = await fetch(`/get-referrals/${code}`);
+        if (!response.ok) return;
+        
+        const data = await response.json();
+        const rowContainer = document.querySelector('.RowTotalFriendOver');
+        if (!rowContainer) return;
+
+        // Очищаем контейнер и добавляем базовую структуру
+        rowContainer.innerHTML = `
+            <div id="referralsList"></div>
+            <p class="TextonDontHaveFriend" style="display: none">You don't have any friends yet</p>
+        `;
+
+        const referralsList = document.getElementById('referralsList');
+        const noFriendsText = rowContainer.querySelector('.TextonDontHaveFriend');
+
+        // Обновляем счетчик
+        updateFriendsCounter(data.referrals?.length || 0);
+
+        if (data.referrals?.length) {
+            noFriendsText.style.display = 'none';
+            data.referrals.slice(0, 15).forEach(ref => {
+                referralsList.appendChild(createFriendForm(ref));
+            });
+        } else {
+            noFriendsText.style.display = 'block';
+        }
+
+        // Управляем видимостью контейнера
+        if (shouldShow || isFriendsPageVisible()) {
+            rowContainer.style.display = 'block';
+        } else {
+            rowContainer.style.display = 'none';
+        }
+
+    } catch (error) {
+        console.error('Ошибка загрузки друзей:', error);
+    }
+}
+
+// Создание формы друга
+function createFriendForm(ref) {
+    const form = document.createElement('div');
+    form.className = 'friend-form-item';
+    form.innerHTML = `
+        <div class="friend-form-content">
+            <div class="EllipseWidthIconBro">
+                <svg class="IconBroOnEllipse" width="30" height="18" viewBox="0 0 30 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M23.75 15.4286V18H8.75V15.4286C8.75 15.4286 8.75 10.2857 16.25 10.2857C23.75 10.2857 23.75 15.4286 23.75 15.4286ZM20 3.85714C20 3.09427 19.7801 2.34853 19.368 1.71423C18.956 1.07993 18.3703 0.585547 17.6851 0.293609C16.9998 0.00167125 16.2458 -0.0747131 15.5184 0.0741156C14.791 0.222944 14.1228 0.590301 13.5983 1.12973C13.0739 1.66916 12.7167 2.35644 12.5721 3.10465C12.4274 3.85287 12.5016 4.62841 12.7855 5.33321C13.0693 6.03801 13.5499 6.64041 14.1666 7.06424C14.7833 7.48807 15.5083 7.71429 16.25 7.71429C17.2446 7.71429 18.1984 7.30791 18.9017 6.58456C19.6049 5.8612 20 4.88012 20 3.85714ZM24 10.3629C24.6833 11.0112 25.2342 11.7931 25.6205 12.6629C26.0068 13.5326 26.2208 14.4728 26.25 15.4286V18H30V15.4286C30 15.4286 30 10.9929 24 10.3629ZM22.5 1.46765e-06C22.1223 2.40446e-05 21.747 0.0607566 21.3875 0.180001C22.1188 1.25868 22.5109 2.54209 22.5109 3.85714C22.5109 5.17219 22.1188 6.45561 21.3875 7.53429C21.747 7.65353 22.1223 7.71426 22.5 7.71429C23.4946 7.71429 24.4484 7.30791 25.1517 6.58456C25.8549 5.8612 26.25 4.88012 26.25 3.85714C26.25 2.83417 25.8549 1.85309 25.1517 1.12973C24.4484 0.406378 23.4946 1.46765e-06 22.5 1.46765e-06ZM10 6.42857H6.25V2.57143H3.75V6.42857H0V9H3.75V12.8571H6.25V9H10V6.42857Z" fill="white"/>
+                </svg>
+            </div>
+            <p class="BroName">Друг: ${ref.friend_id?.substring(0, 8) || 'Unknown'}...</p>
+            <p class="RewordForFriend"><b>+120</b>ROW</p>
+            <p class="SecsessReceivedFriend">Received</p>
+            <div class="bottomFormPanel"></div>
+        </div>
+    `;
+    return form;
+}
+
+// Проверка видимости страницы друзей
+function isFriendsPageVisible() {
+    const mainByFriends = document.getElementById('MainByFriends');
+    return mainByFriends && mainByFriends.style.display === 'block';
+}
+
+// Обновление счетчика друзей
+function updateFriendsCounter(count) {
+    const counter = document.getElementById('TotalNumberFriendsSpanID');
+    if (counter) {
+        counter.textContent = `${count}/15 friends`;
+    }
+}
+
+// Проверка видимости и загрузка друзей
+function checkFriendsVisibility() {
+    const observer = new MutationObserver(() => {
+        const mainVisible = isFriendsPageVisible();
+        const rowContainer = document.querySelector('.RowTotalFriendOver');
+        
+        if (!rowContainer) return;
+        
+        if (mainVisible) {
+            rowContainer.style.display = 'block';
+            const userId = localStorage.getItem('userId');
+            if (userId) {
+                fetch(`/get-referral-code/${userId}`)
+                    .then(res => res.json())
+                    .then(data => data.code && loadReferrals(data.code, true))
+                    .catch(console.error);
+            }
+        } else {
+            rowContainer.style.display = 'none';
+        }
+    });
+
+    observer.observe(document.body, { attributes: true, subtree: true });
+}
+
+// Вспомогательные функции
+function generateUserId() {
+    return 'user_' + Math.random().toString(36).substr(2, 12) + '_' + Date.now();
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text)
+        .then(() => showNotification('Ссылка скопирована!', 'success'))
+        .catch(err => console.error('Ошибка копирования:', err));
+}
+
+function showNotification(message, type) {
+    const notification = document.getElementById('notification');
+    if (notification) {
+        notification.textContent = message;
+        notification.className = type;
+        setTimeout(() => notification.textContent = '', 5000);
+    }
+}
