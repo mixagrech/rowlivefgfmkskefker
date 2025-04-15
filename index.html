@@ -346,21 +346,19 @@
                 <div class="InvationMativationText">
                     <p><b class="ShareMotFriendText">SHARE</b> YOUR INVITATION<br>LINK & <b class="GetMotFriendText">GET 20%</b> OF<br>FRIEND`S POINTS</p>
                 </div>
-                <div class="ReferalcodeDiv">
-                    <input type="Referalcode" id="codeInput" class="ReferalcodeInput" placeholder="Place for referal code" maxlength="6">
-                </div>
-                <button class="SendReferalCode" onclick="checkCode()">Send</button>
+                
+                <div id="codeInput" class="ReferalcodeInput"></div>
+                <div class="SendReferalCode"></div>
+                
                 <div class="RowTotalFriend"></div>
                 <div class="TotalFriend">
                     <p>Total</p>
                 </div>
                 <div class="TotalNumberFriends">
-                    <p>0 friends</p>
+                    <span id="TotalNumberFriendsSpanID">0/15 friends</span>
                 </div>
                 <div class="RowTotalFriendOver"></div>
-                <div class="TextonDontHaveFriend">
-                    <p>You don`t have any friends?</p>
-                </div>
+            
                 <div id="InvieButtonFriendID">
                     <div id="InvieButtonFriendID" class="InvieButtonFriend"><p>Invite</p></div>
                 </div>
@@ -377,13 +375,13 @@
                     <path d="M7.5 7.5L14 14M7.5 7.5L1 1M7.5 7.5L1 14M7.5 7.5L14 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </div>
-            <a href="https://t.me/share/url?url=https://t.me/rowlivebot&text=Hi%2C+follow+the+link+and+join+the+ROW-LIVE+game"><div id="SentMesageInvFriendBtn">
-                <button class="AddFriendSentMessageBtn"><svg width="19" height="16" viewBox="0 0 19 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div id="SentMesageInvFriendBtn">
+                <a class="AddFriendSentMessageBtn" id="AddFriendSentMessageBtnID"><svg width="19" height="16" viewBox="0 0 19 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path fill-rule="evenodd" clip-rule="evenodd" d="M0 1.98295C0 0.887979 0.944722 0 2.11111 0H16.8889C18.0553 0 19 0.887979 19 1.98295V10.9057C18.999 11.1673 18.9436 11.4262 18.837 11.6674C18.7303 11.9087 18.5745 12.1277 18.3784 12.3119C18.1823 12.496 17.9499 12.6418 17.6943 12.7408C17.4387 12.8397 17.165 12.89 16.8889 12.8887H9.92222L6.89594 15.5886C5.88789 16.4876 4.22222 15.8166 4.22222 14.5087V12.8887H2.11111C0.944722 12.8887 0 12.0007 0 10.9057V1.98295ZM6.023 5.79187C5.92479 5.69915 5.80826 5.62568 5.68008 5.57563C5.55189 5.52558 5.41456 5.49994 5.27591 5.50017C5.13727 5.5004 5.00003 5.5265 4.87203 5.57698C4.74403 5.62746 4.62778 5.70133 4.52992 5.79437C4.43205 5.88741 4.35449 5.99779 4.30166 6.11923C4.24883 6.24067 4.22176 6.37077 4.22201 6.50212C4.22225 6.63346 4.2498 6.76348 4.30309 6.88473C4.35637 7.00599 4.43435 7.11612 4.53256 7.20883C4.63077 7.30154 4.74729 7.37502 4.87548 7.42507C5.00366 7.47512 5.141 7.50076 5.27964 7.50053C5.41829 7.5003 5.55553 7.4742 5.68353 7.42372C5.81152 7.37324 5.92777 7.29937 6.02564 7.20633C6.1235 7.11329 6.20106 7.0029 6.2539 6.88147C6.30673 6.76003 6.33379 6.62993 6.33355 6.49858C6.3333 6.36724 6.30575 6.23722 6.25247 6.11596C6.19918 5.99471 6.12121 5.88458 6.023 5.79187ZM8.75161 5.79386C8.89891 5.65369 9.08677 5.55804 9.29145 5.51902C9.49613 5.48 9.70843 5.49936 9.9015 5.57465C10.0946 5.64994 10.2597 5.77778 10.3761 5.942C10.4925 6.10622 10.5548 6.29944 10.5552 6.49723C10.5557 6.69502 10.4942 6.88849 10.3786 7.05317C10.2629 7.21786 10.0984 7.34636 9.90563 7.42242C9.71291 7.49849 9.5007 7.5187 9.29585 7.4805C9.091 7.4423 8.9027 7.34741 8.75478 7.20783C8.55647 7.02071 8.44474 6.76663 8.44414 6.50147C8.44355 6.23631 8.55414 5.98179 8.75161 5.79386ZM14.4674 5.79187C14.2691 5.60463 14.0004 5.4997 13.7204 5.50017C13.4403 5.50064 13.172 5.60646 12.9744 5.79437C12.7767 5.98227 12.666 6.23685 12.6665 6.50212C12.6669 6.76738 12.7787 7.02159 12.977 7.20883C13.0752 7.30154 13.1917 7.37502 13.3199 7.42507C13.4481 7.47512 13.5854 7.50076 13.7241 7.50053C13.8627 7.5003 14 7.4742 14.128 7.42372C14.256 7.37324 14.3722 7.29937 14.4701 7.20633C14.5679 7.11329 14.6455 7.0029 14.6983 6.88147C14.7512 6.76003 14.7782 6.62993 14.778 6.49858C14.7777 6.36724 14.7502 6.23722 14.6969 6.11596C14.6436 5.99471 14.5657 5.88458 14.4674 5.79187Z" fill="white"/>
                     </svg>
-                    <p>Send message</p></button>
-            </div></a>
-            <button class="AddFriendCopyLinkBtn" onclick="generateCode()"><svg width="16" height="18" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <p>Send message</p></a>
+            </div>
+            <button class="AddFriendCopyLinkBtn" id="AddFriendCopyLinkBtnID"><svg width="16" height="18" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M14.2222 0C14.6937 0 15.1459 0.189642 15.4793 0.527208C15.8127 0.864773 16 1.32261 16 1.8V12.6C16 13.0774 15.8127 13.5352 15.4793 13.8728C15.1459 14.2104 14.6937 14.4 14.2222 14.4H12.4444V16.2C12.4444 16.6774 12.2571 17.1352 11.9237 17.4728C11.5903 17.8104 11.1382 18 10.6667 18H1.77778C1.30628 18 0.854097 17.8104 0.520699 17.4728C0.187301 17.1352 0 16.6774 0 16.2V5.4C0 4.92261 0.187301 4.46477 0.520699 4.12721C0.854097 3.78964 1.30628 3.6 1.77778 3.6H3.55556V1.8C3.55556 1.32261 3.74286 0.864773 4.07625 0.527208C4.40965 0.189642 4.86184 0 5.33333 0H14.2222ZM6.22222 11.7H4.44444C4.21788 11.7003 3.99997 11.7881 3.83523 11.9456C3.67048 12.103 3.57135 12.3183 3.55807 12.5473C3.54479 12.7763 3.61838 13.0017 3.76379 13.1776C3.9092 13.3536 4.11547 13.4666 4.34044 13.4937L4.44444 13.5H6.22222C6.44878 13.4997 6.6667 13.4119 6.83144 13.2544C6.99618 13.097 7.09532 12.8817 7.1086 12.6527C7.12188 12.4237 7.04829 12.1983 6.90288 12.0224C6.75746 11.8464 6.5512 11.7334 6.32622 11.7063L6.22222 11.7ZM14.2222 1.8H5.33333V3.6H10.6667C11.1382 3.6 11.5903 3.78964 11.9237 4.12721C12.2571 4.46477 12.4444 4.92261 12.4444 5.4V12.6H14.2222V1.8ZM8 8.1H4.44444C4.2087 8.1 3.9826 8.19482 3.81591 8.3636C3.64921 8.53239 3.55556 8.7613 3.55556 9C3.55556 9.23869 3.64921 9.46761 3.81591 9.6364C3.9826 9.80518 4.2087 9.9 4.44444 9.9H8C8.23575 9.9 8.46184 9.80518 8.62854 9.6364C8.79524 9.46761 8.88889 9.23869 8.88889 9C8.88889 8.7613 8.79524 8.53239 8.62854 8.3636C8.46184 8.19482 8.23575 8.1 8 8.1Z" fill="white"/>
                 </svg>            
                 <p>Copy code</p>
@@ -533,68 +531,26 @@
             </div>
         </div>
         <div class="TableOnRank">
-            <img src="Table_on_Rank_ROW.png" class="TableOnRankClass">
+            <img src="TableOnRank.svg" class="TableOnRankClass">
         </div>
     </div>
+
+
+
+
+    <div class="container">
+        <div class="referrals-box">
+            <div id="referralsList" class="referrals-list">
+                <div class="empty"></div>
+            </div>
+        </div>
+        
+        <div id="notification"></div>
+    </div>
+
+
+
     
-
-
-    <script>
-        const userId = Math.random().toString(36).substring(7);
-        console.log('User ID:', userId); // Отладка
-    
-        let eventSource;
-    
-        // Подключаемся к SSE при загрузке страницы
-        window.onload = () => {
-            eventSource = new EventSource(`http://localhost:4000/events?userId=${userId}`);
-
-            eventSource.onmessage = (e) => {
-                console.log('Получено сообщение:', e.data); // Логирование
-                document.getElementById('notifications').placeholder = e.data;
-            };
-
-            eventSource.onerror = (e) => {
-                console.error('Ошибка SSE:', e); // Логирование
-            };
-        };
-        async function generateCode() {
-        try {
-            const response = await fetch('http://localhost:4000/generate-code', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ owner: userId }),
-            });
-            const data = await response.json();
-            console.log('Сгенерирован код:', data.code); // Логирование
-            alert(`Ваш код: ${data.code}`);
-        } catch (error) {
-            console.error('Ошибка при генерации кода:', error);
-            alert('Ошибка! Проверьте консоль для деталей.');
-        }
-    }
-
-    async function checkCode() {
-        const code = document.getElementById('codeInput').value;
-        try {
-            const response = await fetch('http://localhost:4000/check-code', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code, user: userId }),
-            });
-            const data = await response.json();
-            console.log('Результат проверки кода:', data); // Логирование
-            document.querySelector('.ReferalcodeInput').placeholder = data.message;
-
-            if (data.valid) {
-                console.log(`Владелец кода уведомлён о входе пользователя ${userId}`);
-            }
-        } catch (error) {
-            console.error('Ошибка при проверке кода:', error);
-            document.querySelector('.ReferalcodeInput').placeholder = 'Ошибка соединения с сервером';
-        }
-    }
-    </script>
     <script>
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://egor178996yrdfj.github.io/ROW-LIVE/tonconnect-manifest.json',
@@ -649,6 +605,6 @@
             document.querySelector(".BtnClaimSkin2").click();
         });
     </script>
-    <script src="pajes.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
