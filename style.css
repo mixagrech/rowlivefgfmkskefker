@@ -99,6 +99,31 @@ body{
     background-color: rgba(25, 25, 25, 50%);
     padding-top: 0px;
 }
+
+.NftMarketMainBtn {
+    position: absolute;
+    width: 21.5%;
+    height: 4%;
+    top: 13%;
+    right: 2.3%;
+    border-radius: 8px;
+    border: 1.5px solid #3A3A3A;
+    background: rgba(13, 13, 13, 80%);
+    font-size: 12px;
+    padding: 20px 10px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    -webkit-tap-highlight-color: transparent;
+    font-size: 1rem;
+    color: #FFFFFF;
+    margin-right: 1px;
+}
+
+.NftMarketMainBtn svg {
+    margin-right: 6px;
+}
+
 .age_middle_heder_text {
     color: #ffffff;
     font-size: 1rem;
@@ -1343,4 +1368,277 @@ SkinImgStandart2
     width: 40%;
     height: 1px;
     background-color: #7D7D7D;
+}
+
+/* Marketplase */
+
+.SubstrateNFTMarket {
+    position: absolute;
+    width: 100%;
+    height: 10%;
+    background-color: rgba(25, 25, 25, 0.5);
+    color: #FFFFFF;
+    font-weight: 600;
+    font-size: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.SubstrateNFTMarket svg {
+    margin-right: 10px;
+}
+
+.BackBTNNFTMarket {
+    position: absolute;
+    left: 14px;
+    top: 12%;
+    width: 8%;
+    height: 12%;
+    border: 2px solid #0088CC;
+    border-radius: 8px;
+    background-color: rgba(21, 21, 21, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.TextBlockNFTMarketplase {
+    position: absolute;
+    width: 82%;
+    height: 12%;
+    top: 12%;
+    right: 14px;
+    border: 2px solid #3A3A3A;
+    background-color: rgba(21, 21, 21, 0.8);
+    border-radius: 8px;
+    color: #ADADAD;
+    font-weight: 400;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.MarketIllustrationBuy {
+    position: absolute;
+    justify-content: center;
+    width: 100%;
+    top: 26%;
+    text-align: center;
+}
+.MarketIllustrationBuy img {
+    width: 60%;
+    height: 11.6%;
+}
+
+.LotsTextNFTMarket {
+    position: absolute;
+    top: 41%;
+    font-weight: 600;
+    font-size: 1.2rem;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+.AllLotsNFTMArket {
+    color: #FFFFFF;
+    margin-left: 28px;
+    margin-right: 16px;
+}
+.MyLotsNFTMArket {
+    color: #515151;
+}
+
+.AttentionButtonNFTMark {
+    position: absolute;
+    top: 41.4%;
+    right: 25px;
+}
+
+.BackPanrlAllMarket {
+    position: absolute;
+    width: 100%;
+    height: 65%;
+    top: 45.5%;
+    background-color: rgba(25, 25, 25, 0.75);
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+}
+
+
+.ButtonsPanelMarketplase {
+    position: absolute;
+    z-index: 2;
+    width: 100%;
+    top: 47.5%;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    box-sizing: border-box;
+    gap: 10px;
+}
+.SearchPanelonNFTMarket {
+    flex-grow: 1;
+    height: 42px;
+    border-radius: 8px;
+    border: 2px solid #3A3A3A;
+    background-color: #151515;
+    padding-left: 20px;
+    color: white;
+    font-size: 0.8rem;
+    outline: none;
+}
+
+.SearchPanelonNFTMarket::placeholder {
+    color: #4F4F4F;
+    font-size: 0.9rem;
+}
+
+.SearchOnMarketplase {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    border: 2px solid #0088CC; 
+    background-color: #142128;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s;
+}
+
+.SearchOnMarketplase:active {
+    transform: scale(0.9); 
+}
+
+.ButtonPriseUp {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    border: 2px solid #3A3A3A; 
+    background-color: #151515;
+    flex-shrink: 0;
+    color: #3A3A3A;
+    font-size: 30px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s;
+}
+.ButtonPriseUp:active {
+    transform: scale(0.9); 
+}
+.ButtonPriseUp svg {
+    position: absolute;
+    z-index: 2;
+    width: 30px;
+    height: 30px;
+}
+
+.SearchPanelonNFTMarket::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 15px;
+    width: 15px;
+    background: 
+        linear-gradient(152.07deg, #3A3A3A 17.32%, #0088CC 112.74%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 15 15'%3E%3Cpath d='M12.23.5c.15-.16.33-.28.53-.36.2-.08.41-.12.62-.13.21 0 .43.04.63.12.2.08.38.2.53.35.15.15.27.33.35.53.08.2.12.41.12.63 0 .21-.04.43-.13.62-.08.2-.2.38-.35.53l-4.7 4.7c-.01.01-.01.02-.01.03 0 .01 0 .02.01.03l4.7 4.7c.15.15.27.33.35.53.08.2.12.41.12.63 0 .21-.04.43-.13.62-.08.2-.2.38-.35.53-.15.15-.33.27-.53.35-.2.08-.41.12-.63.12-.21 0-.43-.04-.62-.13-.2-.08-.38-.2-.53-.35l-4.7-4.7c-.01-.01-.02-.01-.03-.01-.01 0-.02 0-.03.01l-4.7 4.7c-.15.15-.33.27-.53.35-.2.08-.41.12-.62.13-.21 0-.43-.04-.63-.12-.2-.08-.38-.2-.53-.35-.15-.15-.27-.33-.35-.53-.08-.2-.12-.41-.12-.63 0-.21.04-.43.12-.62.08-.2.2-.38.35-.53l4.7-4.7c.01-.01.01-.02.01-.03 0-.01 0-.02-.01-.03l-4.7-4.7c-.15-.15-.27-.33-.35-.53-.08-.2-.12-.41-.12-.63 0-.22.04-.43.12-.63.08-.2.2-.38.35-.53.15-.15.33-.27.53-.35.2-.08.41-.12.63-.12.21 0 .43.04.62.13.2.08.38.2.53.35l4.7 4.7c.01.01.02.01.03.01.01 0 .02 0 .03-.01l4.7-4.7z' fill='white'/%3E%3C/svg%3E") center/16px no-repeat;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 15 15'%3E%3Cpath d='M12.23.5c.15-.16.33-.28.53-.36.2-.08.41-.12.62-.13.21 0 .43.04.63.12.2.08.38.2.53.35.15.15.27.33.35.53.08.2.12.41.12.63 0 .21-.04.43-.13.62-.08.2-.2.38-.35.53l-4.7 4.7c-.01.01-.01.02-.01.03 0 .01 0 .02.01.03l4.7 4.7c.15.15.27.33.35.53.08.2.12.41.12.63 0 .21-.04.43-.13.62-.08.2-.2.38-.35.53-.15.15-.33.27-.53.35-.2.08-.41.12-.63.12-.21 0-.43-.04-.62-.13-.2-.08-.38-.2-.53-.35l-4.7-4.7c-.01-.01-.02-.01-.03-.01-.01 0-.02 0-.03.01l-4.7 4.7c-.15.15-.33.27-.53.35-.2.08-.41.12-.62.13-.21 0-.43-.04-.63-.12-.2-.08-.38-.2-.53-.35-.15-.15-.27-.33-.35-.53-.08-.2-.12-.41-.12-.63 0-.21.04-.43.12-.62.08-.2.2-.38.35-.53l4.7-4.7c.01-.01.01-.02.01-.03 0-.01 0-.02-.01-.03l-4.7-4.7c-.15-.15-.27-.33-.35-.53-.08-.2-.12-.41-.12-.63 0-.22.04-.43.12-.63.08-.2.2-.38.35-.53.15-.15.33-.27.53-.35.2-.08.41-.12.63-.12.21 0 .43.04.62.13.2.08.38.2.53.35l4.7 4.7c.01.01.02.01.03.01.01 0 .02 0 .03-.01l4.7-4.7z'/%3E%3C/svg%3E");
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+    cursor: pointer;
+    margin-right: 10px;
+    border-radius: 4px;
+    transition: opacity 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+.SearchPanelonNFTMarket::-webkit-search-cancel-button:hover {
+    opacity: 0.9;
+}
+
+.AllLotsNumb {
+    position: absolute;
+    color: #0088CC;
+    top: 54.7%;
+    text-align: center;
+    width: 100%;
+    font-size: 0.9rem;
+    font-weight: 500;
+    z-index: 2;
+}
+
+/* Form on marketplase all lots */
+
+.ExampleLotForm {
+    position: absolute;
+    width: 40%;
+    height: 31%;
+    top: 58%;
+    left: 20px;
+    z-index: 2;
+    border-radius: 6px;
+    border: 2px solid #3A3A3A;
+    background-color: #151515;
+}
+.TheSkinOnMarketAllLots {
+    width: 82%;
+    height: 55%;
+    border-radius: 6px;
+    background: linear-gradient(225deg, #222222 0%, #700000 100%);
+    margin: 10px auto 0;
+}
+.SkinNameShopAll {
+    padding-top: 5px;
+    color: #FFFFFF;
+    margin-left: 15px;
+    font-size: 0.6rem;
+    font-weight: 400;
+}
+.RarityOfTheSkin {
+    color: #FFFFFF;
+    font-size: 0.8rem;
+    margin-left: 14px;
+}
+
+.BoostPercentageSkinMArk {
+    position: absolute;
+    right: 20px;
+    top: 75%;
+    width: 24.5%;
+    height: 7.4%;
+    border-radius: 2px;
+    background-color: #282828;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #FFFFFF;
+    font-size: 0.6rem;
+    z-index: 10;
+    transform: translateY(-50%);
+}
+
+.PriceBtnAllLotsMarket {
+    width: 82%;
+    height: 13%;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #0088CC -38.46%, #151515 171.15%);
+    margin: 0 auto;
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.1s;
+}
+.PriceBtnAllLotsMarket:active {
+    transform: scale(0.9); 
+}
+.PriceAllLotsMarket {
+    color: #FFFFFF;
+    font-size: 0.7rem;
+    font-weight: 300;
+}
+.PriceAllLotsMarket b {
+    font-size: 1rem;
+    font-weight: 500;
 }
