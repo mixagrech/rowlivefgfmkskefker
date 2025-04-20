@@ -55,15 +55,6 @@ daily_claim_btn.addEventListener('click', () => {
 var day_numberNumb = 0;
 day_number.innerHTML = day_numberNumb;
 
-var heventPressed = setInterval(function() {
-    var heventPressedDate = new Date();
-    day_numberNumb.innerHTML = (heventPressedDate.getHours());
-}, 60000);
-
-if (day_numberNumb == "0") {
-    day_numberNumb == 0;
-}
-
 rowdayly_text_id.innerHTML = ("+" + DayNumb0 + "ROW");
 score.innerHTML = '0';
 
@@ -104,7 +95,8 @@ setInterval(function() {
     document.getElementById('FriendsMain').style.display = 'none';
     document.getElementById('ProfileMain').style.display = 'none';
     document.getElementById('YourRank').style.display = 'none';
-    AirdropMain = document.getElementById('AirdropMain').style.display='none';
+    document.getElementById('AirdropMain').style.display = 'none';
+    document.getElementById('MarketplaseNFT').style.display = 'none';
 }, 120000);
 
 // task
@@ -597,7 +589,10 @@ async function handleReferralCode(code, userId) {
         const response = await fetch(`/track-referral?code=${code}&currentUserId=${userId}`);
         if (response.ok) {
             window.history.replaceState({}, document.title, window.location.pathname);
-            showNotification('Реферальная ссылка активирована!', 'success');
+            let RowFriendReward = 600;
+            rowscore += RowFriendReward;
+            score.innerHTML = rowscore;
+            showNotification('', 'success');
         }
     } catch (error) {
         showNotification(error.message, 'error');
@@ -709,11 +704,23 @@ function isFriendsPageVisible() {
     return mainByFriends && mainByFriends.style.display === 'block';
 }
 
-// Обновление счетчика друзей
 function updateFriendsCounter(count) {
     const counter = document.getElementById('TotalNumberFriendsSpanID');
     if (counter) {
+        // Достаём предыдущее значение из data-атрибута (или 0, если его нет)
+        const lastCount = parseInt(counter.dataset.lastCount) || 0;
+        
+        // Обновляем счетчик
         counter.textContent = `${count}/15 friends`;
+        counter.dataset.lastCount = count; // Сохраняем текущее значение
+        
+
+        if (count > lastCount) {
+            const newFriends = count - lastCount;
+            const reward = newFriends * 120;
+            rowscore += reward;
+            score.innerHTML = rowscore;
+        }
     }
 }
 
@@ -749,7 +756,7 @@ function generateUserId() {
 
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text)
-        .then(() => showNotification('Ссылка скопирована!', 'success'))
+        .then(() => showNotification('','success'))
         .catch(err => console.error('Ошибка копирования:', err));
 }
 
@@ -761,3 +768,43 @@ function showNotification(message, type) {
         setTimeout(() => notification.textContent = '', 5000);
     }
 }
+
+// marketplase
+
+const NftMarketMainBtn = document.querySelector('.NftMarketMainBtn');
+
+NftMarketMainBtn.addEventListener('click', () => {
+    document.getElementById('main').style.display = 'none';
+    document.getElementById('MarketplaseNFT').style.display = 'block';
+});
+
+document.getElementById('MarketplaseNFT').style.display = 'none';
+
+document.querySelector('.BackBTNNFTMarket').addEventListener('click', () => {
+    document.getElementById('main').style.display = 'block';
+    document.getElementById('MarketplaseNFT').style.display = 'none';
+});
+
+//price up or down
+
+const buttonPriseUp = document.querySelector('.ButtonPriseUp');
+let isPriceMarketUp = true;
+
+const upPriceSVG = `
+<svg width="45" height="27" viewBox="0 0 45 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M43 2L27.4991 17.2174C26.9499 17.7564 26.2051 18.0591 25.4286 18.0591C24.652 18.0591 23.9073 17.7564 23.3581 17.2174L18.7134 12.6576C18.1642 12.1186 17.4194 11.8159 16.6429 11.8159C15.8663 11.8159 15.1215 12.1186 14.5724 12.6576L2 25M43 2V11.8159M43 2H32.75" 
+          stroke="#ADADAD" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
+const downPriceSVG = `
+<svg width="45" height="27" viewBox="0 0 45 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M43 25L27.4991 9.78262C26.9499 9.24364 26.2051 8.94086 25.4286 8.94086C24.652 8.94086 23.9073 9.24364 23.3581 9.78262L18.7134 14.3424C18.1642 14.8814 17.4194 15.1841 16.6429 15.1841C15.8663 15.1841 15.1215 14.8814 14.5724 14.3424L2 2M43 25V15.1841M43 25H32.75" 
+          stroke="#ADADAD" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
+buttonPriseUp.addEventListener('click', () => {
+    isPriceMarketUp = !isPriceMarketUp;
+    buttonPriseUp.innerHTML = '$' + (isPriceMarketUp ? upPriceSVG : downPriceSVG);
+});
+
+//attention sign in marketplace
