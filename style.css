@@ -1504,6 +1504,7 @@ SkinImgStandart2
     align-items: center;
     justify-content: center;
     transition: transform 0.1s;
+    z-index: 50;
 }
 
 .SearchOnMarketplase:active {
