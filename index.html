@@ -450,7 +450,7 @@
                     <div class="BackPanelSkin1"></div>
                     <div class="PanelNameSkin1"><p>Standard</p></div>
                     <img src="Skins/StandartSkin1.svg" class="SkinImgStandart1">
-                    <div class="BtnClaimSkin1"><p>Selected</p></div>
+                    <div class="BtnClaimSkin1"><p>Unselected</p></div>
                 </div>
                 <div class="ScinSelectContent">
                     <div class="BackPanelSkin2"></div>
@@ -480,10 +480,11 @@
         </div>
 
         <div class="ExtensionBlockProfile"></div>
-        <div>
+        <div class="SkinCentredDivYou">
             <div class="BackBlockProfileSkin"></div>
-            <div class="SkinLabelName1"><p>Standard</p></div>
+            <div class="SkinLabelName1" style="display: none;"><p>Standard</p></div>
             <img src="Skins/StandartSkin1.svg" class="youeScinSelectedStandart1">
+            <p class="TextThenUnselectedSkin">Select skin</p>
         </div>
     </div>
     <div id="YourRank">
@@ -613,7 +614,7 @@
     </div>
 
 
-
+    
     <div class="container">
         <div class="referrals-box">
             <div id="referralsList" class="referrals-list">
@@ -627,140 +628,6 @@
 
 
     
-    <script>
-        // Инициализация TonConnectUI
-        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://mixagrech.github.io/rowlivefgfmkskefker/tonconnect-manifest.json',
-            buttonRootId: 'ton-connect'
-        });
-    
-        // Настройки для Telegram Web App
-        tonConnectUI.uiOptions = {
-            twaReturnUrl: 'https://t.me/rowlivebot'
-        };
-    
-        // Объявляем все необходимые переменные
-        let connectedWallet = null;
-        let isProcessingTransaction = false;
-        const YOUR_WALLET_ADDRESS = "UQB485DhZAZuY1Eo7i72OJUt9v9DNzAoiB-pUtgkhmndALkq"; // Ваш кошелёк для получения средств
-    
-        // Функция для обновления состояния кнопки оплаты
-        function updatePaymentButton(isPurchased = false) {
-            const btn = document.getElementById('BtnClaimSkin2ID');
-            
-            if (isPurchased) {
-                btn.innerHTML = '<p>Куплено</p>';
-                btn.style.background = 'linear-gradient(90deg, #009D22 0%, #272727 100.48%)';
-                btn.style.pointerEvents = 'none';
-                return;
-            }
-            
-            if (connectedWallet) {
-                btn.innerHTML = isProcessingTransaction 
-                    ? '<p>Обработка...</p>' 
-                    : '<p>0,45 <b>TON</b></p>';
-                btn.style.pointerEvents = isProcessingTransaction ? 'none' : 'auto';
-            } else {
-                btn.innerHTML = '<p>Подключите крипто кошелёк</p>';
-                btn.style.pointerEvents = 'none';
-            }
-        }
-    
-        // Функция для отправки транзакции
-        async function sendPayment() {
-            if (!connectedWallet || isProcessingTransaction) return;
-            
-            isProcessingTransaction = true;
-            updatePaymentButton();
-    
-            const transaction = {
-                validUntil: Math.floor(Date.now() / 1000) + 300, // 5 минут на подтверждение
-                messages: [
-                    {
-                        address: 'UQDDEEbNMPfVwpL2q1zi5oAbChXADLuZp4gCOdFoHDmHo4Nn', // Ваш кошелёк
-                        amount: "450000000", // 0.45 TON в наноTON (строка!)
-                        message: "Покупка в приложении" // Сообщение для транзакции
-                    }
-                ]
-            };
-    
-            try {
-                const result = await tonConnectUI.sendTransaction(transaction);
-                console.log('Транзакция успешна:', result);
-                
-                // Проверяем, что транзакция действительно прошла
-                if (result && result.boc) {
-                    markAsPurchased();
-                    yourFunctionAfterPayment();
-                } else {
-                    throw new Error("Транзакция не подтверждена");
-                }
-            } catch (error) {
-                console.error("Ошибка при оплате:", error);
-                
-                if (error?.message?.includes('User rejected')) {
-                    alert('Вы отменили транзакцию');
-                } else {
-                    alert('Произошла ошибка: ' + (error?.message || 'Неизвестная ошибка'));
-                }
-            } finally {
-                isProcessingTransaction = false;
-                if (!document.getElementById('BtnClaimSkin2ID').innerHTML.includes('Куплено')) {
-                    updatePaymentButton();
-                }
-            }
-        }
-    
-        // Помечаем кнопку как купленную
-        function markAsPurchased() {
-            updatePaymentButton(true);
-            
-            // Сохраняем в localStorage, чтобы статус сохранялся при обновлении
-            localStorage.setItem('purchased', 'true');
-        }
-    
-        // Функция после успешной оплаты
-        function yourFunctionAfterPayment() {
-            console.log("Оплата прошла успешно!");
-            // Здесь можно добавить дополнительную логику
-        }
-    
-        // Подписка на изменения состояния подключения кошелька
-        tonConnectUI.onStatusChange((wallet) => {
-            connectedWallet = wallet;
-            
-            // Проверяем статус покупки при подключении кошелька
-            if (localStorage.getItem('purchased') === 'true') {
-                updatePaymentButton(true);
-            } else {
-                updatePaymentButton();
-            }
-            
-            if (wallet) {
-                console.log("Кошелёк подключен:", wallet);
-            } else {
-                console.log("Кошелёк отключен");
-            }
-        });
-    
-        // Инициализация при загрузке страницы
-        document.addEventListener('DOMContentLoaded', () => {
-            // Проверяем статус покупки
-            if (localStorage.getItem('purchased') === 'true') {
-                updatePaymentButton(true);
-                return;
-            }
-            
-            // Проверяем, есть ли уже подключенный кошелёк
-            tonConnectUI.connectionRestored.then(() => {
-                connectedWallet = tonConnectUI.wallet;
-                updatePaymentButton();
-            });
-    
-            // Назначаем обработчик клика на кнопку оплаты
-            document.getElementById('BtnClaimSkin2ID').addEventListener('click', sendPayment);
-        });
-    </script>
     <script src="script.js"></script>
 </body>
 </html>
