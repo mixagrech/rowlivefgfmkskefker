@@ -808,3 +808,173 @@ buttonPriseUp.addEventListener('click', () => {
 });
 
 //attention sign in marketplace
+
+
+
+
+
+
+
+
+
+
+
+//Buying a skin for TON
+
+const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+    manifestUrl: 'https://mixagrech.github.io/rowlivefgfmkskefker/tonconnect-manifest.json',
+    buttonRootId: 'ton-connect'
+});
+
+
+tonConnectUI.uiOptions = {
+    twaReturnUrl: 'https://t.me/rowlivebot'
+};
+
+
+let connectedWallet = null;
+let isProcessingTransaction = false;
+
+// Функция для обновления состояния кнопки оплаты
+function updatePaymentButton(isPurchased = false) {
+    const btn1 = document.getElementById('BtnClaimSkin2ID');
+    
+    if (isPurchased) {
+        btn1.innerHTML = '<p>Куплено</p>';
+        btn1.style.background = 'linear-gradient(90deg, #009D22 0%, #272727 100.48%)';
+        btn1.style.pointerEvents = 'none';
+        return;
+    }
+    
+    if (connectedWallet) {
+        btn1.innerHTML = isProcessingTransaction 
+            ? '<p>Обработка...</p>' 
+            : '<p>0,45 <b>TON</b></p>';
+        btn1.style.pointerEvents = isProcessingTransaction ? 'none' : 'auto';
+    } else {
+        btn1.innerHTML = '<p style="font-size: 0.7rem;">Connect <b style="font-size: 0.8rem; font-weight: 500;">TON</b> wallet</p>';
+        btn1.style.pointerEvents = 'none';
+    }
+}
+
+// Функция для отправки транзакции
+async function sendPayment() {
+    if (!connectedWallet || isProcessingTransaction) return;
+    
+    isProcessingTransaction = true;
+    updatePaymentButton();
+
+    const transaction = {
+        validUntil: Math.floor(Date.now() / 1000) + 300,
+        messages: [
+            {
+                address: 'UQDDEEbNMPfVwpL2q1zi5oAbChXADLuZp4gCOdFoHDmHo4Nn',
+                amount: "450000000", // 0.45 TON в наноTON (строка!)
+                message: "Покупка в приложении" // Сообщение для транзакции
+            }
+        ]
+    };
+
+    try {
+        const result = await tonConnectUI.sendTransaction(transaction);
+        console.log('Транзакция успешна:', result);
+        
+        // Проверяем, что транзакция действительно прошла
+        if (result && result.boc) {
+            markAsPurchased();
+            yourFunctionAfterPayment();
+        } else {
+            throw new Error("Транзакция не подтверждена");
+        }
+    } catch (error) {
+        console.error("Ошибка при оплате:", error);
+        
+        if (error?.message?.includes('User rejected')) {
+            console.log('Вы отменили транзакцию');
+        } else {
+            console.log('Произошла ошибка: ' + (error?.message || 'Неизвестная ошибка'));
+        }
+    } finally {
+        isProcessingTransaction = false;
+        if (!document.getElementById('BtnClaimSkin2ID').innerHTML.includes('Куплено')) {
+            updatePaymentButton();
+        }
+    }
+}
+
+// Помечаем кнопку как купленную
+function markAsPurchased() {
+    updatePaymentButton(true);
+    
+    // Сохраняем в localStorage, чтобы статус сохранялся при обновлении
+    localStorage.setItem2('purchased', 'true');
+}
+
+// Функция после успешной оплаты
+function yourFunctionAfterPayment() {
+    console.log("Оплата прошла успешно!");
+    
+
+    
+
+}
+
+// Подписка на изменения состояния подключения кошелька
+tonConnectUI.onStatusChange((wallet) => {
+    connectedWallet = wallet;
+    
+    // Проверяем статус покупки при подключении кошелька
+    if (localStorage.getItem('purchased') === 'true') {
+        updatePaymentButton(true);
+    } else {
+        updatePaymentButton();
+    }
+    
+    if (wallet) {
+        console.log("Кошелёк подключен:", wallet);
+    } else {
+        console.log("Кошелёк отключен");
+    }
+});
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    // Проверяем статус покупки
+    if (localStorage.getItem('purchased') === 'true') {
+        updatePaymentButton(true);
+        return;
+    }
+    
+    // Проверяем, есть ли уже подключенный кошелёк
+    tonConnectUI.connectionRestored.then(() => {
+        connectedWallet = tonConnectUI.wallet;
+        updatePaymentButton();
+    });
+
+    // Назначаем обработчик клика на кнопку оплаты
+    document.getElementById('BtnClaimSkin2ID').addEventListener('click', sendPayment);
+});
+
+
+//Skins Equipment
+
+const BtnClaimSkin1 = document.querySelector('.BtnClaimSkin1');
+let isSelected = false;
+
+BtnClaimSkin1.addEventListener('click', () => {
+    isSelected = !isSelected;
+    
+    // Переключаем класс и текст
+    BtnClaimSkin1.classList.toggle('selected', isSelected);
+    BtnClaimSkin1.querySelector('p').textContent = isSelected ? 'Selected' : 'Unselected';
+
+    // Находим изображение (исправленный селектор)
+    const youeScinSelectedStandart1 = document.querySelector('.youeScinSelectedStandart1');
+    
+    // Управляем видимостью изображения
+    if (youeScinSelectedStandart1) {
+        youeScinSelectedStandart1.style.display = isSelected ? 'block' : 'none';
+        document.querySelector('.TextThenUnselectedSkin').style.display = !isSelected ? 'block' : 'none';
+        document.querySelector('.SkinLabelName1').style.display = isSelected ? 'block' : 'none';
+    }
+});
