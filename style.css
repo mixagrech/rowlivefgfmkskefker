@@ -1080,23 +1080,45 @@ body{
     top: 40%;
     z-index: 5;
 }
+
 .BtnClaimSkin1 {
     position: absolute;
-    background: linear-gradient(to right, #A40000, #272727);
-    border-radius: 10px;
     width: 36.8%;
     height: 30px;
     left: 6.4%;
     top: 260px;
     z-index: 4;
+    border-radius: 10px;
+    background: linear-gradient(90.01deg, #494949 0.01%, #151515 171.13%);
 }
-.BtnClaimSkin1 p{
+.BtnClaimSkin1 p {
     text-align: center;
     font-size: 0.8rem;
     font-weight: 400;
     color: #FFFFFF;
     margin-top: 6%;
+    transition: transform 0.1s;
 }
+.BtnClaimSkin1:active {
+    transform: scale(0.9); 
+}
+.BtnClaimSkin1.selected {
+    background: linear-gradient(to right, #A40000, #272727);
+}
+
+.SkinCentredDivYou {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.TextThenUnselectedSkin {
+    position: absolute;
+    color: #FFFFFF;
+    mix-blend-mode: difference;
+    z-index: 10;
+    top: 97%;
+}
+
 .ScinSelectContent {
     display: inline-block;
     width: 70%;
@@ -1138,6 +1160,7 @@ body{
     left: 15%;
     top: 82%;
     z-index: 6;
+    display: none;
 }
 
 .BackPanelSkin2 {
