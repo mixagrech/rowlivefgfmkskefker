@@ -1081,30 +1081,146 @@ body{
     z-index: 5;
 }
 
-.BtnClaimSkin1 {
+
+.BtnClaimSkin1, .BtnClaimSkin2 {
     position: absolute;
     width: 36.8%;
     height: 30px;
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none;
+    z-index: 4;
+    transition: transform 0.1s ease, background-image 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.BtnClaimSkin1 {
     left: 6.4%;
     top: 260px;
-    z-index: 4;
-    border-radius: 10px;
-    background: linear-gradient(90.01deg, #494949 0.01%, #151515 171.13%);
+    background-image: linear-gradient(90deg, #494949 0.01%, #151515 171.13%);
 }
-.BtnClaimSkin1 p {
+
+.BtnClaimSkin2 {
+    left: 48.5%;
+    top: 260px;
+    background-image: linear-gradient(90deg, #0088CC 0%, #272727 100%);
+}
+
+
+.BtnClaimSkin1.selected, .BtnClaimSkin2.selected {
+    background-image: linear-gradient(to right, #A40000, #272727) !important;
+}
+
+
+.BtnClaimSkin1 p, .BtnClaimSkin2 p {
     text-align: center;
     font-size: 0.8rem;
-    font-weight: 400;
     color: #FFFFFF;
-    margin-top: 6%;
-    transition: transform 0.1s;
+    margin: 0;
+    pointer-events: none;
 }
-.BtnClaimSkin1:active {
-    transform: scale(0.9); 
+
+.youeScinSelectedStandart1, .youeScinSelectedStandart2 {
+    position: absolute;
+    width: 63.5%;
+    height: 33%;
+    left: 15%;
+    top: 82%;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
-.BtnClaimSkin1.selected {
-    background: linear-gradient(to right, #A40000, #272727);
+
+.youeScinSelectedStandart1 {
+    position: absolute;
+    width: 61.5%;
+    height: 31%;
+    left: 15%;
+    top: 82%;
+    z-index: 6;
+    display: block;
+    opacity: 1;
+    visibility: visible;
 }
+
+.youeScinSelectedStandart2 {
+    z-index: 5;
+    display: block;
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Анимации нажатия для десктопов */
+.BtnClaimSkin1:active, .BtnClaimSkin2:active {
+    transform: scale(0.95);
+}
+
+/* Анимации для мобильных устройств */
+@media (hover: none) {
+    .BtnClaimSkin1, .BtnClaimSkin2 {
+        transition: transform 0.1s ease, background-image 0.3s ease;
+    }
+    
+    .BtnClaimSkin1:active, .BtnClaimSkin2:active {
+        transform: scale(0.95);
+    }
+}
+
+.BtnClaimSkin1, .BtnClaimSkin2 {
+    position: absolute;
+    width: 36.8%;
+    height: 30px;
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none;
+    z-index: 4;
+    transition: transform 0.1s ease, background-image 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.BtnClaimSkin1 {
+    left: 6.4%;
+    top: 260px;
+}
+
+.BtnClaimSkin2 {
+    left: 48.5%;
+    top: 260px;
+}
+
+.BtnClaimSkin1 p, .BtnClaimSkin2 p {
+    text-align: center;
+    color: #FFFFFF;
+    margin: 0;
+    pointer-events: none;
+}
+
+.youeScinSelectedStandart2 {
+    position: absolute;
+    width: 63.5%;
+    height: 33%;
+    left: 15%;
+    top: 82%;
+    z-index: 5;
+}
+
+.youeScinSelectedStandart2 {
+    display: none;
+}
+
+.TextThenUnselectedSkin {
+    position: absolute;
+    left: 15%;
+    top: 82%;
+    z-index: 4;
+}
+
+
 
 .SkinCentredDivYou {
     display: flex;
@@ -1153,15 +1269,7 @@ body{
 .SkinLabelName1 p {
     padding-top: 5.5%;
 }
-.youeScinSelectedStandart1 {
-    position: absolute;
-    width: 63.5%;
-    height: 33%;
-    left: 15%;
-    top: 82%;
-    z-index: 6;
-    display: none;
-}
+
 
 .BackPanelSkin2 {
     position: absolute;
@@ -1199,23 +1307,11 @@ body{
     top: 38%;
     z-index: 5;
 }
-.BtnClaimSkin2 {
-    position: absolute;
-    background: linear-gradient(to right, #0088CC, #272727);
-    border-radius: 10px;
-    width: 36.8%;
-    height: 30px;
-    left: 48.5%;
-    top: 260px;
-    z-index: 4;
-}
-.BtnClaimSkin2 p{
-    text-align: center;
-    font-size: 0.8rem;
-    font-weight: 400;
-    color: #FFFFFF;
-    margin-top: 6%;
-}
+
+
+
+
+
 .HeadTextYourRank {
     position: absolute;
     font-size: 2.2rem;
