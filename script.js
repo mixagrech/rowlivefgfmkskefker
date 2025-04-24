@@ -826,34 +826,128 @@ const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
     buttonRootId: 'ton-connect'
 });
 
-
 tonConnectUI.uiOptions = {
     twaReturnUrl: 'https://t.me/rowlivebot'
 };
 
-
 let connectedWallet = null;
 let isProcessingTransaction = false;
+let isSelected1 = true; // Первый скин выбран по умолчанию
+let isSelected2 = false;
 
-// Функция для обновления состояния кнопки оплаты
-function updatePaymentButton(isPurchased = false) {
-    const btn1 = document.getElementById('BtnClaimSkin2ID');
-    
-    if (isPurchased) {
-        btn1.innerHTML = '<p>Куплено</p>';
-        btn1.style.background = 'linear-gradient(90deg, #009D22 0%, #272727 100.48%)';
-        btn1.style.pointerEvents = 'none';
-        return;
+// Функция для безопасного получения элементов
+function getElement(selector) {
+    const el = document.querySelector(selector);
+    if (!el) console.error(`Элемент не найден: ${selector}`);
+    return el;
+}
+
+// Функция для принудительной загрузки изображений
+function loadSkinImages() {
+    try {
+        const skin1 = getElement('.youeScinSelectedStandart1');
+        const skin2 = getElement('.youeScinSelectedStandart2');
+        
+        if (skin1 && isSelected1) {
+            skin1.src = '';
+            skin1.src = 'Skins/StandartSkin1.svg?' + Date.now();
+            console.log('StandartSkin1 перезагружен');
+        }
+        
+        if (skin2 && isSelected2) {
+            skin2.src = '';
+            skin2.src = 'Skins/GoodManSkin1.svg?' + Date.now();
+            console.log('GoodManSkin1 перезагружен');
+        }
+    } catch (e) {
+        console.error('Ошибка при загрузке изображений:', e);
     }
-    
-    if (connectedWallet) {
-        btn1.innerHTML = isProcessingTransaction 
-            ? '<p>Обработка...</p>' 
-            : '<p>0,45 <b>TON</b></p>';
-        btn1.style.pointerEvents = isProcessingTransaction ? 'none' : 'auto';
-    } else {
-        btn1.innerHTML = '<p style="font-size: 0.7rem;">Connect <b style="font-size: 0.8rem; font-weight: 500;">TON</b> wallet</p>';
-        btn1.style.pointerEvents = 'none';
+}
+
+// Обновление отображения скинов
+function updateSkinDisplay() {
+    try {
+        const skin1 = getElement('.youeScinSelectedStandart1');
+        const skin2 = getElement('.youeScinSelectedStandart2');
+        
+        if (skin1) {
+            skin1.style.display = isSelected1 ? 'block' : 'none';
+            if (isSelected1) {
+                if (!skin1.src.includes('StandartSkin1.svg')) {
+                    skin1.src = 'Skins/StandartSkin1.svg';
+                }
+                skin1.onerror = () => {
+                    console.error('Ошибка загрузки StandartSkin1');
+                    loadSkinImages();
+                };
+            }
+        }
+        
+        if (skin2) {
+            skin2.style.display = isSelected2 ? 'block' : 'none';
+            if (isSelected2) {
+                if (!skin2.src.includes('GoodManSkin1.svg')) {
+                    skin2.src = 'Skins/GoodManSkin1.svg';
+                }
+                skin2.onerror = () => {
+                    console.error('Ошибка загрузки GoodManSkin1');
+                    loadSkinImages();
+                };
+            }
+        }
+        
+        // Дополнительная проверка через 500мс
+        setTimeout(() => {
+            if (isSelected1 && skin1 && !skin1.complete) {
+                loadSkinImages();
+            }
+            if (isSelected2 && skin2 && !skin2.complete) {
+                loadSkinImages();
+            }
+        }, 500);
+    } catch (e) {
+        console.error('Ошибка в updateSkinDisplay:', e);
+    }
+}
+
+// Функция для обновления состояния кнопок
+function updateSkinButtons() {
+    try {
+        const btn1 = getElement('.BtnClaimSkin1');
+        const btn2 = getElement('.BtnClaimSkin2');
+        
+        if (btn1) {
+            const textEl = btn1.querySelector('p') || document.createElement('p');
+            textEl.textContent = isSelected1 ? 'Selected' : 'Unselected';
+            btn1.innerHTML = '';
+            btn1.appendChild(textEl);
+            btn1.style.background = isSelected1 
+                ? 'linear-gradient(to right, #A40000, #272727)' 
+                : 'linear-gradient(90deg, #494949 0.01%, #151515 171.13%)';
+        }
+        
+        if (btn2) {
+            const textEl = btn2.querySelector('p') || document.createElement('p');
+            if (!connectedWallet) {
+                textEl.innerHTML = '<span style="font-size: 0.7rem;">Connect <b style="font-size: 0.8rem; font-weight: 500;">TON</b> wallet</span>';
+                btn2.style.background = 'linear-gradient(90deg, #0088CC 0%, #272727 100%)';
+                btn2.style.pointerEvents = 'none';
+            } else {
+                const isPurchased = localStorage.getItem('skin2Purchased') === 'true';
+                textEl.textContent = isSelected2 
+                    ? 'Selected' 
+                    : (isPurchased ? 'Unselected' : '0,45 TON');
+                btn2.style.background = isSelected2 
+                    ? 'linear-gradient(to right, #A40000, #272727)' 
+                    : (isPurchased ? 'linear-gradient(90deg, #494949 0.01%, #151515 171.13%)' 
+                                  : 'linear-gradient(90deg, #0088CC 0%, #272727 100%)');
+                btn2.style.pointerEvents = 'auto';
+            }
+            btn2.innerHTML = '';
+            btn2.appendChild(textEl);
+        }
+    } catch (e) {
+        console.error('Ошибка в updateSkinButtons:', e);
     }
 }
 
@@ -862,119 +956,157 @@ async function sendPayment() {
     if (!connectedWallet || isProcessingTransaction) return;
     
     isProcessingTransaction = true;
-    updatePaymentButton();
-
-    const transaction = {
-        validUntil: Math.floor(Date.now() / 1000) + 300,
-        messages: [
-            {
-                address: 'UQDDEEbNMPfVwpL2q1zi5oAbChXADLuZp4gCOdFoHDmHo4Nn',
-                amount: "450000000", // 0.45 TON в наноTON (строка!)
-                message: "Покупка в приложении" // Сообщение для транзакции
-            }
-        ]
-    };
+    updateSkinButtons();
 
     try {
+        const transaction = {
+            validUntil: Math.floor(Date.now() / 1000) + 300,
+            messages: [
+                {
+                    address: 'UQDDEEbNMPfVwpL2q1zi5oAbChXADLuZp4gCOdFoHDmHo4Nn',
+                    amount: "0",
+                    message: "Покупка скина в приложении"
+                }
+            ]
+        };
+
         const result = await tonConnectUI.sendTransaction(transaction);
-        console.log('Транзакция успешна:', result);
-        
-        // Проверяем, что транзакция действительно прошла
-        if (result && result.boc) {
-            markAsPurchased();
-            yourFunctionAfterPayment();
-        } else {
-            throw new Error("Транзакция не подтверждена");
+        if (result?.boc) {
+            localStorage.setItem('skin2Purchased', 'true');
+            selectSkin2();
         }
     } catch (error) {
         console.error("Ошибка при оплате:", error);
-        
-        if (error?.message?.includes('User rejected')) {
-            console.log('Вы отменили транзакцию');
-        } else {
-            console.log('Произошла ошибка: ' + (error?.message || 'Неизвестная ошибка'));
-        }
     } finally {
         isProcessingTransaction = false;
-        if (!document.getElementById('BtnClaimSkin2ID').innerHTML.includes('Куплено')) {
-            updatePaymentButton();
-        }
+        updateSkinButtons();
     }
 }
 
-// Помечаем кнопку как купленную
-function markAsPurchased() {
-    updatePaymentButton(true);
-    
-    // Сохраняем в localStorage, чтобы статус сохранялся при обновлении
-    localStorage.setItem2('purchased', 'true');
-}
-
-// Функция после успешной оплаты
-function yourFunctionAfterPayment() {
-    console.log("Оплата прошла успешно!");
-    
-
-    
-
-}
-
-// Подписка на изменения состояния подключения кошелька
-tonConnectUI.onStatusChange((wallet) => {
-    connectedWallet = wallet;
-    
-    // Проверяем статус покупки при подключении кошелька
-    if (localStorage.getItem('purchased') === 'true') {
-        updatePaymentButton(true);
-    } else {
-        updatePaymentButton();
-    }
-    
-    if (wallet) {
-        console.log("Кошелёк подключен:", wallet);
-    } else {
-        console.log("Кошелёк отключен");
-    }
-});
-
-// Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
-    // Проверяем статус покупки
-    if (localStorage.getItem('purchased') === 'true') {
-        updatePaymentButton(true);
+// Выбрать первый скин
+function selectSkin1() {
+    if (!connectedWallet) {
+        console.log('Пожалуйста, подключите кошелек для выбора скина');
         return;
     }
     
-    // Проверяем, есть ли уже подключенный кошелёк
+    isSelected1 = true;
+    isSelected2 = false;
+    updateSkinButtons();
+    updateSkinDisplay();
+    localStorage.setItem('lastSelectedSkin', 'skin1');
+}
+
+// Выбрать второй скин
+function selectSkin2() {
+    if (!connectedWallet) {
+        console.log('Пожалуйста, подключите кошелек для выбора скина');
+        return;
+    }
+    
+    if (localStorage.getItem('skin2Purchased') !== 'true') return;
+    
+    isSelected2 = true;
+    isSelected1 = false;
+    updateSkinButtons();
+    updateSkinDisplay();
+    localStorage.setItem('lastSelectedSkin', 'skin2');
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    // Создаем контейнер для скинов если его нет
+    let skinContainer = document.querySelector('.skin-images-container');
+    if (!skinContainer) {
+        skinContainer = document.createElement('div');
+        skinContainer.className = 'skin-images-container';
+        skinContainer.style.position = 'relative';
+        document.body.appendChild(skinContainer);
+    }
+
+    // Создаем элементы изображений если их нет
+    if (!document.querySelector('.youeScinSelectedStandart1')) {
+        const img1 = document.createElement('img');
+        img1.className = 'youeScinSelectedStandart1';
+        img1.style.position = 'absolute';
+        img1.style.width = '63.5%';
+        img1.style.height = '33%';
+        img1.style.left = '15%';
+        img1.style.top = '82%';
+        img1.style.zIndex = '6';
+        img1.style.display = 'block';
+        img1.alt = 'Standart Skin';
+        img1.src = 'Skins/StandartSkin1.svg';
+        skinContainer.appendChild(img1);
+    }
+
+    if (!document.querySelector('.youeScinSelectedStandart2')) {
+        const img2 = document.createElement('img');
+        img2.className = 'youeScinSelectedStandart2';
+        img2.style.position = 'absolute';
+        img2.style.width = '63.5%';
+        img2.style.height = '33%';
+        img2.style.left = '15%';
+        img2.style.top = '82%';
+        img2.style.zIndex = '5';
+        img2.style.display = 'none';
+        img2.alt = 'GoodMan Skin';
+        img2.src = 'Skins/GoodManSkin1.svg';
+        skinContainer.appendChild(img2);
+    }
+
+    // Инициализация кнопок
+    const btn1 = document.querySelector('.BtnClaimSkin1');
+    const btn2 = document.querySelector('.BtnClaimSkin2');
+    
+    if (btn1) {
+        btn1.addEventListener('click', selectSkin1);
+        // Устанавливаем первый скин выбранным по умолчанию
+        const p = btn1.querySelector('p') || document.createElement('p');
+        p.textContent = 'Selected';
+        btn1.innerHTML = '';
+        btn1.appendChild(p);
+        btn1.style.background = 'linear-gradient(to right, #A40000, #272727)';
+    }
+    
+    if (btn2) {
+        btn2.addEventListener('click', () => {
+            if (!connectedWallet) {
+                console.log('Пожалуйста, подключите кошелек');
+                return;
+            }
+            
+            if (localStorage.getItem('skin2Purchased') === 'true') {
+                selectSkin2();
+            } else {
+                sendPayment();
+            }
+        });
+    }
+    
+    // Восстановление состояния
+    updateSkinButtons();
+    updateSkinDisplay();
+    
+    // Проверка подключения кошелька
+    tonConnectUI.onStatusChange((wallet) => {
+        connectedWallet = wallet;
+        updateSkinButtons();
+        updateSkinDisplay();
+    });
+    
     tonConnectUI.connectionRestored.then(() => {
         connectedWallet = tonConnectUI.wallet;
-        updatePaymentButton();
+        updateSkinButtons();
     });
-
-    // Назначаем обработчик клика на кнопку оплаты
-    document.getElementById('BtnClaimSkin2ID').addEventListener('click', sendPayment);
-});
-
-
-//Skins Equipment
-
-const BtnClaimSkin1 = document.querySelector('.BtnClaimSkin1');
-let isSelected = false;
-
-BtnClaimSkin1.addEventListener('click', () => {
-    isSelected = !isSelected;
     
-    // Переключаем класс и текст
-    BtnClaimSkin1.classList.toggle('selected', isSelected);
-    BtnClaimSkin1.querySelector('p').textContent = isSelected ? 'Selected' : 'Unselected';
-
-    // Находим изображение (исправленный селектор)
-    const youeScinSelectedStandart1 = document.querySelector('.youeScinSelectedStandart1');
-    
-    // Управляем видимостью изображения
-    if (youeScinSelectedStandart1) {
-        youeScinSelectedStandart1.style.display = isSelected ? 'block' : 'none';
-        document.querySelector('.TextThenUnselectedSkin').style.display = !isSelected ? 'block' : 'none';
-        document.querySelector('.SkinLabelName1').style.display = isSelected ? 'block' : 'none';
-    }
+    // Отслеживание видимости страницы для обработки возврата из кошелька
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            setTimeout(() => {
+                loadSkinImages();
+                updateSkinDisplay();
+            }, 300);
+        }
+    });
 });
