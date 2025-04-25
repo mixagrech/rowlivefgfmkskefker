@@ -809,17 +809,17 @@ buttonPriseUp.addEventListener('click', () => {
 
 //attention sign in marketplace
 
+const AttentionButtonNFTMark = document.querySelector('.AttentionButtonNFTMark');
+let AttentionTextOnClick = document.querySelector('.AttentionTextOnClick').style.display = 'none';
 
+AttentionButtonNFTMark.addEventListener('click', () => {
+    document.querySelector('.AttentionTextOnClick').style.display = 'block';
+});
+document.querySelector('.PanelOnBackAttention').addEventListener('click', () => {
+    document.querySelector('.AttentionTextOnClick').style.display = 'none';
+});
 
-
-
-
-
-
-
-
-
-//Buying a skin for TON
+//Buying a skin for TON and equeped 
 
 const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
     manifestUrl: 'https://mixagrech.github.io/rowlivefgfmkskefker/tonconnect-manifest.json',
@@ -1110,3 +1110,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+
+
+// Marketplase MY Lots paje
+
+const MyLotsNFTMArket = document.querySelector('.MyLotsNFTMArket');
+const AllLotsNFTMArket = document.querySelector('.AllLotsNFTMArket'); 
+document.querySelector('.MyLotsMenu').style.display = 'none';
+
+MyLotsNFTMArket.addEventListener('click', () => {
+    MyLotsNFTMArket.style.color = '#FFFFFF';
+    AllLotsNFTMArket.style.color = '#515151';
+    document.querySelector('.AllLotsMenu').style.display = 'none';
+    document.querySelector('.MyLotsMenu').style.display = 'block';
+});
+
+AllLotsNFTMArket.addEventListener('click', () => {
+    MyLotsNFTMArket.style.color = '#515151';
+    AllLotsNFTMArket.style.color = '#FFFFFF';
+    document.querySelector('.AllLotsMenu').style.display = 'block';
+    document.querySelector('.MyLotsMenu').style.display = 'none';
+});
+
+// Widthrow NFT skin
