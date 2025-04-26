@@ -1134,3 +1134,114 @@ AllLotsNFTMArket.addEventListener('click', () => {
 });
 
 // Widthrow NFT skin
+
+
+// Конфигурация NFT коллекции
+const NFT_COLLECTION_ADDRESS = 'EQAG1zMLkCFOCl8lJSCiPS7nXKoookxzN3-IuPshaG5QeNqd';
+const MINT_PRICE = '10000000'; // 0.01 TON
+const GAS_AMOUNT = '80000000'; // 0.08 TON
+const WITHDRAWAL_KEY = 'nft_withdrawn_v2'; // Ключ для хранения статуса вывода
+
+// Инициализация TonWeb
+const tonweb = new TonWeb();
+
+// Обработчик кнопки Withdraw
+document.querySelector('.PriceBtnMyLotsMarket').addEventListener('click', async function() {
+    const btn = this;
+    try {
+        btn.disabled = true;
+        btn.innerHTML = '<p><b style="font-size: 0.9rem; font-weight: 500; color: #FFFFFF;">Processing...</b></p>';
+         
+        await withdrawNFT();
+        console.log('NFT успешно создан и отправлен на ваш кошелек!');
+    } catch (error) {
+        console.error('Withdraw NFT error:', error);
+        console.log(`Ошибка: ${error.message}`);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = hasWithdrawn() ? '<p><b style="font-size: 0.9rem; font-weight: 500; color: #FFFFFF;">Already Claimed</b></p>' : '<p><b style="font-size: 0.9rem; font-weight: 500; color: #FFFFFF;">Withdraw</b></p>';
+    }
+});
+
+// Проверка, был ли уже вывод
+function hasWithdrawn() {
+    return localStorage.getItem(WITHDRAWAL_KEY) === 'true';
+}
+
+// Отметить вывод как выполненный
+function markAsWithdrawn() {
+    localStorage.setItem(WITHDRAWAL_KEY, 'true');
+}
+
+async function withdrawNFT() {
+    if (!connectedWallet) {
+        throw new Error('Пожалуйста, подключите кошелек TON');
+    }
+
+    if (hasWithdrawn()) {
+        throw new Error('Вы уже получили свой NFT');
+    }
+
+    // Упрощенные метаданные (минимум данных)
+    const metadata = {
+        n: isSelected1 ? "Standard" : "Premium", // name
+        i: isSelected1 ? "skin1" : "skin2" // image id вместо полного URL
+    };
+
+    const transaction = {
+        validUntil: Math.floor(Date.now() / 1000) + 600, // 10 минут
+        messages: [{
+            address: NFT_COLLECTION_ADDRESS,
+            amount: (BigInt(MINT_PRICE) + BigInt(GAS_AMOUNT)).toString(),
+            payload: await prepareMintPayload(connectedWallet.account.address, metadata)
+        }]
+    };
+
+    const result = await tonConnectUI.sendTransaction(transaction);
+    if (!result?.boc) {
+        throw new Error('Транзакция не была отправлена');
+    }
+
+    markAsWithdrawn();
+}
+
+async function prepareMintPayload(ownerAddress, metadata) {
+    // 1. Создаем ячейку для контента (очень компактную)
+    const contentCell = new tonweb.boc.Cell();
+    contentCell.bits.writeUint(0, 8); // on-chain контент
+    
+    // Записываем метаданные по частям
+    const jsonStr = JSON.stringify(metadata);
+    for (let i = 0; i < jsonStr.length; i += 50) { // Очень маленькие куски
+        const chunk = jsonStr.slice(i, i + 50);
+        contentCell.bits.writeString(chunk);
+    }
+
+    // 2. Создаем ячейку для операции mint
+    const mintCell = new tonweb.boc.Cell();
+    mintCell.bits.writeUint(0x5fcc3d14, 32); // opcode mint
+    mintCell.bits.writeUint(0, 64); // query_id
+    
+    // 3. Записываем адрес владельца (оптимизированно)
+    const address = new tonweb.Address(ownerAddress);
+    const addressCell = new tonweb.boc.Cell();
+    addressCell.bits.writeUint(0x100, 9); // addr_std$10
+    addressCell.bits.writeInt(address.wc, 8);
+    addressCell.bits.writeBytes(address.hashPart);
+    
+    // 4. Собираем все вместе
+    mintCell.refs.push(addressCell);
+    mintCell.refs.push(contentCell);
+    
+    // 5. Сериализуем в base64
+    return (await mintCell.toBoc()).toString('base64');
+}
+
+// При загрузке страницы обновляем UI
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.querySelector('.PriceBtnMyLotsMarket');
+    if (btn && hasWithdrawn()) {
+        btn.disabled = true;
+        btn.innerHTML = '<p><b>Already Claimed</b></p>';
+    }
+});
