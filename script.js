@@ -1138,156 +1138,117 @@ AllLotsNFTMArket.addEventListener('click', () => {
   
 
 
-
-
-
-// 1. Конфигурация с увеличенными лимитами и таймаутами
+// 1. Конфиг с увеличенными лимитами
 const NFT_CONFIG = {
     collectionAddress: 'EQAG1zMLkCFOCl8lJSCiPS7nXKoookxzN3-IuPshaG5QeNqd',
-    requiredAmount: '50000000', // 0.25 TON (с большим запасом)
-    feeAmount: '100000000', // 0.1 TON комиссия
-    withdrawalKey: 'row_nft_telegram_final',
-    timeout: 180000, // 3 минуты
-    retryCount: 3 // Количество попыток
+    requiredAmount: '300000000', // 0.3 TON (с запасом)
+    feeAmount: '50000000', // 0.05 TON комиссия
+    withdrawalKey: 'row_nft_direct_link',
+    timeout: 120000 // 2 минуты
 };
 
-// 2. Улучшенный метод отправки транзакции
-async function sendTransactionWithRetry(transaction, attempt = 1) {
-    try {
-        const result = await Promise.race([
-            tonConnectUI.sendTransaction(transaction, {
-                returnStrategy: 'back',
-                forceReturnStrategy: true,
-                ignoreErrors: false
-            }),
-            new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Transaction timeout')), NFT_CONFIG.timeout)
-            )
-        ]);
-
-        if (!result?.boc) {
-            throw new Error('No BOC received');
-        }
-        return result;
-
-    } catch (error) {
-        if (attempt >= NFT_CONFIG.retryCount) throw error;
-        
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Экспоненциальная задержка
-        return sendTransactionWithRetry(transaction, attempt + 1);
-    }
-}
-
-// 3. Полный процесс mint с улучшенной обработкой ошибок
-async function mintNFT() {
-    const mainButton = Telegram.WebApp.MainButton;
-    mainButton.setText('🔄 ИНИЦИАЛИЗАЦИЯ').show().disable();
-
-    try {
-        // Проверка подключения кошелька
-        if (!tonConnectUI.connected) {
-            Telegram.WebApp.showAlert('🔴 Откройте TON кошелек и нажмите "Подключить"');
-            mainButton.setText('ПОДКЛЮЧИТЬ КОШЕЛЕК').enable();
-            return;
-        }
-
-        // Проверка предыдущих попыток
-        if (localStorage.getItem(NFT_CONFIG.withdrawalKey)) {
-            Telegram.WebApp.showAlert('ℹ️ Вы уже получили этот NFT');
-            mainButton.hide();
-            return;
-        }
-
-        // Проверка баланса через TON API
-        mainButton.setText('🔍 ПРОВЕРКА БАЛАНСА');
-        const balance = await fetchBalance(tonConnectUI.account.address);
-        const requiredTotal = BigInt(NFT_CONFIG.requiredAmount) + BigInt(NFT_CONFIG.feeAmount);
-
-        if (balance < requiredTotal) {
-            Telegram.WebApp.showAlert(`⚠️ Недостаточно средств. Требуется: ${TonWeb.utils.fromNano(requiredTotal.toString())} TON`);
-            mainButton.setText('ПОПОЛНИТЬ БАЛАНС').enable();
-            return;
-        }
-
-        // Подготовка транзакции
-        mainButton.setText('✍️ ПОДГОТОВКА ТРАНЗАКЦИИ');
-        const transaction = {
-            validUntil: Math.floor(Date.now() / 1000) + 600, // 10 минут
-            messages: [{
-                address: NFT_CONFIG.collectionAddress,
-                amount: requiredTotal.toString(),
-                payload: await createMintPayload(tonConnectUI.account.address)
-            }]
-        };
-
-        // Отправка с повторами
-        mainButton.setText('🚀 ОТПРАВКА ТРАНЗАКЦИИ');
-        const result = await sendTransactionWithRetry(transaction);
-
-        // Успешное завершение
-        localStorage.setItem(NFT_CONFIG.withdrawalKey, 'true');
-        mainButton.setText('✅ УСПЕШНО!').disable();
-        
-        Telegram.WebApp.showAlert('NFT успешно создан! Закройте это окно и проверьте коллекцию в кошельке', () => {
-            Telegram.WebApp.close();
-        });
-
-    } catch (error) {
-        console.error('Mint error:', error);
-        handleMintError(error, mainButton);
-    }
-}
-
-// 4. Вспомогательные функции
-async function fetchBalance(address) {
-    try {
-        const response = await fetch(`https://tonapi.io/v2/accounts/${address}`);
-        const data = await response.json();
-        return BigInt(data.balance || '0');
-    } catch {
-        return BigInt('0');
-    }
-}
-
-function handleMintError(error, button) {
-    let message = 'Ошибка при создании NFT';
+// 2. Генерация прямого deep-link для Tonkeeper/TON Space
+function generateTonDeepLink(ownerAddress) {
+    const payload = {
+        address: NFT_CONFIG.collectionAddress,
+        amount: NFT_CONFIG.requiredAmount,
+        binPayload: await createMintPayload(ownerAddress),
+        text: "Mint Row NFT"
+    };
     
-    if (error.message.includes('Rejected')) {
-        message = '❌ Транзакция отклонена пользователем';
-    } else if (error.message.includes('timeout')) {
-        message = '⌛ Превышено время ожидания';
-    } else if (error.message.includes('No BOC')) {
-        message = '📭 Транзакция не была подтверждена';
-    }
-
-    button.setText('ПОВТОРИТЬ ПОПЫТКУ').enable();
-    Telegram.WebApp.showAlert(`${message}\n\nРекомендации:\n1. Откройте @wallet заранее\n2. Проверьте интернет-соединение\n3. Увеличьте баланс кошелька\n4. Попробуйте через 2 минуты`);
+    const base64Payload = btoa(JSON.stringify(payload));
+    return `https://app.tonkeeper.com/transfer/${base64Payload}`;
 }
 
-// 5. Инициализация WebApp
+// 3. Альтернативный метод mint через deep-link
+async function mintViaDeepLink() {
+    try {
+        if (!window.Telegram.WebApp.initDataUnsafe.user) {
+            throw new Error('Только для авторизованных пользователей');
+        }
+
+        const userId = Telegram.WebApp.initDataUnsafe.user.id;
+        const storageKey = `${NFT_CONFIG.withdrawalKey}_${userId}`;
+        
+        if (localStorage.getItem(storageKey)) {
+            Telegram.WebApp.showAlert('Вы уже получили NFT');
+            return;
+        }
+
+        const ownerAddress = await getWalletAddress();
+        if (!ownerAddress) {
+            throw new Error('Кошелек не подключен');
+        }
+
+        const deepLink = await generateTonDeepLink(ownerAddress);
+        
+        // Открываем кошелек через deep-link
+        Telegram.WebApp.openLink(deepLink);
+        
+        // Ждем завершения (через localStorage)
+        const checkCompletion = setInterval(() => {
+            if (localStorage.getItem(storageKey)) {
+                clearInterval(checkCompletion);
+                Telegram.WebApp.showAlert('✅ NFT успешно создан!');
+            }
+        }, 5000);
+
+        // Таймаут
+        setTimeout(() => {
+            clearInterval(checkCompletion);
+        }, NFT_CONFIG.timeout);
+
+    } catch (error) {
+        Telegram.WebApp.showAlert(`Ошибка: ${error.message}`);
+    }
+}
+
+// 4. Получение адреса кошелька через TonConnect
+async function getWalletAddress() {
+    if (tonConnectUI.connected) {
+        return tonConnectUI.account.address;
+    }
+    
+    return new Promise((resolve) => {
+        const unsubscribe = tonConnectUI.onStatusChange((wallet) => {
+            if (wallet) {
+                unsubscribe();
+                resolve(wallet.address);
+            }
+        });
+    });
+}
+
+// 5. Инициализация для Telegram WebApp
 Telegram.WebApp.ready();
 Telegram.WebApp.expand();
 
-// Создаем интерфейс для Telegram
+// Создаем кнопку
+const btn = document.createElement('button');
+btn.textContent = '🛠 ПОЛУЧИТЬ NFT (АЛЬТЕРНАТИВА)';
+btn.style.cssText = `
+    background: linear-gradient(90deg, #0088cc, #00aaff);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 10px;
+    font-size: 18px;
+    margin: 20px auto;
+    display: block;
+    cursor: pointer;
+`;
+btn.onclick = mintViaDeepLink;
+
 document.body.innerHTML = `
     <div style="text-align: center; padding: 20px;">
-        <h2>Получить эксклюзивный NFT</h2>
-        <p>Нажмите кнопку ниже чтобы получить ваш NFT</p>
-        <button id="mintBtn" style="background: #0088cc; color: white; 
-                padding: 12px 24px; border-radius: 8px; border: none;
-                font-size: 16px; margin-top: 20px;">
-            ПОЛУЧИТЬ NFT
-        </button>
+        <h2>Альтернативный способ получения NFT</h2>
+        <p>Используйте если основной не работает</p>
     </div>
 `;
+document.body.appendChild(btn);
 
-document.getElementById('mintBtn').addEventListener('click', mintNFT);
-
-// Отслеживаем статус кошелька
-tonConnectUI.onStatusChange((wallet) => {
-    const btn = document.getElementById('mintBtn');
-    if (!btn) return;
-    
-    btn.disabled = !wallet;
-    btn.style.opacity = wallet ? '1' : '0.7';
+// Инициализация TonConnect (минимальная)
+const tonConnectUI = new TonConnectUI({
+    manifestUrl: 'https://your-site.com/tonconnect-manifest.json',
+    buttonRootId: 'ton-connect-hidden'
 });
