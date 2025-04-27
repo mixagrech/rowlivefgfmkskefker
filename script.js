@@ -1135,113 +1135,140 @@ AllLotsNFTMArket.addEventListener('click', () => {
 
 // Widthrow NFT skin
 
+  
 
-// Конфигурация NFT коллекции
-const NFT_COLLECTION_ADDRESS = 'EQAG1zMLkCFOCl8lJSCiPS7nXKoookxzN3-IuPshaG5QeNqd';
-const MINT_PRICE = '10000000'; // 0.01 TON
-const GAS_AMOUNT = '80000000'; // 0.08 TON
-const WITHDRAWAL_KEY = 'nft_withdrawn_v2'; // Ключ для хранения статуса вывода
 
-// Инициализация TonWeb
-const tonweb = new TonWeb();
 
-// Обработчик кнопки Withdraw
-document.querySelector('.PriceBtnMyLotsMarket').addEventListener('click', async function() {
-    const btn = this;
+
+
+// 2. Конфигурация NFT с проверками
+const NFT_CONFIG = {
+    collectionAddress: 'EQAG1zMLkCFOCl8lJSCiPS7nXKoookxzN3-IuPshaG5QeNqd',
+    requiredAmount: '100000000', // 0.1 TON
+    withdrawalKey: 'row_nft_withdrawn_v3',
+    minFee: '20000000' // 0.02 TON минимальная комиссия
+};
+
+// 3. Проверка баланса перед транзакцией
+async function checkBalance() {
     try {
-        btn.disabled = true;
-        btn.innerHTML = '<p><b style="font-size: 0.9rem; font-weight: 500; color: #FFFFFF;">Processing...</b></p>';
-         
-        await withdrawNFT();
-        console.log('NFT успешно создан и отправлен на ваш кошелек!');
+        const provider = new TonWeb.HttpProvider();
+        const wallet = new TonWeb.Wallet(provider, {
+            address: tonConnectUI.account.address
+        });
+        const balance = await wallet.getBalance();
+        const needed = new TonWeb.utils.BN(NFT_CONFIG.requiredAmount).add(new TonWeb.utils.BN(NFT_CONFIG.minFee));
+        return new TonWeb.utils.BN(balance).gte(needed);
     } catch (error) {
-        console.error('Withdraw NFT error:', error);
-        console.log(`Ошибка: ${error.message}`);
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = hasWithdrawn() ? '<p><b style="font-size: 0.9rem; font-weight: 500; color: #FFFFFF;">Already Claimed</b></p>' : '<p><b style="font-size: 0.9rem; font-weight: 500; color: #FFFFFF;">Withdraw</b></p>';
+        console.error('Balance check failed:', error);
+        return false;
     }
-});
-
-// Проверка, был ли уже вывод
-function hasWithdrawn() {
-    return localStorage.getItem(WITHDRAWAL_KEY) === 'true';
 }
 
-// Отметить вывод как выполненный
-function markAsWithdrawn() {
-    localStorage.setItem(WITHDRAWAL_KEY, 'true');
-}
-
-async function withdrawNFT() {
-    if (!connectedWallet) {
-        throw new Error('Пожалуйста, подключите кошелек TON');
-    }
-
-    if (hasWithdrawn()) {
-        throw new Error('Вы уже получили свой NFT');
-    }
-
-    // Упрощенные метаданные (минимум данных)
-    const metadata = {
-        n: isSelected1 ? "Standard" : "Premium", // name
-        i: isSelected1 ? "skin1" : "skin2" // image id вместо полного URL
-    };
-
-    const transaction = {
-        validUntil: Math.floor(Date.now() / 1000) + 600, // 10 минут
-        messages: [{
-            address: NFT_COLLECTION_ADDRESS,
-            amount: (BigInt(MINT_PRICE) + BigInt(GAS_AMOUNT)).toString(),
-            payload: await prepareMintPayload(connectedWallet.account.address, metadata)
-        }]
-    };
-
-    const result = await tonConnectUI.sendTransaction(transaction);
-    if (!result?.boc) {
-        throw new Error('Транзакция не была отправлена');
-    }
-
-    markAsWithdrawn();
-}
-
-async function prepareMintPayload(ownerAddress, metadata) {
-    // 1. Создаем ячейку для контента (очень компактную)
-    const contentCell = new tonweb.boc.Cell();
-    contentCell.bits.writeUint(0, 8); // on-chain контент
-    
-    // Записываем метаданные по частям
-    const jsonStr = JSON.stringify(metadata);
-    for (let i = 0; i < jsonStr.length; i += 50) { // Очень маленькие куски
-        const chunk = jsonStr.slice(i, i + 50);
-        contentCell.bits.writeString(chunk);
-    }
-
-    // 2. Создаем ячейку для операции mint
-    const mintCell = new tonweb.boc.Cell();
-    mintCell.bits.writeUint(0x5fcc3d14, 32); // opcode mint
-    mintCell.bits.writeUint(0, 64); // query_id
-    
-    // 3. Записываем адрес владельца (оптимизированно)
-    const address = new tonweb.Address(ownerAddress);
-    const addressCell = new tonweb.boc.Cell();
-    addressCell.bits.writeUint(0x100, 9); // addr_std$10
-    addressCell.bits.writeInt(address.wc, 8);
-    addressCell.bits.writeBytes(address.hashPart);
-    
-    // 4. Собираем все вместе
-    mintCell.refs.push(addressCell);
-    mintCell.refs.push(contentCell);
-    
-    // 5. Сериализуем в base64
-    return (await mintCell.toBoc()).toString('base64');
-}
-
-// При загрузке страницы обновляем UI
-document.addEventListener('DOMContentLoaded', () => {
+// 4. Улучшенная функция mintNFT
+async function mintNFT() {
     const btn = document.querySelector('.PriceBtnMyLotsMarket');
-    if (btn && hasWithdrawn()) {
+    if (!btn) return;
+
+    try {
+        // Проверка подключения
+        if (!tonConnectUI.connected) {
+            alert('🔴 Пожалуйста, сначала подключите TON кошелек');
+            return;
+        }
+
+        // Проверка предыдущих выводов
+        if (localStorage.getItem(NFT_CONFIG.withdrawalKey)) {
+            alert('ℹ️ Вы уже получили этот NFT ранее');
+            return;
+        }
+
+        // Проверка баланса
+        if (!(await checkBalance())) {
+            alert(`⚠️ Недостаточно средств. Нужно минимум ${TonWeb.utils.fromNano(NFT_CONFIG.requiredAmount + NFT_CONFIG.minFee)} TON`);
+            return;
+        }
+
         btn.disabled = true;
-        btn.innerHTML = '<p><b>Already Claimed</b></p>';
+        btn.textContent = '⏳ Подготовка транзакции...';
+
+        // Добавляем задержку для стабильности
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        const transaction = {
+            validUntil: Math.floor(Date.now() / 1000) + 600, // 10 минут
+            messages: [{
+                address: NFT_CONFIG.collectionAddress,
+                amount: NFT_CONFIG.requiredAmount,
+                payload: await createMintPayload(tonConnectUI.account.address)
+            }]
+        };
+
+        btn.textContent = '🔐 Ожидание подписи...';
+        
+        const result = await tonConnectUI.sendTransaction(transaction, {
+            returnStrategy: 'back',
+            forceReturnStrategy: true,
+            ignoreErrors: false
+        });
+
+        if (!result?.boc) {
+            throw new Error('Транзакция не была подписана');
+        }
+
+        // Дополнительная проверка через 5 секунд
+        setTimeout(async () => {
+            try {
+                const provider = new TonWeb.HttpProvider();
+                const tx = await provider.getTransactions(NFT_CONFIG.collectionAddress, 1);
+                if (tx.length > 0) {
+                    localStorage.setItem(NFT_CONFIG.withdrawalKey, 'true');
+                    alert('✅ NFT успешно создан! Проверьте коллекцию в кошельке');
+                }
+            } catch (e) {
+                console.log('Фоновая проверка не удалась:', e);
+            }
+        }, 5000);
+
+    } catch (error) {
+        console.error('Transaction error:', error);
+        let message = 'Ошибка при отправке транзакции';
+        
+        if (error.message.includes('Rejected')) {
+            message = '❌ Транзакция отклонена пользователем';
+        } else if (error.message.includes('Timeout')) {
+            message = '⌛ Время ожидания истекло, попробуйте снова';
+        } else if (error.message.includes('Insufficient')) {
+            message = '💸 Недостаточно средств для комиссии';
+        }
+        
+        alert(message);
+    } finally {
+        updateMintButton();
     }
+}
+
+// 5. Добавляем обработчик ошибок сети
+window.addEventListener('offline', () => {
+    alert('⚠️ Отсутствует интернет-соединение. Транзакция невозможна');
+    updateMintButton();
 });
+
+// Инициализация при загрузке
+document.addEventListener('DOMContentLoaded', () => {
+    // Проверка поддержки TON
+    if (!window.TonConnectUI || !window.TonWeb) {
+        alert('Браузер не поддерживает TON. Пожалуйста, используйте официальное приложение Telegram');
+        return;
+    }
+
+    // Настройка обработчиков
+    document.querySelector('.PriceBtnMyLotsMarket')?.addEventListener('click', mintNFT);
+    tonConnectUI.onStatusChange(updateMintButton);
+    updateMintButton();
+});
+// Добавьте в начало кода
+TonConnectUI.setLogLevel('DEBUG');
+
+// Это включит подробное логирование
+// Проверьте консоль браузера для диагностики
