@@ -97,11 +97,12 @@ setInterval(function() {
     document.getElementById('YourRank').style.display = 'none';
     document.getElementById('AirdropMain').style.display = 'none';
     document.getElementById('MarketplaseNFT').style.display = 'none';
+    document.getElementById('GameOnTask').style.display = 'none';
 }, 120000);
 
 // task
 
-let NoQuestsID1 = document.getElementById('NoQuestsID1').style.display = 'none';
+
 
 let TaskBtnMain = document.getElementById('TaskBtnMain');
 const HomeBtnGray = document.getElementById('HomeBtnGray').style.display = 'none';
@@ -162,29 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// completed task1
 
-let BtnOverTask1 = document.getElementById('BtnOverTask1');
-
-let SpecTaskText = document.querySelector('.SpecTaskText');
-let TaskBlockStart2 = document.querySelector('.TaskBlockStart2');
-let SponsorTaskLogoClass2 = document.querySelector('.SponsorTaskLogoClass2');
-let TaskToBtn2 = document.querySelector('.TaskToBtn2');
-let arrowTaskBtn2 = document.querySelector('.arrowTaskBtn2');
-let QuantityAddRow2 = document.querySelector('.QuantityAddRow2');
-
-
-BtnOverTask1.addEventListener('click', () => {
-    BtnOverTask1.style.display = 'none';
-    score.innerHTML = (rowscore += 20);
-    document.getElementById('NoQuestsID1').style.display = 'block';
-    SpecTaskText.style.top = '27%';
-    TaskBlockStart2.style.top = '31.5%';
-    SponsorTaskLogoClass2.style.top = '32%';
-    TaskToBtn2.style.top = '34%';
-    arrowTaskBtn2.style.top = '31.5%';
-    QuantityAddRow2.style.top = '37.8%';
-});
 
 //loading
 
@@ -823,7 +802,8 @@ document.querySelector('.PanelOnBackAttention').addEventListener('click', () => 
 
 const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
     manifestUrl: 'https://mixagrech.github.io/rowlivefgfmkskefker/tonconnect-manifest.json',
-    buttonRootId: 'ton-connect'
+    buttonRootId: 'ton-connect',
+    bridgeUrl: 'https://bridge.tonapi.io/bridge'
 });
 
 tonConnectUI.uiOptions = {
@@ -1138,203 +1118,98 @@ AllLotsNFTMArket.addEventListener('click', () => {
 
 
 
-// 1. КОНФИГУРАЦИЯ NFT
+// Конфиг NFT коллекции
 const NFT_CONFIG = {
     collectionAddress: 'EQAG1zMLkCFOCl8lJSCiPS7nXKoookxzN3-IuPshaG5QeNqd',
-    requiredAmount: '10000000', // 0.01 TON
-    mintFee: '1806948', // 0.001806948 TON
-    nftContent: {
-        name: "ROW-LIVE product",
-        description: "Exclusive NFT from Row Live Game",
-        image: "https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png",
-        external_url: "https://rowlivegame.com"
-    },
-    withdrawalKey: 'row_nft_final_working_v3'
+    gasAmount: '0.05', // Комиссия
+    metadata: {
+        name: "ROW LIVE Reward",
+        description: "Withdrawn from ROW LIVE game",
+        image: "ipfs://bafybeici36x6pedrpai6o4kfw5aaxkp3wlxnep6pl5cvjifu2kcwznx5vy",
+        attributes: [
+            { "trait_type": "Type", "value": "Game Reward" }
+        ]
+    }
 };
 
-// 2. ПОЛНАЯ ФУНКЦИЯ МИНТИНГА
-async function withdrawNFT() {
-    console.log('WithdrawNFT function started');
-    
+// Функция отправки уведомления
+async function sendTonkeeperNotification(userAddress) {
+    const response = await fetch('YOUR_BACKEND_ENDPOINT', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer TC-MSG_436fe48b166ab892d29ae81fce8605cfddc79bcd2c2a192dae27c1c0c520435028'
+        }
+    });
+    return await response.json();
+}
+
+// Основная функция вывода NFT
+async function withdrawNft() {
     try {
-        // Находим элементы с защитой от null
-        const btn = document.getElementById('mintButton') || 
-                   document.querySelector('.PriceBtnMyLotsMarket');
+        // 1. Проверка подключения кошелька
+        if (!connector.connected) {
+            await connector.connect();
+            return;
+        }
+
+        const userAddress = connector.account.address;
         
-        const textEl = btn?.querySelector('.PriceMyLotsMarket') || 
-                      document.querySelector('.PriceMyLotsMarket');
+        // 2. Подготовка транзакции (используем window.TonCore если подключили через script tag)
+        const TonCore = window.TonCore || (await import('@ton/core')).default;
+        const { beginCell } = TonCore;
         
-        if (!btn || !textEl) {
-            throw new Error('Mint button elements not found in DOM');
-        }
-        
-        if (!window.tonConnectUI) {
-            throw new Error('TonConnect UI not initialized');
-        }
-
-        const originalText = textEl.textContent;
-        btn.style.pointerEvents = 'none';
-        textEl.textContent = 'Processing...';
-
-        // Проверка подключения кошелька
-        if (!window.tonConnectUI.connected) {
-            throw new Error('Please connect your wallet first');
-        }
-
-        // Проверка предыдущих минтингов
-        if (localStorage.getItem(NFT_CONFIG.withdrawalKey)) {
-            throw new Error('You have already minted this NFT');
-        }
-
-        // Создаем payload
-        const payload = await createMintPayload(window.tonConnectUI.account.address);
-        console.log('Payload created:', payload);
-
-        // Рассчет суммы с учетом комиссии
-        const totalAmount = new TonWeb.utils.BN(NFT_CONFIG.requiredAmount)
-                          .add(new TonWeb.utils.BN(NFT_CONFIG.mintFee))
-                          .toString();
-
-        // Формируем транзакцию
-        const transaction = {
+        const tx = {
             validUntil: Math.floor(Date.now() / 1000) + 300,
             messages: [{
                 address: NFT_CONFIG.collectionAddress,
-                amount: totalAmount,
-                payload: payload
+                amount: (parseFloat(NFT_CONFIG.gasAmount) * 1000000000).toString(),
+                payload: beginCell()
+                    .storeUint(1, 32) // op = mint
+                    .storeAddress(TonCore.Address.parse(userAddress))
+                    .storeRef(
+                        beginCell()
+                            .storeStringTail(JSON.stringify(NFT_CONFIG.metadata))
+                            .endCell()
+                    )
+                    .endCell()
+                    .toBoc()
+                    .toString('base64')
             }]
         };
 
-        console.log('Sending transaction:', transaction);
-        
-        // Отправляем транзакцию
-        const result = await window.tonConnectUI.sendTransaction(transaction);
-        
-        if (!result?.boc) {
-            throw new Error('Transaction was not confirmed');
-        }
+        // 3. Отправка транзакции
+        const result = await connector.sendTransaction(tx);
+        console.log('NFT minted:', result);
 
-        // Успешный минтинг
-        localStorage.setItem(NFT_CONFIG.withdrawalKey, 'true');
-        textEl.textContent = 'Success!';
-        showAlert('🎉 NFT successfully minted! Check your wallet.');
-
+        // 4. Отправка уведомления (через бекенд!)
+        await sendTonkeeperNotification(userAddress);
+        
+        // 5. Открытие кошелька
+        window.open(`https://app.tonkeeper.com/collection/${NFT_CONFIG.collectionAddress}`, '_blank');
+        
     } catch (error) {
-        console.error('Minting error:', error);
-        showAlert(`❌ Error: ${error.message}`);
-        
-        // Восстанавливаем кнопку
-        const textEl = document.querySelector('.PriceMyLotsMarket');
-        if (textEl) {
-            textEl.textContent = 'Try Again';
-            setTimeout(() => {
-                textEl.textContent = 'Withdraw';
-                const btn = document.querySelector('.PriceBtnMyLotsMarket');
-                if (btn) btn.style.pointerEvents = 'auto';
-            }, 2000);
-        }
+        console.error('Withdraw error:', error);
+        alert('Error: ' + (error.message || 'Please try later'));
     }
 }
 
-// 3. ФУНКЦИЯ СОЗДАНИЯ PAYLOAD
-async function createMintPayload(ownerAddress) {
-    if (!window.TonWeb) {
-        throw new Error('TonWeb library not loaded');
-    }
+// Вешаем обработчик на кнопку
+document.querySelector('.PriceBtnMyLotsMarket').addEventListener('click', withdrawNft);
 
-    const { boc, utils } = window.TonWeb;
-    const { Cell } = boc;
-    const { Address } = utils;
 
-    try {
-        const cell = new Cell();
-        
-        // Opcode для минтинга (из вашей транзакции)
-        cell.bits.writeUint(0x5fcc3d14, 32); 
-        cell.bits.writeUint(0, 64); // query_id
-        
-        // Контент NFT (off-chain)
-        const contentCell = new Cell();
-        contentCell.bits.writeUint(1, 8); // off-chain флаг
-        contentCell.bits.writeString('meta.json');
-        cell.refs.push(contentCell);
-        
-        // Метаданные
-        const metaCell = new Cell();
-        metaCell.bits.writeString(JSON.stringify(NFT_CONFIG.nftContent));
-        cell.refs.push(metaCell);
-        
-        // Адрес владельца
-        const address = new Address(ownerAddress);
-        const addressCell = new Cell();
-        addressCell.bits.writeAddress(address);
-        cell.refs.push(addressCell);
-        
-        return (await cell.toBoc()).toString('base64');
-    } catch (error) {
-        console.error('Payload creation failed:', error);
-        throw new Error('Failed to create NFT mint payload');
-    }
-}
+//Mini game
 
-// 4. ФУНКЦИЯ УВЕДОМЛЕНИЙ
-function showAlert(message) {
-    if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert(message);
-    } else {
-        alert(message);
-    }
-}
+const MiniGameRow1 = document.getElementById('MiniGameRow1');
+const GameOnTask = document.getElementById('GameOnTask').style.display = 'none';
 
-// 5. ИНИЦИАЛИЗАЦИЯ ВСЕГО ПРИЛОЖЕНИЯ
-function initApp() {
-    // Ждем загрузки всех необходимых библиотек
-    const checkDependencies = () => {
-        if (typeof TonWeb !== 'undefined' && window.tonConnectUI) {
-            setupMintButton();
-        } else {
-            setTimeout(checkDependencies, 100);
-        }
-    };
+MiniGameRow1.addEventListener('click', () => {
+    document.getElementById('taskMain').style.display = 'none';
+    document.getElementById('bottombuttonsclass').style.display = 'none';
+    document.getElementById('GameOnTask').style.display = 'block';
+});
 
-    // Настройка кнопки минтинга
-    const setupMintButton = () => {
-        const btn = document.getElementById('mintButton') || 
-                   document.querySelector('.PriceBtnMyLotsMarket');
-        
-        if (!btn) {
-            console.error('Mint button not found in DOM');
-            return;
-        }
-
-        // Проверяем, был ли уже минтинг
-        if (localStorage.getItem(NFT_CONFIG.withdrawalKey)) {
-            const textEl = btn.querySelector('.PriceMyLotsMarket');
-            if (textEl) textEl.textContent = 'Already minted';
-            btn.style.opacity = '0.7';
-            btn.style.pointerEvents = 'none';
-            return;
-        }
-
-        // Настраиваем кнопку
-        btn.style.cursor = 'pointer';
-        btn.addEventListener('click', withdrawNFT);
-        
-        // Обновляем состояние в зависимости от подключения кошелька
-        if (window.tonConnectUI) {
-            const updateButtonState = (wallet) => {
-                btn.style.opacity = wallet ? '1' : '0.7';
-                btn.style.pointerEvents = wallet ? 'auto' : 'none';
-            };
-            
-            updateButtonState(window.tonConnectUI.connected);
-            window.tonConnectUI.onStatusChange(updateButtonState);
-        }
-    };
-
-    // Запускаем проверку зависимостей
-    checkDependencies();
-}
-
-// Запускаем приложение когда все загружено
-document.addEventListener('DOMContentLoaded', initApp);
+document.querySelector('.BackBtnOnMiniGame').addEventListener('click', () => {
+    document.getElementById('taskMain').style.display = 'block';
+    document.getElementById('bottombuttonsclass').style.display = 'block';
+    document.getElementById('GameOnTask').style.display = 'none';
+});
