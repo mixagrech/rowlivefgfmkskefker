@@ -1213,3 +1213,78 @@ document.querySelector('.BackBtnOnMiniGame').addEventListener('click', () => {
     document.getElementById('bottombuttonsclass').style.display = 'block';
     document.getElementById('GameOnTask').style.display = 'none';
 });
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const imageRowerMiniGame = document.getElementById('centerImageOnCenterColomnFiled');
+    const leftBtnMiniGame = document.querySelector('.LeftBtnMiniGame');
+    const rightBtnMiniGame = document.querySelector('.RightBtnMiniGame');
+    const columnClipMiniGame = document.querySelector('#columnClip path');
+
+    const columns = [
+        { x: 20, path: "M100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50V340C0 367.614 22.3858 390 50 390C77.6142 390 100 367.614 100 340V50Z" },
+        { x: 145, path: "M226 50C226 22.3858 203.614 0 176 0C148.386 0 126 22.3858 126 50V340C126 367.614 148.386 390 176 390C203.614 390 226 367.614 226 340V50Z" },
+        { x: 270, path: "M352 50C352 22.3858 329.614 0 302 0C274.386 0 252 22.3858 252 50V340C252 367.614 274.386 390 302 390C329.614 390 352 367.614 352 340V50Z" }
+    ];
+
+    let currentPosition = 1;
+
+    function moveToPosition(newPosition) {
+        if (newPosition >= 0 && newPosition < columns.length) {
+            currentPosition = newPosition;
+            const column = columns[newPosition];
+            imageRowerMiniGame.setAttribute('x', column.x);
+            columnClipMiniGame.setAttribute('d', column.path);
+        }
+    }
+
+    leftBtnMiniGame.addEventListener('click', () => {
+        moveToPosition(currentPosition - 1);
+    });
+
+    rightBtnMiniGame.addEventListener('click', () => {
+        moveToPosition(currentPosition + 1);
+    });
+
+    moveToPosition(1);
+});
+
+
+document.querySelector('.MovementButtonsMiniGame').style.display = 'none';
+
+const PlayBtnMiniGame = document.querySelector('.PlayBtnMiniGame');
+
+
+const originalStyles = {
+    MovementButtonsMiniGame: document.querySelector('.MovementButtonsMiniGame').style.display,
+    BottomProgressPanelCentred: document.querySelector('.BottomProgressPanelCentred').style.bottom,
+    PlayBtnMiniGame: document.querySelector('.PlayBtnMiniGame').style.display,
+    BackBtnOnMiniGameCentred: document.querySelector('.BackBtnOnMiniGameCentred').style.display,
+    TheResultLineGameCentred: document.querySelector('.TheResultLineGameCentred').style.bottom,
+    ResultLineGameP: document.querySelector('.ResultLineGame p').style.bottom,
+    NoBestPinInLine: document.querySelector('.NoBestPinInLine').style.bottom,
+    BestPinInLine: document.querySelector('.BestPinInLine').style.bottom
+};
+
+document.querySelector('.PlayBtnMiniGame').addEventListener('click', () => {
+    document.querySelector('.MovementButtonsMiniGame').style.display = 'block';
+    document.querySelector('.BottomProgressPanelCentred').style.bottom = '35px';
+    document.querySelector('.PlayBtnMiniGame').style.display = 'none';
+    document.querySelector('.BackBtnOnMiniGameCentred').style.display = 'none';
+    document.querySelector('.TheResultLineGameCentred').style.bottom = '17%';
+    document.querySelector('.ResultLineGame p').style.bottom = '17.5%';
+    document.querySelector('.NoBestPinInLine').style.bottom = '17.5%';
+    document.querySelector('.BestPinInLine').style.bottom = '17.5%';
+});
+
+document.querySelector('.BottomProgressPanelCentred').addEventListener('click', () => {
+    document.querySelector('.MovementButtonsMiniGame').style.display = originalStyles.MovementButtonsMiniGame;
+    document.querySelector('.BottomProgressPanelCentred').style.bottom = originalStyles.BottomProgressPanelCentred;
+    document.querySelector('.PlayBtnMiniGame').style.display = originalStyles.PlayBtnMiniGame;
+    document.querySelector('.BackBtnOnMiniGameCentred').style.display = originalStyles.BackBtnOnMiniGameCentred;
+    document.querySelector('.TheResultLineGameCentred').style.bottom = originalStyles.TheResultLineGameCentred;
+    document.querySelector('.ResultLineGame p').style.bottom = originalStyles.ResultLineGameP;
+    document.querySelector('.NoBestPinInLine').style.bottom = originalStyles.NoBestPinInLine;
+    document.querySelector('.BestPinInLine').style.bottom = originalStyles.BestPinInLine;
+});
