@@ -1470,10 +1470,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.BottomProgressPanelCentred').style.bottom = '14.2%';
         document.querySelector('.PlayBtnMiniGame').style.display = 'flex';
         document.querySelector('.BackBtnOnMiniGameCentred').style.display = 'flex';
-        document.querySelector('.TheResultLineGameCentred').style.bottom = '-100%';
-        document.querySelector('.ResultLineGame p').style.bottom = '-100%';
-        document.querySelector('.NoBestPinInLine').style.bottom = '-100%';
-        document.querySelector('.BestPinInLine').style.bottom = '-100%';
+        document.querySelector('.TheResultLineGameCentred').style.bottom = '26%';
+        document.querySelector('.ResultLineGame p').style.bottom = '26.2%';
+        document.querySelector('.NoBestPinInLine').style.bottom = '26.2%';
+        document.querySelector('.BestPinInLine').style.bottom = '26.2%';
         
         obstacles.forEach(o => o.element && o.element.remove());
         coins.forEach(c => c.element && c.element.remove());
