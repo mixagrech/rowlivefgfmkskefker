@@ -2248,3 +2248,59 @@ SkinImgStandart2
 #centerImageOnCenterColomnFiled {
     transition: x 0.3s ease;
 }
+
+
+
+
+
+
+
+
+/* Стили для игровых объектов */
+.obstacle {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    z-index: 10;
+}
+
+.coin {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: gold;
+    border-radius: 50%;
+    z-index: 10;
+}
+
+/* Стили для обратного отсчета */
+.countdown {
+    display: none;
+    position: absolute;
+    bottom: 26%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 72px;
+    color: white;
+    z-index: 100;
+    text-shadow: 0 0 10px rgba(0,0,0,0.8);
+    animation: pulse 0.5s infinite alternate;
+}
+
+@keyframes pulse {
+    from { transform: translateX(-50%) scale(1); }
+    to { transform: translateX(-50%) scale(1.1); }
+}
+
+.BottomProgressPanelCentred,
+.TheResultLineGameCentred,
+.ResultLineGame p,
+.NoBestPinInLine,
+.BestPinInLine {
+    transition: bottom 0.3s ease;
+}
+
+.NoBestPinInLine {
+    left: 4.5%;
+}
