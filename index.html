@@ -663,12 +663,17 @@
                         </g>
                     </g>
                     
+                    <!-- Слой для игровых объектов -->
+                    <g id="gameObjectsLayer">
+                        <!-- Здесь будут динамически добавляться препятствия и монеты -->
+                    </g>
+                    
                     <image 
                         id="centerImageOnCenterColomnFiled" 
                         x="145" 
-                        y="170" 
+                        y="230" 
                         width="60"
-                        height="280" 
+                        height="155" 
                         xlink:href="MiniGameImage/StandardSkinOnMiniGame.png" 
                         clip-path="url(#columnClip)"
                         preserveAspectRatio="xMidYMid meet"
@@ -760,26 +765,27 @@
             </div>
         </div>
         
-            
+        
+
 
         <div class="BottomProgressPanelCentred">
             <div class="BottomProgressPanel">
                 <div class="LeftGrupM">
                     <p>Left:</p>
                     <div class="MeterBlockPanel">
-                        <p class="FlexMeterNumber"><span>15</span><span>000m</span></p>
+                        <p class="FlexMeterNumber"><span id="leftRemaining">15000</span><span>м</span></p>
                     </div>
                 </div>
                 <div class="CenterGrupC">
                     <p>Collected:</p>
                     <div class="CollectedBlockPanel">
-                        <p class="FlexCollectedNumber"><span>0</span><span>ROW</span></p>
+                        <p class="FlexCollectedNumber"><span id="collectedCount">0</span><span>ROW</span></p>
                     </div>
                 </div>
                 <div class="RightGrupL">
                     <p>Best result:</p>
                     <div class="LiveBlockPanel">
-                        <p class="FlexLiveNumber"><span>9</span><span>642</span></p>
+                        <p class="FlexLiveNumber"><span id="bestResult">9642</span></p>
                     </div>
                 </div>
             </div>
