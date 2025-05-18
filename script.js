@@ -1199,92 +1199,373 @@ document.querySelector('.PriceBtnMyLotsMarket').addEventListener('click', withdr
 
 //Mini game
 
-const MiniGameRow1 = document.getElementById('MiniGameRow1');
-const GameOnTask = document.getElementById('GameOnTask').style.display = 'none';
 
-MiniGameRow1.addEventListener('click', () => {
-    document.getElementById('taskMain').style.display = 'none';
-    document.getElementById('bottombuttonsclass').style.display = 'none';
-    document.getElementById('GameOnTask').style.display = 'block';
-});
-
-document.querySelector('.BackBtnOnMiniGame').addEventListener('click', () => {
-    document.getElementById('taskMain').style.display = 'block';
-    document.getElementById('bottombuttonsclass').style.display = 'block';
-    document.getElementById('GameOnTask').style.display = 'none';
-});
 
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    const imageRowerMiniGame = document.getElementById('centerImageOnCenterColomnFiled');
-    const leftBtnMiniGame = document.querySelector('.LeftBtnMiniGame');
-    const rightBtnMiniGame = document.querySelector('.RightBtnMiniGame');
-    const columnClipMiniGame = document.querySelector('#columnClip path');
-
-    const columns = [
-        { x: 20, path: "M100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50V340C0 367.614 22.3858 390 50 390C77.6142 390 100 367.614 100 340V50Z" },
-        { x: 145, path: "M226 50C226 22.3858 203.614 0 176 0C148.386 0 126 22.3858 126 50V340C126 367.614 148.386 390 176 390C203.614 390 226 367.614 226 340V50Z" },
-        { x: 270, path: "M352 50C352 22.3858 329.614 0 302 0C274.386 0 252 22.3858 252 50V340C252 367.614 274.386 390 302 390C329.614 390 352 367.614 352 340V50Z" }
+    // Скрываем игровое поле изначально
+    document.getElementById('GameOnTask').style.display = 'none';
+    
+    // Основные элементы
+    let waterImage1, waterImage2;
+    let leftRemainingElement, collectedCountElement, bestResultElement;
+    let playBtn, playBtnText, currentPin, bestPin, gameField;
+    let countdownElement;
+    let imageRowerMiniGame, leftBtnMiniGame, rightBtnMiniGame, columnClipMiniGame;
+    let currentPosition = 1; // Центральная колонка по умолчанию
+    
+    // Точные параметры колонок из SVG path
+    const COLUMNS = [
+        { center: 90, playerX: 20, path: "M100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50V340C0 367.614 22.3858 390 50 390C77.6142 390 100 367.614 100 340V50Z" },
+        { center: 167, playerX: 145, path: "M226 50C226 22.3858 203.614 0 176 0C148.386 0 126 22.3858 126 50V340C126 367.614 148.386 390 176 390C203.614 390 226 367.614 226 340V50Z" },
+        { center: 242, playerX: 270, path: "M352 50C352 22.3858 329.614 0 302 0C274.386 0 252 22.3858 252 50V340C252 367.614 274.386 390 302 390C329.614 390 352 367.614 352 340V50Z" }
     ];
 
-    let currentPosition = 1;
+    // Настройки игры
+    const difficultyLevels = [
+        { speed: 5, spawnRate: 1500 },
+        { speed: 7, spawnRate: 1200 },
+        { speed: 9, spawnRate: 900 },
+        { speed: 11, spawnRate: 700 },
+        { speed: 13, spawnRate: 500 }
+    ];
+
+    // Размеры объектов
+    const OBSTACLE_WIDTH = 30;
+    const OBSTACLE_HEIGHT = 30;
+    const COIN_WIDTH = 20;
+    const COIN_HEIGHT = 20;
+    const PLAYER_WIDTH = 60;
+    const PLAYER_HEIGHT = 155;
+    const PLAYER_Y = 230;
+
+    const MAX_DISTANCE = 15000;
+    const RESET_TIME = 12 * 60 * 60 * 1000;
+
+    // Состояние игры
+    let waterPosition = 0;
+    let obstacles = [];
+    let coins = [];
+    let score = 0;
+    let distance = 0;
+    let bestDistance = localStorage.getItem('bestDistance') || 0;
+    let gameInterval;
+    let isGameOver = false;
+    let currentDifficulty = 0;
+    let isGameStarted = false;
+    let lastPlayTime = localStorage.getItem('lastPlayTime');
+
+    // Инициализация игры
+    function initGameElements() {
+        waterImage1 = document.getElementById('waterImage1');
+        waterImage2 = document.getElementById('waterImage2');
+        leftRemainingElement = document.getElementById('leftRemaining');
+        collectedCountElement = document.getElementById('collectedCount');
+        bestResultElement = document.getElementById('bestResult');
+        playBtn = document.querySelector('.PlayBtnMiniGame');
+        playBtnText = playBtn.querySelector('p');
+        currentPin = document.querySelector('.NoBestPinInLine');
+        bestPin = document.querySelector('.BestPinInLine');
+        gameField = document.querySelector('.GameFailed');
+        
+        countdownElement = document.createElement('div');
+        countdownElement.className = 'countdown';
+        gameField.appendChild(countdownElement);
+        
+        imageRowerMiniGame = document.getElementById('centerImageOnCenterColomnFiled');
+        leftBtnMiniGame = document.querySelector('.LeftBtnMiniGame');
+        rightBtnMiniGame = document.querySelector('.RightBtnMiniGame');
+        columnClipMiniGame = document.querySelector('#columnClip path');
+        
+        playBtn.addEventListener('click', handlePlayClick);
+        leftBtnMiniGame.addEventListener('click', () => isGameStarted && moveToPosition(currentPosition - 1));
+        rightBtnMiniGame.addEventListener('click', () => isGameStarted && moveToPosition(currentPosition + 1));
+        document.addEventListener('keydown', handleKeyDown);
+        
+        updatePlayButton();
+        updateDistanceInfo();
+    }
+
+    function spawnObjects() {
+        if (isGameOver || !isGameStarted || !gameField) return;
+        
+        const spawnType = Math.random() < 0.7 ? 'obstacle' : 'coin';
+        const lane = Math.floor(Math.random() * 3);
+        const column = COLUMNS[lane];
+        
+        const width = spawnType === 'obstacle' ? OBSTACLE_WIDTH : COIN_WIDTH;
+        const height = spawnType === 'obstacle' ? OBSTACLE_HEIGHT : COIN_HEIGHT;
+        const yOffset = spawnType === 'obstacle' ? -OBSTACLE_HEIGHT : -COIN_HEIGHT;
+        
+        // Точное центрирование в колонке
+        const xPos = column.center - width/2;
+        
+        const element = document.createElement('div');
+        element.className = spawnType;
+        element.style.position = 'absolute';
+        element.style.left = `${xPos}px`;
+        element.style.top = `${yOffset}px`;
+        element.style.width = `${width}px`;
+        element.style.height = `${height}px`;
+        element.style.zIndex = '10';
+        
+        if (spawnType === 'obstacle') {
+            const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12'];
+            element.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            element.style.borderRadius = '10px';
+            obstacles.push({
+                element: element,
+                lane: lane,
+                top: yOffset,
+                width: width,
+                height: height
+            });
+        } else {
+            element.style.backgroundColor = 'gold';
+            element.style.borderRadius = '50%';
+            coins.push({
+                element: element,
+                lane: lane,
+                top: yOffset,
+                width: width,
+                height: height
+            });
+        }
+        
+        gameField.appendChild(element);
+    }
+
+    function moveObjects() {
+        if (isGameOver || !isGameStarted) return;
+        
+        distance += 0.83;
+        if (distance >= MAX_DISTANCE) {
+            distance = MAX_DISTANCE;
+            gameOver();
+            return;
+        }
+        
+        updateDistanceInfo();
+        
+        // Движение препятствий
+        for (let i = obstacles.length - 1; i >= 0; i--) {
+            const obstacle = obstacles[i];
+            obstacle.top += difficultyLevels[currentDifficulty].speed;
+            obstacle.element.style.top = `${obstacle.top}px`;
+            
+            if (obstacle.top > 390) {
+                obstacle.element.remove();
+                obstacles.splice(i, 1);
+            } else if (checkCollision(obstacle)) {
+                gameOver();
+                return;
+            }
+        }
+        
+        // Движение монет
+        for (let i = coins.length - 1; i >= 0; i--) {
+            const coin = coins[i];
+            coin.top += difficultyLevels[currentDifficulty].speed;
+            coin.element.style.top = `${coin.top}px`;
+            
+            if (coin.top > 390) {
+                coin.element.remove();
+                coins.splice(i, 1);
+            } else if (checkCollision(coin)) {
+                coin.element.remove();
+                coins.splice(i, 1);
+                score += 10;
+                collectedCountElement.textContent = score;
+            }
+        }
+    }
+
+    function checkCollision(object) {
+        if (object.lane !== currentPosition) return false;
+        
+        const playerTop = PLAYER_Y;
+        const playerBottom = playerTop + PLAYER_HEIGHT;
+        const objectBottom = object.top + object.height;
+        
+        return (
+            objectBottom > playerTop &&
+            object.top < playerBottom
+        );
+    }
+
+    function handlePlayClick() {
+        if (canPlayAgain() || playBtnText.textContent === 'Again') {
+            startCountdown();
+        }
+    }
+
+    function handleKeyDown(e) {
+        if (!isGameStarted) return;
+        if (e.key === 'ArrowLeft') moveToPosition(currentPosition - 1);
+        if (e.key === 'ArrowRight') moveToPosition(currentPosition + 1);
+    }
+
+    function canPlayAgain() {
+        if (!lastPlayTime) return true;
+        return (Date.now() - lastPlayTime) >= RESET_TIME;
+    }
+
+    function updatePlayButton() {
+        if (playBtnText) {
+            playBtnText.textContent = canPlayAgain() ? 'Play' : 'Again';
+        }
+    }
+
+    function updateDistanceInfo() {
+        if (!leftRemainingElement || !collectedCountElement || !bestResultElement) return;
+        
+        leftRemainingElement.textContent = Math.round(MAX_DISTANCE - distance);
+        collectedCountElement.textContent = score;
+        bestResultElement.textContent = Math.round(bestDistance);
+        
+        const currentPos = Math.min(distance / 30, 500);
+        if (currentPin) currentPin.style.left = `${currentPos}px`;
+        
+        const bestPos = Math.min(bestDistance / 30, 500);
+        if (bestPin) bestPin.style.left = `${bestPos}px`;
+    }
+
+    function animateWater() {
+        waterPosition += 4;
+        
+        if (waterPosition >= 599) {
+            waterPosition = 0;
+        }
+        
+        waterImage1.setAttribute('y', waterPosition);
+        waterImage2.setAttribute('y', waterPosition - 599);
+        
+        if (!isGameOver && isGameStarted) {
+            requestAnimationFrame(animateWater);
+        }
+    }
+
+    function gameOver() {
+        isGameOver = true;
+        isGameStarted = false;
+        clearInterval(gameInterval);
+        
+        if (distance > bestDistance) {
+            bestDistance = distance;
+            localStorage.setItem('bestDistance', bestDistance);
+        }
+        
+        lastPlayTime = Date.now();
+        localStorage.setItem('lastPlayTime', lastPlayTime);
+        updatePlayButton();
+        
+        setTimeout(() => {
+            resetGameUI();
+        }, 500);
+    }
+
+    function resetGameUI() {
+        document.querySelector('.MovementButtonsMiniGame').style.display = 'none';
+        document.querySelector('.BottomProgressPanelCentred').style.bottom = '14.2%';
+        document.querySelector('.PlayBtnMiniGame').style.display = 'flex';
+        document.querySelector('.BackBtnOnMiniGameCentred').style.display = 'flex';
+        document.querySelector('.TheResultLineGameCentred').style.bottom = '-100%';
+        document.querySelector('.ResultLineGame p').style.bottom = '-100%';
+        document.querySelector('.NoBestPinInLine').style.bottom = '-100%';
+        document.querySelector('.BestPinInLine').style.bottom = '-100%';
+        
+        obstacles.forEach(o => o.element && o.element.remove());
+        coins.forEach(c => c.element && c.element.remove());
+        obstacles = [];
+        coins = [];
+    }
+
+    function startCountdown() {
+        if (!playBtn || !countdownElement) return;
+        
+        document.querySelector('.MovementButtonsMiniGame').style.display = 'block';
+        document.querySelector('.BottomProgressPanelCentred').style.bottom = '35px';
+        document.querySelector('.PlayBtnMiniGame').style.display = 'none';
+        document.querySelector('.BackBtnOnMiniGameCentred').style.display = 'none';
+        document.querySelector('.TheResultLineGameCentred').style.bottom = '17%';
+        document.querySelector('.ResultLineGame p').style.bottom = '17.5%';
+        document.querySelector('.NoBestPinInLine').style.bottom = '17.5%';
+        document.querySelector('.BestPinInLine').style.bottom = '17.5%';
+        
+        playBtn.style.display = 'none';
+        countdownElement.style.display = 'block';
+        countdownElement.style.position = 'absolute';
+        countdownElement.style.bottom = '30%';
+        countdownElement.style.left = '50%';
+        countdownElement.style.transform = 'translateX(-50%)';
+        countdownElement.style.fontSize = '72px';
+        countdownElement.style.color = 'white';
+        countdownElement.style.zIndex = '100';
+        countdownElement.style.textShadow = '0 0 10px rgba(0,0,0,0.8)';
+        
+        let count = 3;
+        countdownElement.textContent = count;
+        
+        const countdownInterval = setInterval(() => {
+            count--;
+            if (count > 0) {
+                countdownElement.textContent = count;
+            } else {
+                countdownElement.textContent = 'GO!';
+                setTimeout(() => {
+                    countdownElement.style.display = 'none';
+                    startGame();
+                    clearInterval(countdownInterval);
+                }, 500);
+            }
+        }, 1000);
+    }
+
+    function startGame() {
+        isGameStarted = true;
+        isGameOver = false;
+        score = 0;
+        distance = 0;
+        currentDifficulty = 0;
+        currentPosition = 1;
+        moveToPosition(currentPosition);
+        
+        updateDistanceInfo();
+        gameInterval = setInterval(spawnObjects, difficultyLevels[0].spawnRate);
+        requestAnimationFrame(animateWater);
+        
+        function gameLoop() {
+            moveObjects();
+            if (!isGameOver && isGameStarted) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+        gameLoop();
+    }
 
     function moveToPosition(newPosition) {
-        if (newPosition >= 0 && newPosition < columns.length) {
+        if (!isGameStarted || !imageRowerMiniGame || !columnClipMiniGame) return;
+        
+        if (newPosition >= 0 && newPosition < COLUMNS.length) {
             currentPosition = newPosition;
-            const column = columns[newPosition];
-            imageRowerMiniGame.setAttribute('x', column.x);
+            const column = COLUMNS[newPosition];
+            imageRowerMiniGame.setAttribute('x', column.playerX);
             columnClipMiniGame.setAttribute('d', column.path);
         }
     }
 
-    leftBtnMiniGame.addEventListener('click', () => {
-        moveToPosition(currentPosition - 1);
+    // Обработчики переключения экранов
+    document.getElementById('MiniGameRow1').addEventListener('click', () => {
+        document.getElementById('taskMain').style.display = 'none';
+        document.getElementById('bottombuttonsclass').style.display = 'none';
+        document.getElementById('GameOnTask').style.display = 'block';
+        setTimeout(initGameElements, 50);
     });
 
-    rightBtnMiniGame.addEventListener('click', () => {
-        moveToPosition(currentPosition + 1);
+    document.querySelector('.BackBtnOnMiniGame').addEventListener('click', () => {
+        document.getElementById('taskMain').style.display = 'block';
+        document.getElementById('bottombuttonsclass').style.display = 'block';
+        document.getElementById('GameOnTask').style.display = 'none';
     });
-
-    moveToPosition(1);
-});
-
-
-document.querySelector('.MovementButtonsMiniGame').style.display = 'none';
-
-const PlayBtnMiniGame = document.querySelector('.PlayBtnMiniGame');
-
-
-const originalStyles = {
-    MovementButtonsMiniGame: document.querySelector('.MovementButtonsMiniGame').style.display,
-    BottomProgressPanelCentred: document.querySelector('.BottomProgressPanelCentred').style.bottom,
-    PlayBtnMiniGame: document.querySelector('.PlayBtnMiniGame').style.display,
-    BackBtnOnMiniGameCentred: document.querySelector('.BackBtnOnMiniGameCentred').style.display,
-    TheResultLineGameCentred: document.querySelector('.TheResultLineGameCentred').style.bottom,
-    ResultLineGameP: document.querySelector('.ResultLineGame p').style.bottom,
-    NoBestPinInLine: document.querySelector('.NoBestPinInLine').style.bottom,
-    BestPinInLine: document.querySelector('.BestPinInLine').style.bottom
-};
-
-document.querySelector('.PlayBtnMiniGame').addEventListener('click', () => {
-    document.querySelector('.MovementButtonsMiniGame').style.display = 'block';
-    document.querySelector('.BottomProgressPanelCentred').style.bottom = '35px';
-    document.querySelector('.PlayBtnMiniGame').style.display = 'none';
-    document.querySelector('.BackBtnOnMiniGameCentred').style.display = 'none';
-    document.querySelector('.TheResultLineGameCentred').style.bottom = '17%';
-    document.querySelector('.ResultLineGame p').style.bottom = '17.5%';
-    document.querySelector('.NoBestPinInLine').style.bottom = '17.5%';
-    document.querySelector('.BestPinInLine').style.bottom = '17.5%';
-});
-
-document.querySelector('.BottomProgressPanelCentred').addEventListener('click', () => {
-    document.querySelector('.MovementButtonsMiniGame').style.display = originalStyles.MovementButtonsMiniGame;
-    document.querySelector('.BottomProgressPanelCentred').style.bottom = originalStyles.BottomProgressPanelCentred;
-    document.querySelector('.PlayBtnMiniGame').style.display = originalStyles.PlayBtnMiniGame;
-    document.querySelector('.BackBtnOnMiniGameCentred').style.display = originalStyles.BackBtnOnMiniGameCentred;
-    document.querySelector('.TheResultLineGameCentred').style.bottom = originalStyles.TheResultLineGameCentred;
-    document.querySelector('.ResultLineGame p').style.bottom = originalStyles.ResultLineGameP;
-    document.querySelector('.NoBestPinInLine').style.bottom = originalStyles.NoBestPinInLine;
-    document.querySelector('.BestPinInLine').style.bottom = originalStyles.BestPinInLine;
 });
