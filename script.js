@@ -98,7 +98,7 @@ setInterval(function() {
     document.getElementById('AirdropMain').style.display = 'none';
     document.getElementById('MarketplaseNFT').style.display = 'none';
     document.getElementById('GameOnTask').style.display = 'none';
-}, 120000);
+}, 420000);
 
 // task
 
