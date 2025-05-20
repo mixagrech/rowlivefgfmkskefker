@@ -98,7 +98,7 @@ setInterval(function() {
     document.getElementById('AirdropMain').style.display = 'none';
     document.getElementById('MarketplaseNFT').style.display = 'none';
     document.getElementById('GameOnTask').style.display = 'none';
-}, 420000);
+}, 120000);
 
 // task
 
@@ -1207,20 +1207,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Скрываем игровое поле изначально
     document.getElementById('GameOnTask').style.display = 'none';
     
-    // Основные элементы
+    // Основные элементы игры
     let waterImage1, waterImage2;
     let leftRemainingElement, collectedCountElement, bestResultElement;
     let playBtn, playBtnText, currentPin, bestPin, gameField;
     let countdownElement;
     let imageRowerMiniGame, leftBtnMiniGame, rightBtnMiniGame, columnClipMiniGame;
+    let gameObjectsLayer;
     let currentPosition = 1; // Центральная колонка по умолчанию
     
-    // Точные параметры колонок из SVG path
+    // Параметры колонок (как в референсе)
     const COLUMNS = [
-        { center: 90, playerX: 20, path: "M100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50V340C0 367.614 22.3858 390 50 390C77.6142 390 100 367.614 100 340V50Z" },
-        { center: 167, playerX: 145, path: "M226 50C226 22.3858 203.614 0 176 0C148.386 0 126 22.3858 126 50V340C126 367.614 148.386 390 176 390C203.614 390 226 367.614 226 340V50Z" },
-        { center: 242, playerX: 270, path: "M352 50C352 22.3858 329.614 0 302 0C274.386 0 252 22.3858 252 50V340C252 367.614 274.386 390 302 390C329.614 390 352 367.614 352 340V50Z" }
+        { x: 20, path: "M100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50V340C0 367.614 22.3858 390 50 390C77.6142 390 100 367.614 100 340V50Z" },
+        { x: 145, path: "M226 50C226 22.3858 203.614 0 176 0C148.386 0 126 22.3858 126 50V340C126 367.614 148.386 390 176 390C203.614 390 226 367.614 226 340V50Z" },
+        { x: 270, path: "M352 50C352 22.3858 329.614 0 302 0C274.386 0 252 22.3858 252 50V340C252 367.614 274.386 390 302 390C329.614 390 352 367.614 352 340V50Z" }
     ];
+
+    // Границы gameObjectsLayer (18% от левого края, ширина 64%)
+    const GAME_LAYER_LEFT = 0.18 * 352; // ~63px
+    const GAME_LAYER_WIDTH = 0.64 * 352; // ~225px
+    const GAME_LAYER_RIGHT = GAME_LAYER_LEFT + GAME_LAYER_WIDTH;
 
     // Настройки игры
     const difficultyLevels = [
@@ -1238,8 +1244,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const COIN_HEIGHT = 20;
     const PLAYER_WIDTH = 60;
     const PLAYER_HEIGHT = 155;
-    const PLAYER_Y = 230;
+    const PLAYER_Y = 140; // Верхняя граница игрока
+    const PLAYER_BOTTOM = PLAYER_Y + PLAYER_HEIGHT;
 
+    // Лимиты игры
     const MAX_DISTANCE = 15000;
     const RESET_TIME = 12 * 60 * 60 * 1000;
 
@@ -1255,8 +1263,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentDifficulty = 0;
     let isGameStarted = false;
     let lastPlayTime = localStorage.getItem('lastPlayTime');
+    let difficultyTimer;
 
-    // Инициализация игры
+    // Инициализация элементов игры
     function initGameElements() {
         waterImage1 = document.getElementById('waterImage1');
         waterImage2 = document.getElementById('waterImage2');
@@ -1268,6 +1277,17 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPin = document.querySelector('.NoBestPinInLine');
         bestPin = document.querySelector('.BestPinInLine');
         gameField = document.querySelector('.GameFailed');
+        gameObjectsLayer = document.querySelector('.gameObjectsLayer');
+        
+        // Настройка слоя для игровых объектов
+        gameObjectsLayer.style.position = 'absolute';
+        gameObjectsLayer.style.top = '0';
+        gameObjectsLayer.style.left = '18%';
+        gameObjectsLayer.style.width = '64%';
+        gameObjectsLayer.style.height = '100%';
+        gameObjectsLayer.style.overflow = 'hidden';
+        gameObjectsLayer.style.pointerEvents = 'none';
+        gameObjectsLayer.style.zIndex = '5';
         
         countdownElement = document.createElement('div');
         countdownElement.className = 'countdown';
@@ -1287,8 +1307,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateDistanceInfo();
     }
 
+    // Создание игровых объектов
     function spawnObjects() {
-        if (isGameOver || !isGameStarted || !gameField) return;
+        if (isGameOver || !isGameStarted || !gameObjectsLayer) return;
         
         const spawnType = Math.random() < 0.7 ? 'obstacle' : 'coin';
         const lane = Math.floor(Math.random() * 3);
@@ -1296,15 +1317,34 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const width = spawnType === 'obstacle' ? OBSTACLE_WIDTH : COIN_WIDTH;
         const height = spawnType === 'obstacle' ? OBSTACLE_HEIGHT : COIN_HEIGHT;
-        const yOffset = spawnType === 'obstacle' ? -OBSTACLE_HEIGHT : -COIN_HEIGHT;
-        
-        // Точное центрирование в колонке
-        const xPos = column.center - width/2;
-        
+        const yOffset = -height;
+
+        let xPos;
+        if (lane === 0) { // Левая колонка
+            xPos = column.x + (GAME_LAYER_WIDTH * 0.282); 
+        } else if (lane === 1) { // Центральная колонка
+            xPos = column.x + (PLAYER_WIDTH - width) / 1.7;
+        } else { // Правая колонка
+            xPos = column.x + PLAYER_WIDTH - width - (GAME_LAYER_WIDTH * 0.272);
+        }
+
+        // 2. Применяем ЖЕСТКУЮ коррекцию сдвига
+        const FINAL_CORRECTION = -7; // Пиксельная коррекция
+        xPos += FINAL_CORRECTION;
+
+        // 3. Преобразуем в координаты gameObjectsLayer
+        const adjustedXPos = xPos - GAME_LAYER_LEFT;
+
+        // Жесткая проверка границ
+        if (adjustedXPos < 0 || adjustedXPos + width > GAME_LAYER_WIDTH) {
+            console.warn(`Объект выходит за границы: ${adjustedXPos}`);
+            return;
+        }
+
+        // Создание элемента
         const element = document.createElement('div');
         element.className = spawnType;
-        element.style.position = 'absolute';
-        element.style.left = `${xPos}px`;
+        element.style.left = `${adjustedXPos}px`;;
         element.style.top = `${yOffset}px`;
         element.style.width = `${width}px`;
         element.style.height = `${height}px`;
@@ -1318,8 +1358,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 element: element,
                 lane: lane,
                 top: yOffset,
+                x: xPos,
                 width: width,
-                height: height
+                height: height,
+                bottom: yOffset + height
             });
         } else {
             element.style.backgroundColor = 'gold';
@@ -1328,14 +1370,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 element: element,
                 lane: lane,
                 top: yOffset,
+                x: xPos,
                 width: width,
-                height: height
+                height: height,
+                bottom: yOffset + height
             });
         }
         
-        gameField.appendChild(element);
+        gameObjectsLayer.appendChild(element);
     }
 
+    // Движение объектов
     function moveObjects() {
         if (isGameOver || !isGameStarted) return;
         
@@ -1352,6 +1397,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = obstacles.length - 1; i >= 0; i--) {
             const obstacle = obstacles[i];
             obstacle.top += difficultyLevels[currentDifficulty].speed;
+            obstacle.bottom = obstacle.top + obstacle.height;
             obstacle.element.style.top = `${obstacle.top}px`;
             
             if (obstacle.top > 390) {
@@ -1367,6 +1413,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = coins.length - 1; i >= 0; i--) {
             const coin = coins[i];
             coin.top += difficultyLevels[currentDifficulty].speed;
+            coin.bottom = coin.top + coin.height;
             coin.element.style.top = `${coin.top}px`;
             
             if (coin.top > 390) {
@@ -1381,19 +1428,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Проверка столкновений
     function checkCollision(object) {
         if (object.lane !== currentPosition) return false;
-        
-        const playerTop = PLAYER_Y;
-        const playerBottom = playerTop + PLAYER_HEIGHT;
-        const objectBottom = object.top + object.height;
-        
-        return (
-            objectBottom > playerTop &&
-            object.top < playerBottom
-        );
+        return object.top <= PLAYER_BOTTOM && object.bottom >= PLAYER_Y;
     }
 
+    // Перемещение между дорожками (как в референсе)
+    function moveToPosition(newPosition) {
+        if (!isGameStarted || !imageRowerMiniGame || !columnClipMiniGame) return;
+        
+        if (newPosition >= 0 && newPosition < COLUMNS.length) {
+            currentPosition = newPosition;
+            const column = COLUMNS[newPosition];
+            
+            // Устанавливаем позицию картинки игрока
+            imageRowerMiniGame.setAttribute('x', column.x);
+            
+            // Обновляем clipPath для маски
+            columnClipMiniGame.setAttribute('d', column.path);
+        }
+    }
+
+    // Остальные функции без изменений
     function handlePlayClick() {
         if (canPlayAgain() || playBtnText.textContent === 'Again') {
             startCountdown();
@@ -1450,6 +1507,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isGameOver = true;
         isGameStarted = false;
         clearInterval(gameInterval);
+        clearInterval(difficultyTimer);
         
         if (distance > bestDistance) {
             bestDistance = distance;
@@ -1475,8 +1533,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.NoBestPinInLine').style.bottom = '26.2%';
         document.querySelector('.BestPinInLine').style.bottom = '26.2%';
         
-        obstacles.forEach(o => o.element && o.element.remove());
-        coins.forEach(c => c.element && c.element.remove());
+        while (gameObjectsLayer.firstChild) {
+            gameObjectsLayer.removeChild(gameObjectsLayer.firstChild);
+        }
         obstacles = [];
         coins = [];
     }
@@ -1533,6 +1592,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         updateDistanceInfo();
         gameInterval = setInterval(spawnObjects, difficultyLevels[0].spawnRate);
+        
+        // Увеличиваем сложность каждую минуту
+        difficultyTimer = setInterval(() => {
+            if (currentDifficulty < difficultyLevels.length - 1) {
+                currentDifficulty++;
+                clearInterval(gameInterval);
+                gameInterval = setInterval(spawnObjects, difficultyLevels[currentDifficulty].spawnRate);
+            }
+        }, 60000);
+        
         requestAnimationFrame(animateWater);
         
         function gameLoop() {
@@ -1542,17 +1611,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         gameLoop();
-    }
-
-    function moveToPosition(newPosition) {
-        if (!isGameStarted || !imageRowerMiniGame || !columnClipMiniGame) return;
-        
-        if (newPosition >= 0 && newPosition < COLUMNS.length) {
-            currentPosition = newPosition;
-            const column = COLUMNS[newPosition];
-            imageRowerMiniGame.setAttribute('x', column.playerX);
-            columnClipMiniGame.setAttribute('d', column.path);
-        }
     }
 
     // Обработчики переключения экранов
