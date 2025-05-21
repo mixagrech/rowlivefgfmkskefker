@@ -1895,6 +1895,13 @@ SkinImgStandart2
     box-sizing: border-box;
 }
 
+
+.GameContentWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .GameBuoysWhite {
     position: absolute;
     top: 120px;
@@ -1939,6 +1946,9 @@ SkinImgStandart2
     height: 11px;
     border-radius: 50%;
 }
+
+
+
 
 
 
@@ -2316,4 +2326,37 @@ SkinImgStandart2
     pointer-events: none;
     z-index: 5;
 
+}
+
+
+.GagantOvalGame {
+    position: absolute;
+    overflow: hidden;
+    top: 0px;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+}
+
+.GagantOvalGameRight {
+    position: absolute;
+    top: -50px;
+    right: -113%;
+    width: 126%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: rgba(0, 170, 255, 0.24);
+    filter: blur(3px);
+    pointer-events: auto;
+}
+
+.GagantOvalGameLeft {
+    position: absolute;
+    top: -50px;
+    left: -113%;
+    width: 126%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: rgba(0, 170, 255, 0.24);
+    filter: blur(3px);
 }
