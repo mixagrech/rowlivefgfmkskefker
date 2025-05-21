@@ -1206,7 +1206,7 @@ document.querySelector('.PriceBtnMyLotsMarket').addEventListener('click', withdr
 document.addEventListener('DOMContentLoaded', () => {
     // Скрываем игровое поле изначально
     document.getElementById('GameOnTask').style.display = 'none';
-    
+    startCountdown
     // Основные элементы игры
     let waterImage1, waterImage2;
     let leftRemainingElement, collectedCountElement, bestResultElement;
@@ -1452,8 +1452,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Остальные функции без изменений
     function handlePlayClick() {
-        if (canPlayAgain() || playBtnText.textContent === 'Again') {
+        if (isProcessingTransaction) return;
+        
+        if (remainingAttempts > 0 || canPlayAgain()) {
             startCountdown();
+        } else {
+            buyAdditionalAttempts();
         }
     }
 
@@ -1469,8 +1473,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updatePlayButton() {
-        if (playBtnText) {
-            playBtnText.textContent = canPlayAgain() ? 'Play' : 'Again';
+        if (!playBtnText) return;
+        
+        if (remainingAttempts === 0 && !canPlayAgain()) {
+            playBtnText.textContent = 'Buy';
+        } else if (remainingAttempts > 0) {
+            playBtnText.textContent = `Again ${remainingAttempts}`;
+        } else {
+            playBtnText.textContent = 'Play';
         }
     }
 
@@ -1502,6 +1512,41 @@ document.addEventListener('DOMContentLoaded', () => {
             requestAnimationFrame(animateWater);
         }
     }
+    updatePlayButton
+    let remainingAttempts = 0;
+    let isProcessingTransaction = false;
+
+    async function buyAdditionalAttempts() {
+        if (!connectedWallet || isProcessingTransaction) return;
+        
+        isProcessingTransaction = true;
+        updatePlayButton();
+
+        try {
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 300,
+                messages: [
+                    {
+                        address: 'UQDDEEbNMPfVwpL2q1zi5oAbChXADLuZp4gCOdFoHDmHo4Nn', // Замените на ваш адрес
+                        amount: "0", // 0.05 TON в нанотонах 50000000
+                        message: "Покупка дополнительной попытки"
+                    }
+                ]
+            };
+
+            const result = await tonConnectUI.sendTransaction(transaction);
+            if (result?.boc) {
+                // При успешной покупке добавляем 1 попытку
+                remainingAttempts += 1;
+                updatePlayButton();
+            }
+        } catch (error) {
+            console.error("Ошибка при оплате:", error);
+        } finally {
+            isProcessingTransaction = false;
+            updatePlayButton();
+        }
+    }
 
     function gameOver() {
         isGameOver = true;
@@ -1516,6 +1561,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         lastPlayTime = Date.now();
         localStorage.setItem('lastPlayTime', lastPlayTime);
+        
+        // Уменьшаем количество оставшихся попыток только если они были
+        if (remainingAttempts > 0) {
+            remainingAttempts--;
+        }
         updatePlayButton();
         
         setTimeout(() => {
@@ -1540,42 +1590,105 @@ document.addEventListener('DOMContentLoaded', () => {
         coins = [];
     }
 
+    document.querySelector('.GagantOvalGameLeft').style.display = 'none';
+    document.querySelector('.GagantOvalGameRight').style.display = 'none';
+
     function startCountdown() {
         if (!playBtn || !countdownElement) return;
         
+        // Показать игровые элементы
         document.querySelector('.MovementButtonsMiniGame').style.display = 'block';
         document.querySelector('.BottomProgressPanelCentred').style.bottom = '35px';
         document.querySelector('.PlayBtnMiniGame').style.display = 'none';
         document.querySelector('.BackBtnOnMiniGameCentred').style.display = 'none';
+        
+        // Опускаем ResultLineGame вниз
         document.querySelector('.TheResultLineGameCentred').style.bottom = '17%';
         document.querySelector('.ResultLineGame p').style.bottom = '17.5%';
         document.querySelector('.NoBestPinInLine').style.bottom = '17.5%';
         document.querySelector('.BestPinInLine').style.bottom = '17.5%';
         
+        // Настройка счетчика
         playBtn.style.display = 'none';
         countdownElement.style.display = 'block';
-        countdownElement.style.position = 'absolute';
-        countdownElement.style.bottom = '30%';
-        countdownElement.style.left = '50%';
-        countdownElement.style.transform = 'translateX(-50%)';
-        countdownElement.style.fontSize = '72px';
-        countdownElement.style.color = 'white';
-        countdownElement.style.zIndex = '100';
-        countdownElement.style.textShadow = '0 0 10px rgba(0,0,0,0.8)';
+        countdownElement.textContent = '3';
+        Object.assign(countdownElement.style, {
+            position: 'absolute',
+            bottom: '30%', // Изменил позицию счетчика
+            left: '50%',
+            transform: 'translateX(-50%)',
+            fontSize: '72px',
+            color: 'white',
+            zIndex: '100',
+            textShadow: '0 0 10px rgba(0,0,0,0.8)'
+        });
+        
+        // Получаем элементы овалов
+        const ovalLeft = document.querySelector('.GagantOvalGameLeft');
+        const ovalRight = document.querySelector('.GagantOvalGameRight');
+        
+        // Настройка овалов
+        ovalLeft.style.display = 'block';
+        ovalRight.style.display = 'block';
+        ovalLeft.style.opacity = '0';
+        ovalRight.style.opacity = '0';
+        ovalLeft.style.transition = 'opacity 0.3s, filter 0.3s';
+        ovalRight.style.transition = 'opacity 0.3s, filter 0.3s';
+        
+        // Первое моргание (при появлении)
+        setTimeout(() => {
+            ovalLeft.style.opacity = '1';
+            ovalRight.style.opacity = '1';
+            
+            setTimeout(() => {
+                ovalLeft.style.filter = 'blur(15px)';
+                ovalRight.style.filter = 'blur(15px)';
+                
+                setTimeout(() => {
+                    ovalLeft.style.filter = 'blur(3px)';
+                    ovalRight.style.filter = 'blur(3px)';
+                }, 300);
+            }, 300);
+        }, 10);
         
         let count = 3;
-        countdownElement.textContent = count;
-        
         const countdownInterval = setInterval(() => {
             count--;
+            
             if (count > 0) {
                 countdownElement.textContent = count;
+                
+                // Второе моргание (перед "GO!")
+                if (count === 1) {
+                    setTimeout(() => {
+                        ovalLeft.style.filter = 'blur(15px)';
+                        ovalRight.style.filter = 'blur(15px)';
+                        
+                        setTimeout(() => {
+                            ovalLeft.style.filter = 'blur(3px)';
+                            ovalRight.style.filter = 'blur(3px)';
+                            
+                            // Плавное исчезновение
+                            setTimeout(() => {
+                                ovalLeft.style.opacity = '0';
+                                ovalRight.style.opacity = '0';
+                            }, 200);
+                        }, 300);
+                    }, 300);
+                }
             } else {
                 countdownElement.textContent = 'GO!';
+                
                 setTimeout(() => {
                     countdownElement.style.display = 'none';
                     startGame();
                     clearInterval(countdownInterval);
+                    
+                    // Полное скрытие
+                    setTimeout(() => {
+                        ovalLeft.style.display = 'none';
+                        ovalRight.style.display = 'none';
+                    }, 500);
                 }, 500);
             }
         }, 1000);
@@ -1620,7 +1733,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('GameOnTask').style.display = 'block';
         setTimeout(initGameElements, 50);
     });
-
+    
     document.querySelector('.BackBtnOnMiniGame').addEventListener('click', () => {
         document.getElementById('taskMain').style.display = 'block';
         document.getElementById('bottombuttonsclass').style.display = 'block';
