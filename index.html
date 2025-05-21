@@ -621,91 +621,77 @@
     </div>
     <img src="Rowlogo.png" alt="testt" style="width: 0px; height: 0px;">
 
-    <div id="GameOnTask">
+    <div id="GameOnTask" style="display: none;">
         <div class="TopPanelOnMiniGame1">
             <p>Kayak Rush</p>
         </div>
         <div class="LineOnTopPanelOnMiniGame1"></div>
 
         <div class="GameFailed">
-            <div class="GameFieldColomn">
-                <svg id="waterSvg" width="352" height="390" viewBox="0 0 352 390" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-                    <defs>
-                        <clipPath id="clip0_985_3">
-                            <rect width="352" height="390" fill="white"/>
-                        </clipPath>
-                        
-                        <mask id="columnMask" maskUnits="userSpaceOnUse" x="0" y="0" width="352" height="390">
-                            <path class="LeftColonFiled" d="M100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50V340C0 367.614 22.3858 390 50 390C77.6142 390 100 367.614 100 340V50Z" fill="white"/>
-                            <path class="CenterColonFiled" d="M226 50C226 22.3858 203.614 0 176 0C148.386 0 126 22.3858 126 50V340C126 367.614 148.386 390 176 390C203.614 390 226 367.614 226 340V50Z" fill="white"/>
-                            <path class="RightColonFiled" d="M352 50C352 22.3858 329.614 0 302 0C274.386 0 252 22.3858 252 50V340C252 367.614 274.386 390 302 390C329.614 390 352 367.614 352 340V50Z" fill="white"/>
-                        </mask>
-                        
-                        <mask id="wideMask" maskUnits="userSpaceOnUse" x="-992" y="0" width="1344" height="390">
-                            <path d="M352 0H-992V390H352V0Z" fill="white"/>
-                        </mask>
-                        
-                        <clipPath id="columnClip">
-                            <path d="M226 50C226 22.3858 203.614 0 176 0C148.386 0 126 22.3858 126 50V340C126 367.614 148.386 390 176 390C203.614 390 226 367.614 226 340V50Z"/>
-                        </clipPath>
-                    </defs>
+            <div class="GameContentWrapper">
+                <div class="GameBuoysAll">
+                    <div class="GameBuoysWhite">
+                        <div class="RedBouys1"></div>
+                        <div class="WhiteBouys"></div>
+                        <div class="WhiteBouys"></div>
+                        <div class="WhiteBouys"></div>
+                        <div class="WhiteBouys"></div>
+                        <div class="WhiteBouys"></div>
+                        <div class="WhiteBouys"></div>
+                        <div class="WhiteBouys"></div>
+                        <div class="WhiteBouys"></div>
+                        <div class="RedBouys1"></div>
+                    </div>
+                    <div class="GameBuoysYellow">
+                        <div class="RedBouys"></div>
+                        <div class="YellowBuoys"></div>
+                        <div class="YellowBuoys"></div>
+                        <div class="YellowBuoys"></div>
+                        <div class="YellowBuoys"></div>
+                        <div class="YellowBuoys"></div>
+                        <div class="YellowBuoys"></div>
+                        <div class="YellowBuoys"></div>
+                        <div class="YellowBuoys"></div>
+                        <div class="RedBouys"></div>
+                    </div>
+                </div>
 
-                    <g clip-path="url(#clip0_985_3)">
-                        <g mask="url(#columnMask)">
-                            <g id="waterContainer" mask="url(#wideMask)">
-                                <image id="waterImage1" x="-5" y="0" width="513" height="599" 
-                                    xlink:href="MiniGameImage/MiniGameWater2.png" 
-                                    preserveAspectRatio="xMidYMid slice"/>
-                                <image id="waterImage2" x="-5" y="-599" width="513" height="599" 
-                                    xlink:href="MiniGameImage/MiniGameWater2.png" 
-                                    preserveAspectRatio="xMidYMid slice"/>
+                <div class="GameFieldColomn">
+                    <svg id="waterSvg" width="352" height="390" viewBox="0 0 352 390" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                        <defs>
+                            <clipPath id="clip0_985_3">
+                                <rect width="352" height="390" fill="white"/>
+                            </clipPath>
+                            <mask id="columnMask" maskUnits="userSpaceOnUse" x="0" y="0" width="352" height="390">
+                                <path class="LeftColonFiled" d="M100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50V340C0 367.614 22.3858 390 50 390C77.6142 390 100 367.614 100 340V50Z" fill="white"/>
+                                <path class="CenterColonFiled" d="M226 50C226 22.3858 203.614 0 176 0C148.386 0 126 22.3858 126 50V340C126 367.614 148.386 390 176 390C203.614 390 226 367.614 226 340V50Z" fill="white"/>
+                                <path class="RightColonFiled" d="M352 50C352 22.3858 329.614 0 302 0C274.386 0 252 22.3858 252 50V340C252 367.614 274.386 390 302 390C329.614 390 352 367.614 352 340V50Z" fill="white"/>
+                            </mask>
+                            <mask id="wideMask" maskUnits="userSpaceOnUse" x="-992" y="0" width="1344" height="390">
+                                <path d="M352 0H-992V390H352V0Z" fill="white"/>
+                            </mask>
+                            <clipPath id="columnClip">
+                                <path d="M226 50C226 22.3858 203.614 0 176 0C148.386 0 126 22.3858 126 50V340C126 367.614 148.386 390 176 390C203.614 390 226 367.614 226 340V50Z"/>
+                            </clipPath>
+                        </defs>
+                        <g clip-path="url(#clip0_985_3)">
+                            <g mask="url(#columnMask)">
+                                <g id="waterContainer" mask="url(#wideMask)">
+                                    <image id="waterImage1" x="-5" y="0" width="513" height="599" xlink:href="MiniGameImage/MiniGameWater2.png" preserveAspectRatio="xMidYMid slice"/>
+                                    <image id="waterImage2" x="-5" y="-599" width="513" height="599" xlink:href="MiniGameImage/MiniGameWater2.png" preserveAspectRatio="xMidYMid slice"/>
+                                </g>
                             </g>
                         </g>
-                    </g>
-                    
-                    
-                    
-                    <image 
-                        id="centerImageOnCenterColomnFiled" 
-                        x="145" 
-                        y="230" 
-                        width="60"
-                        height="155" 
-                        xlink:href="MiniGameImage/StandardSkinOnMiniGame.png" 
-                        clip-path="url(#columnClip)"
-                        preserveAspectRatio="xMidYMid meet"
-                    />
-                </svg>
-                <div class="gameObjectsLayer"></div>
-            </div>
-            
-            
-            <div class="GameBuoysAll">
-                <div class="GameBuoysWhite">
-                    <div class="RedBouys1"></div>
-                    <div class="WhiteBouys"></div>
-                    <div class="WhiteBouys"></div>
-                    <div class="WhiteBouys"></div>
-                    <div class="WhiteBouys"></div>
-                    <div class="WhiteBouys"></div>
-                    <div class="WhiteBouys"></div>
-                    <div class="WhiteBouys"></div>
-                    <div class="WhiteBouys"></div>
-                    <div class="RedBouys1"></div>
-                </div>
-                <div class="GameBuoysYellow">
-                    <div class="RedBouys"></div>
-                    <div class="YellowBuoys"></div>
-                    <div class="YellowBuoys"></div>
-                    <div class="YellowBuoys"></div>
-                    <div class="YellowBuoys"></div>
-                    <div class="YellowBuoys"></div>
-                    <div class="YellowBuoys"></div>
-                    <div class="YellowBuoys"></div>
-                    <div class="YellowBuoys"></div>
-                    <div class="RedBouys"></div>
+                        <image id="centerImageOnCenterColomnFiled" x="145" y="230" width="60" height="155" xlink:href="MiniGameImage/StandardSkinOnMiniGame.png" clip-path="url(#columnClip)" preserveAspectRatio="xMidYMid meet"/>
+                    </svg>
+                    <div class="gameObjectsLayer"></div>
                 </div>
             </div>
+        </div>
+
+        <div class="GagantOvalGame">
+            <div class="GagantOvalGameLeft"></div>
+            <div class="GagantOvalGameRight"></div>
         </div>
        
         <div class="MovementButtonsMiniGame">
