@@ -49,7 +49,7 @@ daily_claim_btn.addEventListener('click', () => {
     document.getElementById('ProfileMain').style.display = 'none';
 
     document.getElementById('main').style.display = 'block';
-})
+});
 
 
 var day_numberNumb = 0;
@@ -186,7 +186,7 @@ function getRandomInRange (min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
 }
 
-var randomNumbRewDay = getRandomInRange (1500, 2000)
+var randomNumbRewDay = getRandomInRange (500, 1000)
 
 const ageReward = () => {
     counterAgeRewards++;
@@ -1320,12 +1320,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const yOffset = -height;
 
         let xPos;
-        if (lane === 0) { // Левая колонка
-            xPos = column.x + (GAME_LAYER_WIDTH * 0.282); 
-        } else if (lane === 1) { // Центральная колонка
-            xPos = column.x + (PLAYER_WIDTH - width) / 1.7;
-        } else { // Правая колонка
-            xPos = column.x + PLAYER_WIDTH - width - (GAME_LAYER_WIDTH * 0.272);
+        if (lane === 0) { // Левая колонка (рандом от 0.272 до 0.292)
+            const randomMultiplier = 0.272 + Math.random() * (0.302 - 0.262);
+            xPos = column.x + (GAME_LAYER_WIDTH * randomMultiplier); 
+        } else if (lane === 1) { // Центральная колонка (рандом от 1.6 до 1.8)
+            const randomMultiplier = 1.6 + Math.random() * (1.9 - 1.5);
+            xPos = column.x + (PLAYER_WIDTH - width) / randomMultiplier;
+        } else { // Правая колонка (рандом от 0.262 до 0.282)
+            const randomMultiplier = 0.262 + Math.random() * (0.292 - 0.252);
+            xPos = column.x + PLAYER_WIDTH - width - (GAME_LAYER_WIDTH * randomMultiplier);
         }
 
         // 2. Применяем ЖЕСТКУЮ коррекцию сдвига
@@ -1423,18 +1426,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 coin.element.remove();
                 coins.splice(i, 1);
                 score += 10;
+                document.getElementById('rowscore').innerHTML = (rowscore += 10);
+                
                 collectedCountElement.textContent = score;
             }
         }
     }
 
-    // Проверка столкновений
+
     function checkCollision(object) {
         if (object.lane !== currentPosition) return false;
         return object.top <= PLAYER_BOTTOM && object.bottom >= PLAYER_Y;
     }
 
-    // Перемещение между дорожками (как в референсе)
+
     function moveToPosition(newPosition) {
         if (!isGameStarted || !imageRowerMiniGame || !columnClipMiniGame) return;
         
@@ -1491,11 +1496,28 @@ document.addEventListener('DOMContentLoaded', () => {
         collectedCountElement.textContent = score;
         bestResultElement.textContent = Math.round(bestDistance);
         
-        const currentPos = Math.min(distance / 30, 500);
-        if (currentPin) currentPin.style.left = `${currentPos}px`;
+        // Жесткие константы (12px отступ с каждой стороны)
+        const START_OFFSET = 13; // 12px слева
+        const TRACK_WIDTH = 500; // Общая ширина трека
+        const AVAILABLE_WIDTH = TRACK_WIDTH - (2 * START_OFFSET); // 500 - 26 = 474px
         
-        const bestPos = Math.min(bestDistance / 30, 500);
-        if (bestPin) bestPin.style.left = `${bestPos}px`;
+        // Текущая позиция (от 12px до 488px)
+        const currentProgress = Math.min(distance / MAX_DISTANCE, 1);
+        const currentPos = START_OFFSET + (AVAILABLE_WIDTH * currentProgress);
+        
+        if (currentPin) {
+            currentPin.style.left = `${currentPos}px`;
+            console.log("Current pin position:", currentPos); // Для дебага
+        }
+        
+        // Лучшая позиция (аналогично)
+        const bestProgress = Math.min(bestDistance / MAX_DISTANCE, 1);
+        const bestPos = START_OFFSET + (AVAILABLE_WIDTH * bestProgress);
+        
+        if (bestPin) {
+            bestPin.style.left = `${bestPos}px`;
+            console.log("Best pin position:", bestPos); // Для дебага
+        }
     }
 
     function animateWater() {
@@ -1512,12 +1534,19 @@ document.addEventListener('DOMContentLoaded', () => {
             requestAnimationFrame(animateWater);
         }
     }
-    updatePlayButton
+    
     let remainingAttempts = 0;
     let isProcessingTransaction = false;
 
     async function buyAdditionalAttempts() {
-        if (!connectedWallet || isProcessingTransaction) return;
+        if (!connectedWallet) {
+            if (typeof tg !== 'undefined' && tg.showAlert) {
+                tg.showAlert("Подключите кошелёк");
+            }
+            return;
+        }
+        
+        if (isProcessingTransaction) return;
         
         isProcessingTransaction = true;
         updatePlayButton();
@@ -1527,7 +1556,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 validUntil: Math.floor(Date.now() / 1000) + 300,
                 messages: [
                     {
-                        address: 'UQDDEEbNMPfVwpL2q1zi5oAbChXADLuZp4gCOdFoHDmHo4Nn', // Замените на ваш адрес
+                        address: 'UQDDEEbNMPfVwpL2q1zi5oAbChXADLuZp4gCOdFoHDmHo4Nn',
                         amount: "0", // 0.05 TON в нанотонах 50000000
                         message: "Покупка дополнительной попытки"
                     }
