@@ -294,8 +294,9 @@ function initAgeReward() {
     }
 }
 
-if (window.tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-    usernameonAgeID.textContent = `${tg.initDataUnsafe.user.first_name} ${tg.initDataUnsafe.user.last_name}`;
+if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+    const user = Telegram.WebApp.initDataUnsafe.user;
+    usernameonAgeID.textContent = `${user.first_name}${user.last_name ? ' ' + user.last_name : ''}`;
 } else {
     usernameonAgeID.textContent = "Пользователь не найден";
 }
@@ -303,7 +304,6 @@ if (window.tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
 document.addEventListener('DOMContentLoaded', () => {
     initAgeReward();
 });
-
 
 //hat web app
 
