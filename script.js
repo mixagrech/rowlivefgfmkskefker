@@ -22,83 +22,132 @@ var rowscore = 0;
 
 var score = document.getElementById('rowscore');
 
-//daily reward
-
-document.getElementById('main').style.display = 'none';
-
-var DayNumb0 = 400;
-var DayNumb1 = 520;
-var DayNumb2 = 640;
-var DayNumb3 = 760;
-var DayNumb4 = 880;
-var DayNumb5andBiger = 1100;
-
-var day_number = document.getElementById('day_number');
-var rowdayly_text_id = document.getElementById('rowdayly_text_id');
-
-//receiving an award
-
-let daily_claim_btn = document.getElementById('daily_claim_btn_img');
-
-daily_claim_btn.addEventListener('click', () => {
-    document.getElementById('AirdropMain').style.display='none';
-    document.getElementById('daily_reward').style.display = 'none';
-    document.getElementById('account_age').style.display = 'none';
-    document.getElementById('taskMain').style.display = 'none';
-    document.getElementById('FriendsMain').style.display = 'none';
-    document.getElementById('ProfileMain').style.display = 'none';
-
-    document.getElementById('main').style.display = 'block';
-});
 
 
-var day_numberNumb = 0;
-day_number.innerHTML = day_numberNumb;
+// ===== СИСТЕМА НАГРАД С СОХРАНЕНИЕМ ===== //
 
-rowdayly_text_id.innerHTML = ("+" + DayNumb0 + "ROW");
-score.innerHTML = '0';
+const DAILY_REWARDS = [400, 520, 640, 760, 880, 1100];
+const STORAGE_KEY = 'gameRewardsData';
 
-const dayly_reward_con = () => {
-    day_numberNumb ++ ;
-    day_number.innerHTML = day_numberNumb;
-    if (day_numberNumb == 0) {
-        rowdayly_text_id.innerHTML = ("+" + DayNumb0 + "ROW");
-        score.innerHTML = (rowscore + DayNumb0);
-    } else if (day_numberNumb == 1) {
-        rowdayly_text_id.innerHTML = ("+" + DayNumb1 + "ROW");
-        score.innerHTML = (rowscore += DayNumb0);
-    } else if (day_numberNumb == 2) {
-        rowdayly_text_id.innerHTML = ("+" + DayNumb2 + "ROW");
-        score.innerHTML = (rowscore += DayNumb1);
-    } else if (day_numberNumb == 3) {
-        rowdayly_text_id.innerHTML = ("+" + DayNumb3 + "ROW");
-        score.innerHTML = (rowscore += DayNumb2);
-    } else if (day_numberNumb == 4) {
-        rowdayly_text_id.innerHTML = ("+" + DayNumb4 + "ROW");
-        score.innerHTML = (rowscore += DayNumb3);
-    } else if (day_numberNumb == 5) {
-        rowdayly_text_id.innerHTML = ("+" + DayNumb5andBiger + "ROW");
-        score.innerHTML = (rowscore += DayNumb4);
-    } else if (day_numberNumb >= 6) {
-        rowdayly_text_id.innerHTML = ("+" + DayNumb5andBiger + "ROW");
-        score.innerHTML = (rowscore += DayNumb5andBiger);
-    }
+// Состояние игры
+let gameState = {
+    rowscore: 0,          // Общий счет ROW
+    lastDailyClaim: null, // Дата последней ежедневной награды
+    dailyStreak: 0        // Текущая серия дней
 };
 
-daily_claim_btn.addEventListener('click', dayly_reward_con);
 
-setInterval(function() {
-    document.getElementById('daily_reward').style.display = 'block';
-    document.getElementById('main').style.display = 'none';
-    document.getElementById('account_age').style.display = 'none';
-    document.getElementById('taskMain').style.display = 'none';
-    document.getElementById('FriendsMain').style.display = 'none';
-    document.getElementById('ProfileMain').style.display = 'none';
-    document.getElementById('YourRank').style.display = 'none';
-    document.getElementById('AirdropMain').style.display = 'none';
-    document.getElementById('MarketplaseNFT').style.display = 'none';
-    document.getElementById('GameOnTask').style.display = 'none';
-}, 120000);
+let coins = []; // Массив для хранения монет
+let obstacles = []; // Массив для препятствий
+
+
+const rowscoreElement = document.getElementById('rowscore');
+const dailyRewardScreen = document.getElementById('daily_reward');
+const mainScreen = document.getElementById('main');
+
+function initGame() {
+    loadGameState();
+    updateUI();
+    
+    if (shouldShowDailyReward()) {
+        showDailyReward();
+    } else {
+        showMainScreen();
+    }
+}
+
+function loadGameState() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            gameState = {
+                rowscore: parseInt(parsed.rowscore) || 0,
+                lastDailyClaim: parsed.lastDailyClaim || null,
+                dailyStreak: parseInt(parsed.dailyStreak) || 0
+            };
+        } catch (e) {
+            console.error('Ошибка загрузки:', e);
+        }
+    }
+}
+
+function saveGameState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
+}
+
+function shouldShowDailyReward() {
+    if (!gameState.lastDailyClaim) return true;
+    
+    const lastClaim = new Date(gameState.lastDailyClaim);
+    const now = new Date();
+    const hoursPassed = (now - lastClaim) / (1000 * 60 * 60);
+    
+    return hoursPassed >= 24;
+}
+
+function getDailyReward() {
+    const dayIndex = Math.min(gameState.dailyStreak, DAILY_REWARDS.length - 1);
+    return DAILY_REWARDS[dayIndex];
+}
+
+function addRow(amount) {
+    // Получаем текущее значение из gameState
+    let currentScore = parseInt(gameState.rowscore) || 0;
+    
+    // Добавляем новое значение
+    currentScore += amount;
+    
+    // Обновляем все состояния
+    currentRowScore = currentScore;
+    gameState.rowscore = currentScore;
+    
+    // Обновляем отображение в HTML
+    if (rowscoreElement) {
+        rowscoreElement.textContent = currentScore;
+    }
+    
+    // Обновляем ранг, цвета и сохраняем
+    updateRankSystem();
+    saveGameState();
+}
+
+function updateUI() {
+    if (rowscoreElement) {
+        rowscoreElement.textContent = gameState.rowscore;
+    }
+}
+
+function showDailyReward() {
+    if (dailyRewardScreen) {
+        document.getElementById('day_number').textContent = gameState.dailyStreak;
+        document.getElementById('rowdayly_text_id').innerHTML = 
+            `+${getDailyReward()} <span style="font-size:1.1rem; margin-left:-6px; font-weight:400;">ROW</span>`;
+        
+        dailyRewardScreen.style.display = 'block';
+    }
+    if (mainScreen) mainScreen.style.display = 'none';
+}
+
+function showMainScreen() {
+    if (dailyRewardScreen) dailyRewardScreen.style.display = 'none';
+    if (mainScreen) mainScreen.style.display = 'block';
+}
+
+function claimDailyReward() {
+    const reward = getDailyReward();
+    addRow(reward);
+    
+    gameState.dailyStreak++;
+    gameState.lastDailyClaim = new Date().toISOString();
+    saveGameState();
+    
+    showMainScreen();
+}
+
+document.getElementById('daily_claim_btn_img')?.addEventListener('click', claimDailyReward);
+
+document.addEventListener('DOMContentLoaded', initGame);
 
 // task
 
@@ -167,48 +216,94 @@ document.addEventListener('DOMContentLoaded', function() {
 
 //loading
 
+
 let loader_hide = document.getElementById('loader_hide');
 
 window.addEventListener('load', () => {
   loader_hide.style.display = 'none';
 });
 
+
 //age reward disribution
 
-let usernameonAgeID = document.getElementById('usernameonAgeID');
-let usernameonAgeRewardID = document.getElementById('usernameonAgeRewardID');
 
-var ageRewardVar = 0;
-var counterAgeRewards = 0;
-var isAgeRewardAssigned = false;
 
-function getRandomInRange (min, max) {
-    return Math.floor(Math.random() * (max - min)) + min;
+
+// ===== ФУНКЦИЯ ДЛЯ СЛУЧАЙНЫХ ЧИСЕЛ ===== //
+function getRandomInRange(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-var randomNumbRewDay = getRandomInRange (500, 1000)
+// ===== СИСТЕМА НАГРАД ЗА ВОЗРАСТ ===== //
 
-const ageReward = () => {
-    counterAgeRewards++;
-
-    if (!isAgeRewardAssigned) {
-        ageRewardVar = score.innerHTML = (rowscore += randomNumbRewDay);
-        isAgeRewardAssigned = true; 
-    }
-    usernameonAgeRewardID.innerHTML = randomNumbRewDay;
+const AGE_REWARD_KEY = 'ageRewardData';
+let ageRewardState = {
+    claimed: false,
+    amount: 0
 };
 
+const usernameonAgeID = document.getElementById('usernameonAgeID');
+const usernameonAgeRewardID = document.getElementById('usernameonAgeRewardID');
 
-buttonbackage_btn.addEventListener('click', ageReward);
+const randomNumbRewDay = getRandomInRange(500, 1000);
 
-
-if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-    usernameonAgeID.innerHTML = `${tg.initDataUnsafe.user.first_name} ${tg.initDataUnsafe.user.last_name}`;
-} else {
-    usernameonAgeID.innerHTML = "Пользователь не найден";
+function loadAgeRewardState() {
+    try {
+        const saved = localStorage.getItem(AGE_REWARD_KEY);
+        if (saved) ageRewardState = JSON.parse(saved);
+    } catch (e) {
+        console.error('Ошибка загрузки:', e);
+    }
 }
 
-usernameonAgeRewardID.innerHTML = randomNumbRewDay;
+function saveAgeRewardState() {
+    localStorage.setItem(AGE_REWARD_KEY, JSON.stringify(ageRewardState));
+}
+
+function ageReward() {
+    if (ageRewardState.claimed) {
+        console.log('Награда уже была получена ранее');
+        return;
+    }
+
+    try {
+        addRow(randomNumbRewDay);
+        ageRewardState = {
+            claimed: true,
+            amount: randomNumbRewDay
+        };
+        saveAgeRewardState();
+        usernameonAgeRewardID.textContent = randomNumbRewDay;
+    } catch (e) {
+        console.error('Ошибка при выдаче награды:', e);
+    }
+}
+
+function initAgeReward() {
+    loadAgeRewardState();
+    usernameonAgeRewardID.textContent = ageRewardState.claimed 
+        ? ageRewardState.amount 
+        : randomNumbRewDay;
+
+    if (buttonbackage_btn) {
+        buttonbackage_btn.addEventListener('click', ageReward);
+    } else {
+        console.error('Элемент buttonbackage_btn не найден');
+    }
+}
+
+if (window.tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+    usernameonAgeID.textContent = `${tg.initDataUnsafe.user.first_name} ${tg.initDataUnsafe.user.last_name}`;
+} else {
+    usernameonAgeID.textContent = "Пользователь не найден";
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initAgeReward();
+});
+
 
 //hat web app
 
@@ -422,122 +517,134 @@ BackBtnOnTonRank.addEventListener('click', () => {
     document.getElementById('YourRank').style.display = 'none';
 });
 
-//rank image color function
+// ===== ОБНОВЛЕННАЯ СИСТЕМА РАНГОВ ===== //
+const RANKS = [
+    { name: 'NOOB 🐤 RANK', min: 0, max: 1000, bonus: 100 },
+    { name: 'AVERAGE 😐 RANK', min: 1000, max: 5000, bonus: 500 },
+    { name: 'NORMAL 👍 RANK', min: 5000, max: 15000, bonus: 1500 },
+    { name: 'BETTER 💪 RANK', min: 15000, max: 50000, bonus: 5000 },
+    { name: 'CHAMP 🏆 RANK', min: 50000, max: Infinity, bonus: 0 }
+];
 
-document.querySelector('.PathLine1').setAttribute('stroke', '#004C75');
-document.querySelector('.PathLine2').setAttribute('stroke', '#004C75');
+// Загрузка текущего счета из localStorage при старте
+let currentRowScore = 0;
 
-
-document.querySelector('.PathCircle3').setAttribute('fill', '#97DBFF');
-document.querySelector('.PathCircle3').setAttribute('stroke', '#0087CF');
-
-document.querySelector('.PathCircle2').setAttribute('fill', '#97DBFF');
-document.querySelector('.PathCircle2').setAttribute('stroke', '#0087CF');
-
-document.querySelector('.PathCircle1').setAttribute('fill', '#358344');
-document.querySelector('.PathCircle1').setAttribute('stroke', '#57E873');
-
-function RankImageColor() {
-    if (rowscore >= 0 && rowscore <= 1000) {
-        RankColor0();
-    } else if (rowscore >= 1000 && rowscore <= 5000) {
-        RankColor1();
-    } else if (rowscore >= 5000 && rowscore <= 15000) {
-        RankColor2();
-    } else if (rowscore >= 15000 && rowscore <= 50000) {
-        RankColor3();
-    } else if (rowscore >= 50000 && rowscore <= 100000) {
-        RankColor4()
-    }
-
-    setTimeout(RankImageColor, 500);
-}
-
-function RankColor0() {
-    document.getElementById('champrangtitle').innerHTML = ('NOOB 🐤 RANK');
-    document.getElementById('RankOnPath').innerHTML = ('NOOB 🐤 RANK');
-}
-
-let RankColor1Faslse = false;
-
-function RankColor1() {
-    document.querySelector('.PathCircle2').setAttribute('fill', '#358344');
-    document.querySelector('.PathCircle2').setAttribute('stroke', '#57E873');
-
-    document.querySelector('.PathCircle1').setAttribute('fill', '#BFBFBF');
-    document.querySelector('.PathCircle1').setAttribute('stroke', '#818181');
-
-    document.querySelector('.PathLine1').setAttribute('stroke', '#404040');
+// Инициализация цветов рангов
+function initRankColors() {
+    document.querySelector('.PathLine1').setAttribute('stroke', '#004C75');
+    document.querySelector('.PathLine2').setAttribute('stroke', '#004C75');
     
-    if (!RankColor1Faslse) {
-        score.innerHTML = (rowscore += 100);
-        RankColor1Faslse = true;
-    }
-    document.getElementById('champrangtitle').innerHTML = ('AVERAGE 😐 RANK');
-    document.getElementById('RankOnPath').innerHTML = ('AVERAGE 😐 RANK');
+    document.querySelector('.PathCircle3').setAttribute('fill', '#97DBFF');
+    document.querySelector('.PathCircle3').setAttribute('stroke', '#0087CF');
+    
+    document.querySelector('.PathCircle2').setAttribute('fill', '#97DBFF');
+    document.querySelector('.PathCircle2').setAttribute('stroke', '#0087CF');
+    
+    document.querySelector('.PathCircle1').setAttribute('fill', '#358344');
+    document.querySelector('.PathCircle1').setAttribute('stroke', '#57E873');
 }
 
-let RankColor2Faslse = false;
-
-function RankColor2() {
-    document.querySelector('.PathCircle3').setAttribute('fill', '#358344');
-    document.querySelector('.PathCircle3').setAttribute('stroke', '#57E873');
-
-    document.querySelector('.PathCircle2').setAttribute('fill', '#BFBFBF');
-    document.querySelector('.PathCircle2').setAttribute('stroke', '#818181');
-
-    document.querySelector('.PathLine2').setAttribute('stroke', '#404040');
-
-    if (!RankColor2Faslse) {
-        score.innerHTML = (rowscore += 500);
-        RankColor2Faslse = true;
+// Проверка и обновление ранга
+function updateRankSystem() {
+    // Загружаем актуальное значение из localStorage
+    const savedState = localStorage.getItem(STORAGE_KEY);
+    if (savedState) {
+        const parsed = JSON.parse(savedState);
+        currentRowScore = parseInt(parsed.rowscore) || 0;
     }
-    document.getElementById('champrangtitle').innerHTML = ('NORMAl 👍 RANK');
-    document.getElementById('RankOnPath').innerHTML = ('NORMAl 👍 RANK');
+
+    // Находим текущий ранг
+    const currentRank = RANKS.find(rank => 
+        currentRowScore >= rank.min && currentRowScore < rank.max
+    );
+    
+    // Обновляем отображение
+    if (currentRank) {
+        document.getElementById('champrangtitle').textContent = currentRank.name;
+        document.getElementById('RankOnPath').textContent = currentRank.name;
+        updateRankColors(currentRowScore);
+    }
 }
 
-let RankColor3Faslse = false;
+// Функция обновления цветов ранга
+function updateRankColors(score) {
+    // Базовые цвета
+    const activeColors = {
+        fill: '#358344',
+        stroke: '#57E873'
+    };
+    const inactiveColors = {
+        fill: '#BFBFBF',
+        stroke: '#818181'
+    };
+    const defaultColors = {
+        fill: '#97DBFF',
+        stroke: '#0087CF'
+    };
 
-function RankColor3() {
-    document.querySelector('.PathCircle4').setAttribute('fill', '#358344');
-    document.querySelector('.PathCircle4').setAttribute('stroke', '#57E873');
+    // Сброс всех элементов к начальному состоянию
+    document.querySelector('.PathLine1').setAttribute('stroke', '#004C75');
+    document.querySelector('.PathLine2').setAttribute('stroke', '#004C75');
+    document.querySelector('.PathCircle3').setAttribute('fill', defaultColors.fill);
+    document.querySelector('.PathCircle3').setAttribute('stroke', defaultColors.stroke);
+    document.querySelector('.PathCircle2').setAttribute('fill', defaultColors.fill);
+    document.querySelector('.PathCircle2').setAttribute('stroke', defaultColors.stroke);
+    document.querySelector('.PathCircle1').setAttribute('fill', activeColors.fill);
+    document.querySelector('.PathCircle1').setAttribute('stroke', activeColors.stroke);
 
-    document.querySelector('.PathCircle3').setAttribute('fill', '#BFBFBF');
-    document.querySelector('.PathCircle3').setAttribute('stroke', '#818181');
-
-    document.querySelector('.PathLine3').setAttribute('stroke', '#404040');
-
-    if (!RankColor3Faslse) {
-        score.innerHTML = (rowscore += 1500);
-        RankColor3Faslse = true;
+    // Последовательно применяем цвета в зависимости от счета
+    if (score >= 1000) {
+        // Активируем второй круг и первую линию
+        document.querySelector('.PathCircle2').setAttribute('fill', activeColors.fill);
+        document.querySelector('.PathCircle2').setAttribute('stroke', activeColors.stroke);
+        document.querySelector('.PathLine1').setAttribute('stroke', '#404040');
+        document.querySelector('.PathCircle1').setAttribute('fill', activeColors.fill);
+        document.querySelector('.PathCircle1').setAttribute('stroke', activeColors.stroke);
     }
-    document.getElementById('champrangtitle').innerHTML = ('BETTER 💪 RANK');
-    document.getElementById('RankOnPath').innerHTML = ('BETTER 💪 RANK');
+    
+    if (score >= 5000) {
+        // Активируем третий круг и вторую линию
+        document.querySelector('.PathCircle3').setAttribute('fill', activeColors.fill);
+        document.querySelector('.PathCircle3').setAttribute('stroke', activeColors.stroke);
+        document.querySelector('.PathLine2').setAttribute('stroke', '#404040');
+        // Предыдущие элементы остаются активными
+        document.querySelector('.PathCircle2').setAttribute('fill', activeColors.fill);
+        document.querySelector('.PathCircle2').setAttribute('stroke', activeColors.stroke);
+        document.querySelector('.PathCircle1').setAttribute('fill', activeColors.fill);
+        document.querySelector('.PathCircle1').setAttribute('stroke', activeColors.stroke);
+    }
+    
+    if (score >= 15000) {
+        // Активируем четвертый круг и третью линию
+        document.querySelector('.PathCircle4').setAttribute('fill', activeColors.fill);
+        document.querySelector('.PathCircle4').setAttribute('stroke', activeColors.stroke);
+        document.querySelector('.PathLine3').setAttribute('stroke', '#404040');
+        // Все предыдущие элементы остаются активными
+    }
+    
+    if (score >= 50000) {
+        // Активируем пятый круг и четвертую линию
+        document.querySelector('.PathCircle5').setAttribute('fill', activeColors.fill);
+        document.querySelector('.PathCircle5').setAttribute('stroke', activeColors.stroke);
+        document.querySelector('.PathLine4').setAttribute('stroke', '#404040');
+        // Все предыдущие элементы остаются активными
+    }
 }
 
-let RankColor4Faslse = false;
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    initRankColors();
+    updateRankSystem();
+});
 
-function RankColor4() {
-    document.querySelector('.PathCircle5').setAttribute('fill', '#358344');
-    document.querySelector('.PathCircle5').setAttribute('stroke', '#57E873');
-
-    document.querySelector('.PathCircle4').setAttribute('fill', '#BFBFBF');
-    document.querySelector('.PathCircle4').setAttribute('stroke', '#818181');
-
-    document.querySelector('.PathLine4').setAttribute('stroke', '#404040');
-
-    if (!RankColor4Faslse) {
-        score.innerHTML = (rowscore += 5000);
-        RankColor4Faslse = true;
-    }
-    document.getElementById('champrangtitle').innerHTML = ('CHAMP 🏆 RANK');
-    document.getElementById('RankOnPath').innerHTML = ('CHAMP 🏆 RANK');
-}
-
-RankImageColor();
+// Проверка каждые 500мс
+setInterval(updateRankSystem, 500);
 
 
 //Referal prgogram
+
+
+
 
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -562,6 +669,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     checkFriendsVisibility();
 });
 
+
+
 // Обработка реферального кода
 async function handleReferralCode(code, userId) {
     try {
@@ -569,8 +678,7 @@ async function handleReferralCode(code, userId) {
         if (response.ok) {
             window.history.replaceState({}, document.title, window.location.pathname);
             let RowFriendReward = 600;
-            rowscore += RowFriendReward;
-            score.innerHTML = rowscore;
+            addRow(RowFriendReward);
             showNotification('', 'success');
         }
     } catch (error) {
@@ -693,12 +801,10 @@ function updateFriendsCounter(count) {
         counter.textContent = `${count}/15 friends`;
         counter.dataset.lastCount = count; // Сохраняем текущее значение
         
-
         if (count > lastCount) {
             const newFriends = count - lastCount;
             const reward = newFriends * 120;
-            rowscore += reward;
-            score.innerHTML = rowscore;
+            addRow(reward);
         }
     }
 }
@@ -1327,7 +1433,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const randomMultiplier = 1.6 + Math.random() * (1.9 - 1.5);
             xPos = column.x + (PLAYER_WIDTH - width) / randomMultiplier;
         } else { // Правая колонка (рандом от 0.262 до 0.282)
-            const randomMultiplier = 0.262 + Math.random() * (0.292 - 0.252);
+            const randomMultiplier = 0.262 + Math.random() * (0.302 - 0.262);
             xPos = column.x + PLAYER_WIDTH - width - (GAME_LAYER_WIDTH * randomMultiplier);
         }
 
@@ -1426,7 +1532,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 coin.element.remove();
                 coins.splice(i, 1);
                 score += 10;
-                document.getElementById('rowscore').innerHTML = (rowscore += 10);
+                addRow(10)
                 
                 collectedCountElement.textContent = score;
             }
@@ -1562,7 +1668,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 ]
             };
-
+            
             const result = await tonConnectUI.sendTransaction(transaction);
             if (result?.boc) {
                 // При успешной покупке добавляем 1 попытку
@@ -1722,7 +1828,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 1000);
     }
-
+    updateUI
     function startGame() {
         isGameStarted = true;
         isGameOver = false;
