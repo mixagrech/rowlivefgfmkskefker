@@ -1,0 +1,22 @@
+{
+  "name": "My NFT Collection",
+  "description": "This is my first TON NFT collection",
+  "image": "https://example.com/collection.png",
+  "external_url": "https://example.com/collection",
+  "social_links": {
+    "twitter": "https://twitter.com/mycollection",
+    "telegram": "https://t.me/mycollection"
+  },
+  "marketplace_settings": {
+    "min_price": "0.1",
+    "max_price": "100"
+  },
+  "ownerAddress": "UQBoBm_ojL6OjlantDxK7YyE7pHOwEL_lLVVuwz2XRPlTpbQ",
+  "collectionContent": "https://mixagrech.github.io/rowlivefgfmkskefker/collection.json",
+  "commonContent": "https://mixagrech.github.io/rowlivefgfmkskefker/common.json",
+  "royaltyParams": {
+    "royaltyFactor": 100,
+    "royaltyBase": 1000,
+    "royaltyAddress": "UQBoBm_ojL6OjlantDxK7YyE7pHOwEL_lLVVuwz2XRPlTpbQ"
+  }
+}
