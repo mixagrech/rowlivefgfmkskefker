@@ -1847,7 +1847,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 1000);
     }
-    updateUI
     function startGame() {
         isGameStarted = true;
         isGameOver = false;
