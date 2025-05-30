@@ -84,7 +84,7 @@ function shouldShowDailyReward() {
     const hoursPassed = (now - lastClaim) / (1000 * 60 * 60);
     
     // Если пропущено более 48 часов (2 дня), сбрасываем серию
-    if (hoursPassed >= 48) {
+    if (hoursPassed >= 24) {
         gameState.dailyStreak = 0;
         saveGameState();
     }
@@ -151,7 +151,7 @@ function claimDailyReward() {
     gameState.lastDailyClaim = now.toISOString();
     
     // Увеличиваем streak только если последний claim был не более чем 48 часов назад
-    if (lastClaim && (now - lastClaim) < 22 * 60 * 60 * 1000) {
+    if (lastClaim && (now - lastClaim) < 24 * 60 * 60 * 1000) {
         gameState.dailyStreak++;
     } else if (!lastClaim) {
         gameState.dailyStreak = 1;
