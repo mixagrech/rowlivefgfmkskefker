@@ -145,6 +145,46 @@ function claimDailyReward() {
     showMainScreen();
 }
 
+function shouldShowDailyReward() {
+    if (!gameState.lastDailyClaim) return true;
+    
+    const lastClaim = new Date(gameState.lastDailyClaim);
+    const now = new Date();
+    const hoursPassed = (now - lastClaim) / (1000 * 60 * 60);
+    
+    // Если пропущено более 48 часов (2 дня), сбрасываем серию
+    if (hoursPassed >= 22) {
+        gameState.dailyStreak = 0;
+        saveGameState();
+    }
+    
+    return hoursPassed >= 24;
+}
+
+function claimDailyReward() {
+    const reward = getDailyReward();
+    addRow(reward);
+    
+    const now = new Date();
+    const lastClaim = gameState.lastDailyClaim ? new Date(gameState.lastDailyClaim) : null;
+    
+    // Обновляем дату последнего получения награды
+    gameState.lastDailyClaim = now.toISOString();
+    
+    // Увеличиваем streak только если последний claim был не более чем 48 часов назад
+    if (lastClaim && (now - lastClaim) < 22 * 60 * 60 * 1000) {
+        gameState.dailyStreak++;
+    } else if (!lastClaim) {
+        gameState.dailyStreak = 1;
+    } else {
+        gameState.dailyStreak = 1; // Если прошло больше 48 часов, начинаем с 1
+    }
+    
+    saveGameState();
+    showMainScreen();
+}
+
+
 document.getElementById('daily_claim_btn_img')?.addEventListener('click', claimDailyReward);
 
 document.addEventListener('DOMContentLoaded', initGame);
