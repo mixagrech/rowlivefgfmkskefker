@@ -83,6 +83,12 @@ function shouldShowDailyReward() {
     const now = new Date();
     const hoursPassed = (now - lastClaim) / (1000 * 60 * 60);
     
+    // Если пропущено более 48 часов (2 дня), сбрасываем серию
+    if (hoursPassed >= 48) {
+        gameState.dailyStreak = 0;
+        saveGameState();
+    }
+    
     return hoursPassed >= 24;
 }
 
@@ -138,33 +144,6 @@ function claimDailyReward() {
     const reward = getDailyReward();
     addRow(reward);
     
-    gameState.dailyStreak++;
-    gameState.lastDailyClaim = new Date().toISOString();
-    saveGameState();
-    
-    showMainScreen();
-}
-
-function shouldShowDailyReward() {
-    if (!gameState.lastDailyClaim) return true;
-    
-    const lastClaim = new Date(gameState.lastDailyClaim);
-    const now = new Date();
-    const hoursPassed = (now - lastClaim) / (1000 * 60 * 60);
-    
-    // Если пропущено более 48 часов (2 дня), сбрасываем серию
-    if (hoursPassed >= 22) {
-        gameState.dailyStreak = 0;
-        saveGameState();
-    }
-    
-    return hoursPassed >= 24;
-}
-
-function claimDailyReward() {
-    const reward = getDailyReward();
-    addRow(reward);
-    
     const now = new Date();
     const lastClaim = gameState.lastDailyClaim ? new Date(gameState.lastDailyClaim) : null;
     
@@ -183,7 +162,6 @@ function claimDailyReward() {
     saveGameState();
     showMainScreen();
 }
-
 
 document.getElementById('daily_claim_btn_img')?.addEventListener('click', claimDailyReward);
 
