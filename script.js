@@ -1,4 +1,4 @@
-хdocument.ondragstart = noselect;
+document.ondragstart = noselect;
 document.onselectstart = noselect;
 function noselect() {return false;}
 
