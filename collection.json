@@ -1,6 +1,12 @@
 {
-  "name": "Kayak Rush NFT",
-  "description": "Unique kayak racing NFTs on TON!",
-  "image": "https://mixagrech.github.io/rowlivefgfmkskefker/MiniGameImage/KayakRushImage2.png",
-  "external_url": "https://mixagrech.github.io/rowlivefgfmkskefker"
+  "name": "ROW-LIVE test",
+  "description": "This NFT is given for free in the ROW-LIVE game\nhttps://t.me/ROWlive",
+  "image": "https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png",
+  "cover_image": "https://s.getgems.io/nft/c/680b80c7ca39e95bb5779642/cover/1380868.png",
+  "social_links": [
+    "https://x.com/RLive15948?s=09",
+    "https://t.me/ROWlive"
+  ],
+  "external_url": "https://getgems.io/collection/EQAG1zMLkCFOCl8lJSCiPS7nXKoookxzN3-IuPshaG5QeNqd",
+  "marketplace": "getgems.io"
 }
