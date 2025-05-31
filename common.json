@@ -1,5 +1,11 @@
 {
-  "name": "Kayak Rush NFT",
+  "name": "Kayak Rush NFT #1",
   "description": "This is a unique kayak racing NFT from the collection!",
-  "image": "https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png"
+  "image": "https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png",
+  "attributes": [
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    }
+  ]
 }
