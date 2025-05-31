@@ -28,23 +28,25 @@ var score = document.getElementById('rowscore');
 
 const DAILY_REWARDS = [400, 520, 640, 760, 880, 1100];
 const STORAGE_KEY = 'gameRewardsData';
+const REWARD_COOLDOWN_HOURS = 24; // Через сколько часов доступна новая награда
+const RESET_HOURS = 48; // Через сколько часов сбрасывается streak
 
 // Состояние игры
 let gameState = {
-    rowscore: 0,          // Общий счет ROW
-    lastDailyClaim: null, // Дата последней ежедневной награды
-    dailyStreak: 0        // Текущая серия дней
+    rowscore: 0,
+    lastDailyClaim: null,
+    dailyStreak: 0
 };
 
-
-let coins = []; // Массив для хранения монет
-let obstacles = []; // Массив для препятствий
-
-
+// DOM элементы
 const rowscoreElement = document.getElementById('rowscore');
 const dailyRewardScreen = document.getElementById('daily_reward');
 const mainScreen = document.getElementById('main');
+const dayNumberElement = document.getElementById('day_number');
+const rewardAmountElement = document.getElementById('rowdayly_text_id');
+const claimButton = document.getElementById('daily_claim_btn_img');
 
+// Инициализация игры
 function initGame() {
     loadGameState();
     updateUI();
@@ -56,6 +58,7 @@ function initGame() {
     }
 }
 
+// Загрузка состояния из localStorage
 function loadGameState() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -68,103 +71,120 @@ function loadGameState() {
             };
         } catch (e) {
             console.error('Ошибка загрузки:', e);
+            resetGameState();
         }
     }
 }
 
+// Сохранение состояния в localStorage
 function saveGameState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
 }
 
+// Сброс состояния
+function resetGameState() {
+    gameState = {
+        rowscore: 0,
+        lastDailyClaim: null,
+        dailyStreak: 0
+    };
+    saveGameState();
+}
+
+// Проверка, нужно ли показать награду
 function shouldShowDailyReward() {
+    // Если награда еще не получалась
     if (!gameState.lastDailyClaim) return true;
     
     const lastClaim = new Date(gameState.lastDailyClaim);
     const now = new Date();
     const hoursPassed = (now - lastClaim) / (1000 * 60 * 60);
     
-    // Если пропущено более 48 часов (2 дня), сбрасываем серию
-    if (hoursPassed >= 24) {
+    // Если прошло больше 48 часов - полный сброс
+    if (hoursPassed >= RESET_HOURS) {
         gameState.dailyStreak = 0;
         saveGameState();
+        return true;
     }
     
-    return hoursPassed >= 24;
+    // Если прошло больше 24 часов - награда доступна
+    return hoursPassed >= REWARD_COOLDOWN_HOURS;
 }
 
+// Получение текущей награды
 function getDailyReward() {
-    const dayIndex = Math.min(gameState.dailyStreak, DAILY_REWARDS.length - 1);
-    return DAILY_REWARDS[dayIndex];
+    return DAILY_REWARDS[Math.min(gameState.dailyStreak, DAILY_REWARDS.length - 1)];
 }
 
+// Добавление ROW к счету
 function addRow(amount) {
-    // Получаем текущее значение из gameState
-    let currentScore = parseInt(gameState.rowscore) || 0;
-    
-    // Добавляем новое значение
-    currentScore += amount;
-    
-    // Обновляем все состояния
-    currentRowScore = currentScore;
-    gameState.rowscore = currentScore;
-    
-    // Обновляем отображение в HTML
-    if (rowscoreElement) {
-        rowscoreElement.textContent = currentScore;
-    }
-    
-    // Обновляем ранг, цвета и сохраняем
-    updateRankSystem();
+    gameState.rowscore += amount;
+    updateUI();
     saveGameState();
 }
 
+// Обновление интерфейса
 function updateUI() {
     if (rowscoreElement) {
         rowscoreElement.textContent = gameState.rowscore;
     }
 }
 
+// Показать экран награды
 function showDailyReward() {
-    if (dailyRewardScreen) {
-        document.getElementById('day_number').textContent = gameState.dailyStreak;
-        document.getElementById('rowdayly_text_id').innerHTML = 
-            `+${getDailyReward()} <span style="font-size:1.1rem; margin-left:-6px; font-weight:400;">ROW</span>`;
-        
-        dailyRewardScreen.style.display = 'block';
+    if (!dailyRewardScreen) return;
+    
+    if (dayNumberElement) {
+        dayNumberElement.textContent = gameState.dailyStreak + 1;
     }
+    
+    if (rewardAmountElement) {
+        rewardAmountElement.innerHTML = 
+            `+${getDailyReward()} <span style="font-size:1.1rem; margin-left:-6px; font-weight:400;">ROW</span>`;
+    }
+    
+    dailyRewardScreen.style.display = 'block';
     if (mainScreen) mainScreen.style.display = 'none';
 }
 
+// Показать основной экран
 function showMainScreen() {
     if (dailyRewardScreen) dailyRewardScreen.style.display = 'none';
     if (mainScreen) mainScreen.style.display = 'block';
 }
 
+// Забрать награду
 function claimDailyReward() {
-    const reward = getDailyReward();
-    addRow(reward);
-    
     const now = new Date();
     const lastClaim = gameState.lastDailyClaim ? new Date(gameState.lastDailyClaim) : null;
     
-    // Обновляем дату последнего получения награды
+    // Проверяем, не пропустил ли игрок более 48 часов
+    if (lastClaim) {
+        const hoursPassed = (now - lastClaim) / (1000 * 60 * 60);
+        if (hoursPassed >= RESET_HOURS) {
+            gameState.dailyStreak = 0;
+        }
+    }
+    
+    // Выдаем награду
+    addRow(getDailyReward());
+    
+    // Обновляем дату получения
     gameState.lastDailyClaim = now.toISOString();
     
-    // Увеличиваем streak только если последний claim был не более чем 48 часов назад
-    if (lastClaim && (now - lastClaim) < 24 * 60 * 60 * 1000) {
-        gameState.dailyStreak++;
-    } else if (!lastClaim) {
-        gameState.dailyStreak = 1;
-    } else {
-        gameState.dailyStreak = 1; // Если прошло больше 48 часов, начинаем с 1
-    }
+    // Увеличиваем счетчик дней
+    gameState.dailyStreak++;
     
     saveGameState();
     showMainScreen();
 }
 
-document.getElementById('daily_claim_btn_img')?.addEventListener('click', claimDailyReward);
+// Назначение обработчиков событий
+if (claimButton) {
+    claimButton.addEventListener('click', claimDailyReward);
+}
 
+// Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', initGame);
 
 // task
@@ -255,18 +275,20 @@ function getRandomInRange(min, max) {
 }
 
 // ===== СИСТЕМА НАГРАД ЗА ВОЗРАСТ ===== //
-
 const AGE_REWARD_KEY = 'ageRewardData';
 let ageRewardState = {
     claimed: false,
     amount: 0
 };
 
+// Получаем элементы DOM
 const usernameonAgeID = document.getElementById('usernameonAgeID');
 const usernameonAgeRewardID = document.getElementById('usernameonAgeRewardID');
 
+// Генерируем случайное количество монет
 const randomNumbRewDay = getRandomInRange(500, 1000);
 
+// Загрузка состояния из localStorage
 function loadAgeRewardState() {
     try {
         const saved = localStorage.getItem(AGE_REWARD_KEY);
@@ -276,29 +298,58 @@ function loadAgeRewardState() {
     }
 }
 
+// Сохранение состояния в localStorage
 function saveAgeRewardState() {
     localStorage.setItem(AGE_REWARD_KEY, JSON.stringify(ageRewardState));
 }
 
-function ageReward() {
+// Асинхронная функция для выдачи награды
+async function ageReward() {
     if (ageRewardState.claimed) {
-        console.log('Награда уже была получена ранее');
+        if (window.Telegram?.WebApp?.showAlert) {
+            Telegram.WebApp.showAlert('Вы уже получали награду за возраст!');
+        } else {
+            alert('Вы уже получали награду за возраст!');
+        }
         return;
     }
 
     try {
-        addRow(randomNumbRewDay);
+        // Добавляем монеты
+        await addRow(randomNumbRewDay);
+        
+        // Обновляем состояние
         ageRewardState = {
             claimed: true,
             amount: randomNumbRewDay
         };
         saveAgeRewardState();
+        
+        // Обновляем отображение
         usernameonAgeRewardID.textContent = randomNumbRewDay;
+        
+        // Обновляем глобальный счет
+        if (typeof loadRowScore === 'function') {
+            await loadRowScore();
+        }
+        
+        // Показываем уведомление
+        if (window.Telegram?.WebApp?.showAlert) {
+            console.log(`🎉 Вы получили ${randomNumbRewDay} монет за возраст!`);
+        } else {
+            console.log(`🎉 Вы получили ${randomNumbRewDay} монет за возраст!`);
+        }
     } catch (e) {
         console.error('Ошибка при выдаче награды:', e);
+        if (window.Telegram?.WebApp?.showAlert) {
+            console.log('⚠️ Ошибка при получении награды');
+        } else {
+            console.log('⚠️ Ошибка при получении награды');
+        }
     }
 }
 
+// Инициализация системы наград
 function initAgeReward() {
     loadAgeRewardState();
     usernameonAgeRewardID.textContent = ageRewardState.claimed 
@@ -312,17 +363,33 @@ function initAgeReward() {
     }
 }
 
-if (window.tg?.initDataUnsafe?.user) {
-    const user = tg.initDataUnsafe.user;
-    usernameonAgeID.textContent = `${user.first_name}${user.last_name ? ' ' + user.last_name : ''}`;
-} else {
-    usernameonAgeID.textContent = "Пользователь не найден";
+// Проверяем, запущено ли в Telegram WebApp
+function initTelegramUser() {
+    if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+        const user = Telegram.WebApp.initDataUnsafe.user;
+        const userName = [user.first_name, user.last_name].filter(Boolean).join(' ');
+        usernameonAgeID.textContent = userName || "Пользователь Telegram";
+        
+        // Добавляем дополнительные данные, если нужно
+        if (user.username) {
+            usernameonAgeID.textContent += ` (@${user.username})`;
+        }
+    } else if (window.tg?.initDataUnsafe?.user) {
+        // Для старых версий Telegram WebApp
+        const user = tg.initDataUnsafe.user;
+        const userName = [user.first_name, user.last_name].filter(Boolean).join(' ');
+        usernameonAgeID.textContent = userName || "Пользователь Telegram";
+    } else {
+        // Для веб-версии
+        usernameonAgeID.textContent = "Гость";
+    }
 }
 
+// Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
+    initTelegramUser();
     initAgeReward();
 });
-
 
 //hat web app
 
