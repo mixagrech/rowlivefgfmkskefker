@@ -17,6 +17,8 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@ton/core@latest/dist/index.min.js"></script>
 
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -153,6 +155,17 @@
             <div id="user-avatar"></div>
             <div class="Circle1Avatar"></div>
             <div class="Circle2Avatar"></div>
+        </div>
+
+        <div id="lottie-animation" class="lottie-container" style="display: none;">
+            <dotlottie-player
+                src="https://lottie.host/fb17707f-5cd1-4934-ac2f-0d6bf7ac093b/nL6sTaFenR.lottie"
+                background="transparent"
+                speed="1"
+                style="width: 300px; height: 300px"
+                loop
+                autoplay>
+            </dotlottie-player>
         </div>
 
         <div><svg width="49" height="224" viewBox="0 0 49 224" fill="none" xmlns="http://www.w3.org/2000/svg">
