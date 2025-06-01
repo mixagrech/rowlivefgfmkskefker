@@ -304,7 +304,7 @@ body{
     right: 0px;
     display: block;
     text-align: center;
-    top: 45%;
+    top: 47%;
     font-size: 1.5rem;
     font-weight: 500;
 }
@@ -315,7 +315,7 @@ body{
     right: 0px;
     display: block;
     text-align: center;
-    top: 50%;
+    top: 52%;
     font-size: 1.5rem;
     font-weight: 400;
 }
@@ -2370,22 +2370,19 @@ SkinImgStandart2
 
 
 #user-avatar {
-    position: absolute;
-    top: 28%;
-    left: 50%;
-    transform: translateX(-50%);
     width: 100px;
     height: 100px;
     border-radius: 50%;
     overflow: hidden;
     background: linear-gradient(270deg, #D163E6 0%, #7D88FE 100%);
-    display: none; /* Сначала скрыта */
+    display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     font-weight: bold;
     font-size: 50px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 3;
 }
 
 #user-avatar img {
@@ -2397,4 +2394,35 @@ SkinImgStandart2
 #user-avatar svg {
     width: 39px;
     height: 42px;
+}
+
+.AvatarCircles {
+    position: absolute;
+    top: 27%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.Circle1Avatar {
+    position: absolute;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 3px solid #0479FA;
+    z-index: 2;
+}
+
+.Circle2Avatar {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 1px solid #0479FA;
+    z-index: 1;
 }
