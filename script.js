@@ -363,7 +363,6 @@ function initAgeReward() {
     }
 }
 
-// Проверяем, запущено ли в Telegram WebApp
 if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
     usernameonAgeID.innerHTML = `${tg.initDataUnsafe.user.first_name} ${tg.initDataUnsafe.user.last_name}`;
 } else {
@@ -372,7 +371,6 @@ if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
-    initTelegramUser();
     initAgeReward();
 });
 
@@ -1868,3 +1866,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ======== Widthdrow NFT =========
+
