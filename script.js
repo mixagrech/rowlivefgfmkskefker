@@ -342,9 +342,9 @@ function saveAgeRewardState() {
 async function ageReward() {
     if (ageRewardState.claimed) {
         if (window.Telegram?.WebApp?.showAlert) {
-            Telegram.WebApp.showAlert('Вы уже получали награду за возраст!');
+            console.log('Вы уже получали награду за возраст!');
         } else {
-            alert('Вы уже получали награду за возраст!');
+            console.log('Вы уже получали награду за возраст!');
         }
         return;
     }
