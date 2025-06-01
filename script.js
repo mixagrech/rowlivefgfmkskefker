@@ -12,6 +12,12 @@ champrangt.addEventListener('click', () => {
     document.getElementById('main').style.display = 'none';
     document.getElementById('account_age').style.display = 'block';
     document.getElementById("user-avatar").style.display = "flex"; // Показываем аватар
+
+    const animation = document.getElementById('lottie-animation');
+    animation.style.display = 'block'; 
+    setTimeout(() => {
+        animation.style.display = 'none';
+    }, 2000);
 })
 
 buttonbackage_btn.addEventListener('click', () => {
@@ -1901,7 +1907,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ======== Widthdrow NFT =========
-
-
-
-
