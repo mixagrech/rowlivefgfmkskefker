@@ -17,7 +17,7 @@ champrangt.addEventListener('click', () => {
     animation.style.display = 'block'; 
     setTimeout(() => {
         animation.style.display = 'none';
-    }, 2000);
+    }, 1500);
 })
 
 buttonbackage_btn.addEventListener('click', () => {
