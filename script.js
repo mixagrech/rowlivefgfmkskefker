@@ -1867,3 +1867,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ======== Widthdrow NFT =========
 
+
+
+// Проверяем, что мы в Telegram WebApp
+if (window.Telegram && Telegram.WebApp) {
+  // Получаем данные пользователя
+  const user = Telegram.WebApp.initDataUnsafe?.user;
+  
+  if (user && user.photo_url) {
+    // Создаем элемент изображения
+    const img = document.createElement('img');
+    img.src = user.photo_url;
+    img.width = 100;
+    img.height = 100;
+    img.alt = 'Profile Photo';
+    img.style.borderRadius = '50%'; // Делаем круглой (опционально)
+    
+    // Добавляем изображение на страницу
+    document.body.appendChild(img);
+    
+    // Или можно добавить в конкретный элемент
+    // document.getElementById('avatar-container').appendChild(img);
+  } else {
+    console.log('Фото профиля недоступно или пользователь не разрешил доступ');
+  }
+} else {
+  console.log('Это не Telegram WebApp');
+}
