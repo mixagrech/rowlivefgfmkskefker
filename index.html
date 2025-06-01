@@ -15,6 +15,8 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Inder&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     
+    <script src="https://cdn.jsdelivr.net/npm/@ton/core@latest/dist/index.min.js"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -145,6 +147,9 @@
                 <div class="line_under_text"></div>
             </div>
         </div>
+
+        <div id="user-avatar"></div>
+        
         <div><svg width="49" height="224" viewBox="0 0 49 224" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="49" width="224" height="48.9632" transform="rotate(90 49 0)" fill="white" fill-opacity="0"/>
             </svg>
@@ -759,7 +764,7 @@
                 <div class="LeftGrupM">
                     <p>Left:</p>
                     <div class="MeterBlockPanel">
-                        <p class="FlexMeterNumber"><span id="leftRemaining">15000</span><span>м</span></p>
+                        <p class="FlexMeterNumber"><span id="leftRemaining">15000</span><span>m</span></p>
                     </div>
                 </div>
                 <div class="CenterGrupC">
@@ -771,7 +776,7 @@
                 <div class="RightGrupL">
                     <p>Best result:</p>
                     <div class="LiveBlockPanel">
-                        <p class="FlexLiveNumber"><span id="bestResult">9642</span></p>
+                        <p class="FlexLiveNumber"><span id="bestResult">9642</span><span>m</span></p>
                     </div>
                 </div>
             </div>
@@ -785,6 +790,7 @@
 
     </div>
 
+    
 
     <script src="script.js"></script>
 </body>
