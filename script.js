@@ -1305,89 +1305,6 @@ AllLotsNFTMArket.addEventListener('click', () => {
     document.querySelector('.MyLotsMenu').style.display = 'none';
 });
 
-// Widthrow NFT skin
-
-
-
-
-// Конфиг NFT коллекции
-const NFT_CONFIG = {
-    collectionAddress: 'EQAG1zMLkCFOCl8lJSCiPS7nXKoookxzN3-IuPshaG5QeNqd',
-    gasAmount: '0.05', // Комиссия
-    metadata: {
-        name: "ROW LIVE Reward",
-        description: "Withdrawn from ROW LIVE game",
-        image: "ipfs://bafybeici36x6pedrpai6o4kfw5aaxkp3wlxnep6pl5cvjifu2kcwznx5vy",
-        attributes: [
-            { "trait_type": "Type", "value": "Game Reward" }
-        ]
-    }
-};
-
-// Функция отправки уведомления
-async function sendTonkeeperNotification(userAddress) {
-    const response = await fetch('YOUR_BACKEND_ENDPOINT', {
-        method: 'POST',
-        headers: {
-            'Authorization': 'Bearer TC-MSG_436fe48b166ab892d29ae81fce8605cfddc79bcd2c2a192dae27c1c0c520435028'
-        }
-    });
-    return await response.json();
-}
-
-// Основная функция вывода NFT
-async function withdrawNft() {
-    try {
-        // 1. Проверка подключения кошелька
-        if (!connector.connected) {
-            await connector.connect();
-            return;
-        }
-
-        const userAddress = connector.account.address;
-        
-        // 2. Подготовка транзакции (используем window.TonCore если подключили через script tag)
-        const TonCore = window.TonCore || (await import('@ton/core')).default;
-        const { beginCell } = TonCore;
-        
-        const tx = {
-            validUntil: Math.floor(Date.now() / 1000) + 300,
-            messages: [{
-                address: NFT_CONFIG.collectionAddress,
-                amount: (parseFloat(NFT_CONFIG.gasAmount) * 1000000000).toString(),
-                payload: beginCell()
-                    .storeUint(1, 32) // op = mint
-                    .storeAddress(TonCore.Address.parse(userAddress))
-                    .storeRef(
-                        beginCell()
-                            .storeStringTail(JSON.stringify(NFT_CONFIG.metadata))
-                            .endCell()
-                    )
-                    .endCell()
-                    .toBoc()
-                    .toString('base64')
-            }]
-        };
-
-        // 3. Отправка транзакции
-        const result = await connector.sendTransaction(tx);
-        console.log('NFT minted:', result);
-
-        // 4. Отправка уведомления (через бекенд!)
-        await sendTonkeeperNotification(userAddress);
-        
-        // 5. Открытие кошелька
-        window.open(`https://app.tonkeeper.com/collection/${NFT_CONFIG.collectionAddress}`, '_blank');
-        
-    } catch (error) {
-        console.error('Withdraw error:', error);
-        alert('Error: ' + (error.message || 'Please try later'));
-    }
-}
-
-// Вешаем обработчик на кнопку
-document.querySelector('.PriceBtnMyLotsMarket').addEventListener('click', withdrawNft);
-
 
 //Mini game
 
@@ -1960,3 +1877,77 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('GameOnTask').style.display = 'none';
     });
 });
+
+
+
+
+
+// ======== Widthdrow NFT =========
+
+
+
+
+// Создаем прелоадер с корректным SVG
+const loader = document.createElement('div');
+loader.id = 'custom-loader';
+loader.style.cssText = `
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: ${window.Telegram?.WebApp?.themeParams?.bg_color || '#ffffff'};
+  z-index: 9999;
+`;
+
+// Корректный SVG лоадера (убедитесь что весь path в одну строку)
+loader.innerHTML = `
+<svg width="115" height="114" viewBox="0 0 115 114" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M1.598 95.643C0.163 94.815-0.329 92.98 0.5 91.545L19.446 58.73V73.811L7.031 95.315C6.202 96.75 4.368 97.242 2.933 96.413L1.598 95.643ZM32.207 51.709L19.446 73.812V110.404C19.446 112.061 20.789 113.404 22.446 113.404H29.208C30.865 113.404 32.208 112.061 32.208 110.404V64.899H32.225L59.363 111.904C59.899 112.832 60.89 113.404 61.961 113.404H69.769C72.079 113.404 73.522 110.904 72.367 108.904L46.961 64.899H57.395C59.052 64.899 60.395 63.556 60.395 61.899V50.226H70.266C71.923 50.226 73.266 48.883 73.266 47.226V45.718L83.643 56.846V110.404C83.643 112.061 84.986 113.404 86.643 113.404H93.405C95.062 113.404 96.405 112.061 96.405 110.404V70.532L109.429 84.498C110.559 85.71 112.457 85.776 113.669 84.646L113.806 84.518C115.018 83.388 115.084 81.49 113.954 80.278L96.405 61.459V24.943C96.405 23.286 95.062 21.943 93.405 21.943H86.643C84.986 21.943 83.643 23.286 83.643 24.943V47.773L73.266 36.645V36.641C73.266 36.609 73.24 36.583 73.207 36.583V36.583L67.011 29.938C65.881 28.726 63.983 28.66 62.771 29.79L62.634 29.918C61.422 31.048 61.356 32.946 62.486 34.158L64.747 36.583H60.395V24.91C60.395 23.253 59.052 21.91 57.395 21.91H49.412L58.962 5.369C59.79 3.934 59.299 2.099 57.864 1.271L56.529 0.5C55.094-0.328 53.259 0.163 52.431 1.598L40.704 21.91H32.241C32.222 21.91 32.207 21.925 32.207 21.943V21.943H22.446C20.789 21.943 19.446 23.286 19.446 24.943V58.73L32.208 36.625V50.226L32.207 51.709ZM32.208 51.708V64.899L32.207 51.709L32.208 51.708ZM33.063 50.226H60.395V36.583H40.94L49.412 21.91H40.704L32.233 36.583H32.208V36.625L32.233 36.583H40.94L33.063 50.226ZM33.063 50.226H32.208V51.708L33.063 50.226ZM64.747 36.583L73.266 45.718V36.645L73.207 36.583H64.747ZM83.643 47.773V56.846L96.405 70.532V61.459L83.643 47.773ZM46.961 64.899L44.76 61.087C43.932 59.652 42.097 59.161 40.662 59.989L32.237 64.854C32.221 64.863 32.216 64.883 32.225 64.899V64.899H46.961Z" fill="${window.Telegram?.WebApp?.themeParams?.text_color || '#ffffff'}"/>
+</svg>
+`;
+
+document.body.appendChild(loader);
+
+// Удаление прелоадера
+function removeLoader() {
+  if (loader && loader.parentNode) {
+    loader.remove();
+  }
+}
+
+// Инициализация приложения
+function initApp() {
+  try {
+    // Проверяем инициализацию Telegram WebApp
+    if (window.Telegram?.WebApp?.initDataUnsafe) {
+      Telegram.WebApp.expand();
+      Telegram.WebApp.enableClosingConfirmation();
+      
+      // Для версий > 6.1
+      if (parseFloat(Telegram.WebApp.version) > 6.1) {
+        Telegram.WebApp.setHeaderColor(
+          Telegram.WebApp.themeParams.bg_color || '#ffffff'
+        );
+      }
+    }
+    
+    removeLoader();
+    initGame(); // Ваша основная функция инициализации
+    
+  } catch (error) {
+    console.error('App init error:', error);
+    removeLoader(); // Всегда убираем прелоадер даже при ошибке
+  }
+}
+
+// Запуск приложения
+if (document.readyState === 'complete') {
+  initApp();
+} else {
+  window.addEventListener('DOMContentLoaded', initApp);
+  window.addEventListener('load', initApp);
+}
