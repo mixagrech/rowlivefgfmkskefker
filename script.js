@@ -1899,7 +1899,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-
+Telegram.WebApp.HapticFeedback.notificationOccurred('success');
 // ======== Widthdrow NFT =========
 
 
