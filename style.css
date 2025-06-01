@@ -2426,3 +2426,13 @@ SkinImgStandart2
     border: 1px solid #0479FA;
     z-index: 1;
 }
+
+
+.lottie-container {
+    position: fixed;
+    top: 68%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    pointer-events: none;
+}
