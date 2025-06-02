@@ -17,7 +17,7 @@ champrangt.addEventListener('click', () => {
     animation.style.display = 'block'; 
     setTimeout(() => {
         animation.style.display = 'none';
-    }, 1500);
+    }, 2000);
 })
 
 buttonbackage_btn.addEventListener('click', () => {
@@ -826,7 +826,7 @@ function setupReferralButtons(code) {
     }
 
     // Кнопка Telegram
-    const telegramBtn = document.getElementById('AddFriendSentMessageBtnID');
+    const telegramBtn = document.getElementById('SentMesageInvFriendBtn');
     if (telegramBtn) {
         telegramBtn.href = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent('Присоединяйся!')}`;
     }
@@ -1907,3 +1907,90 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ======== Widthdrow NFT =========
+
+
+
+
+
+
+
+// ======== Share Message Referal ========= // 
+
+
+
+/**
+ * Функция для отправки сообщения через Telegram Mini Apps
+ * @param {string} text - Текст сообщения
+ * @param {string} buttonText - Текст кнопки
+ * @param {string} link - Ссылка для кнопки
+ * @param {string} photoUrl - URL изображения (опционально)
+ */
+function shareMessageToTelegram(text, buttonText, link, photoUrl) {
+    // Проверяем, что скрипт запущен внутри Telegram WebApp
+    if (!window.Telegram?.WebApp) {
+        console.error("Этот функционал работает только в Telegram Mini Apps!");
+        return;
+    }
+
+    const webApp = Telegram.WebApp;
+
+    // Создаем объект PreparedInlineMessage
+    const message = {
+        text: text,
+        link: link,
+        button_text: buttonText,
+    };
+
+    // Добавляем фото, если оно указано
+    if (photoUrl) {
+        message.photo_url = photoUrl;
+    }
+
+    // Пытаемся отправить через shareMessage
+    if (webApp.shareMessage) {
+        try {
+            webApp.shareMessage(message);
+        } catch (error) {
+            console.error("Ошибка при отправке:", error);
+            fallbackShare(message);
+        }
+    } else {
+        fallbackShare(message);
+    }
+}
+
+/**
+ * Фолбэк, если shareMessage не поддерживается
+ */
+function fallbackShare(message) {
+    const shareText = `${message.text}\n\n${message.button_text}: ${message.link}`;
+
+    // Пытаемся использовать Web Share API
+    if (navigator.share) {
+        navigator.share({
+            title: "Приглашение",
+            text: shareText,
+            url: message.link,
+        }).catch(() => copyToClipboard(shareText));
+    } else {
+        copyToClipboard(shareText);
+    }
+}
+
+/**
+ * Копирует текст в буфер обмена
+ */
+function copyToClipboard(text) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+    alert("Сообщение скопировано! Вставьте его в чат вручную.");
+}
+
+// Экспортируем функцию, если используется модульная система
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = { shareMessageToTelegram };
+}
