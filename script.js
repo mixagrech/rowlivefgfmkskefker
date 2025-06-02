@@ -1918,84 +1918,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-/**
- * Отправляет сообщение через Telegram WebApp.shareMessage()
- * @param {string} text - Текст сообщения
- * @param {string} buttonText - Текст кнопки (например, "Играть 👆")
- * @param {string} link - Ссылка (например, "https://t.me/rowlivebot/row")
- * @param {string?} photoUrl - URL изображения (опционально)
- */
-function shareMessageToTelegram(text, buttonText, link, photoUrl) {
-    if (!tg) {
-        console.error("Telegram WebApp не инициализирован!");
-        return fallbackShare(text, buttonText, link);
-    }
-
-    // Формируем сообщение в формате PreparedInlineMessage
+    
+document.getElementById("SentMesageInvFriendBtn").addEventListener("click", () => {
+            // Подготавливаем сообщение с картинкой и кнопкой
     const message = {
-        text: text,
-        button_text: buttonText,
-        link: link,
+        text: "Привет! Нажми на кнопку и погрузись в мир гребли на байдарке! 🚣‍♂️",
+        button_text: "Играть 👆",
+        link: "https://t.me/rowlivebot/row",
+        photo_url: "https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png" // Замените на реальный URL
     };
 
-    // Добавляем фото, если указано
-    if (photoUrl) message.photo_url = photoUrl;
-
-    // Пытаемся отправить через Telegram API
+    // Пытаемся отправить через Telegram
     if (tg.shareMessage) {
-        try {
-            tg.shareMessage(message);
-        } catch (error) {
-            console.error("Ошибка shareMessage:", error);
-            fallbackShare(text, buttonText, link);
+        tg.shareMessage(message);
+    } else {
+        // Фолбэк для других платформ
+        const shareText = `${message.text}\n\n${message.button_text}: ${message.link}`;
+        if (navigator.share) {
+            navigator.share({
+                title: "Приглашение в игру",
+                text: shareText,
+                url: message.link
+            }).catch(() => {
+                copyToClipboard(shareText);
+            });
+        } else {
+            copyToClipboard(shareText);
         }
-    } else {
-        fallbackShare(text, buttonText, link);
     }
-}
-
-/**
- * Фолбэк, если Telegram.shareMessage недоступен
- */
-function fallbackShare(text, buttonText, link) {
-    const shareText = `${text}\n\n${buttonText}: ${link}`;
-
-    // Пробуем Web Share API (в мобильных браузерах)
-    if (navigator.share) {
-        navigator.share({
-            title: "Приглашение",
-            text: shareText,
-            url: link,
-        }).catch(() => copyToClipboard(shareText));
-    } else {
-        copyToClipboard(shareText);
-    }
-}
-
-/**
- * Копирует текст в буфер обмена
- */
-function copyToClipboard(text) {
-    const input = document.createElement("textarea");
-    input.value = text;
-    document.body.appendChild(input);
-    input.select();
-    document.execCommand("copy");
-    document.body.removeChild(input);
-    alert("Сообщение скопировано! Вставьте его в чат Telegram.");
-}
-
-// Экспорт для модульных систем (если нужно)
-if (typeof module !== "undefined" && module.exports) {
-    module.exports = { shareMessageToTelegram };
-}
-
-document.getElementById("SentMesageInvFriendBtn").addEventListener("click", () => {
-    shareMessageToTelegram(
-        "Привет! Нажимай на кнопку и погружайся в мир гребли на байдарке.",
-        "Играть 👆",
-        "https://t.me/rowlivebot/row",
-        "dfgfdd.png"  // (если есть картинка)
-    );
 });
 
