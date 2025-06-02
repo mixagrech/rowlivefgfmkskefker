@@ -1986,35 +1986,53 @@ storiesBtn.addEventListener('click', function() {
 });
 
 // Ваш существующий код для shareMessage (немного модифицирован)
-document.querySelector('.TestMessageSent').addEventListener('click', function() {
-  if (window.Telegram?.WebApp?.shareMessage) {
-    const message = {
-      text: "Привет! Нажми на кнопку и погрузись в мир гребли на байдарке! 🚣‍♂️",
-      button_text: "Играть 👆",
-      link: "https://t.me/rowlivebot/row",
-      photo_url: "https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png"
-    };
-    
-    try {
-      Telegram.WebApp.shareMessage(message);
-      this.textContent = "Отправлено!";
-      this.style.backgroundColor = "#4CAF50";
-    } catch (error) {
-      this.textContent = "Ошибка!";
-      this.style.backgroundColor = "#F44336";
-    }
-    
-    setTimeout(() => {
-      this.textContent = "Sent";
-      this.style.backgroundColor = "aqua";
-    }, 2000);
-  } else {
+document.querySelector('.TestMessageSent').addEventListener('click', async function() {
+  if (!window.Telegram?.WebApp) {
     this.textContent = "Только в Telegram!";
     this.style.backgroundColor = "#FF9800";
-    
     setTimeout(() => {
       this.textContent = "Sent";
       this.style.backgroundColor = "aqua";
     }, 2000);
+    return;
   }
+
+  const tg = Telegram.WebApp;
+  
+  // 1. Сначала показываем "Отправка..."
+  this.textContent = "Отправка...";
+  this.style.backgroundColor = "#2196F3";
+
+  try {
+    // 2. Используем расширенный формат сообщения
+    const result = await tg.sendData(JSON.stringify({
+      method: "shareMessage",
+      params: {
+        message: {
+          text: "Привет! Нажми и играй в греблю 🚣‍♂️",
+          button_text: "Играть 👆",
+          link: "https://t.me/rowlivebot/row",
+          photo_url: "https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png"
+        }
+      }
+    }));
+
+    // 3. Проверяем реальный результат отправки
+    if (result?.status === "sent") {
+      this.textContent = "Отправлено!";
+      this.style.backgroundColor = "#4CAF50";
+    } else {
+      throw new Error("Пользователь отменил");
+    }
+  } catch (error) {
+    this.textContent = "Не отправлено";
+    this.style.backgroundColor = "#F44336";
+    console.error("Ошибка:", error);
+  }
+
+  // 4. Возвращаем исходное состояние
+  setTimeout(() => {
+    this.textContent = "Sent";
+    this.style.backgroundColor = "aqua";
+  }, 2000);
 });
