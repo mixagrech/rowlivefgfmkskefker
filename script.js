@@ -1928,91 +1928,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// Проверяем, что код выполняется в браузере (а не в Node.js)
-// Ждем загрузки страницы
-document.addEventListener('DOMContentLoaded', function() {
-  // Создаем кнопку
-  const shareBtn = document.createElement('button');
-  shareBtn.textContent = 'Пригласить друга';
-  
-  // Стили кнопки
-  Object.assign(shareBtn.style, {
-    padding: '12px 24px',
-    background: '#31B545',
-    color: 'white',
-    borderRadius: '24px',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    border: 'none',
-    fontSize: '16px',
-    margin: '10px',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-  });
+// Создаем кнопку
+const inviteBtn = document.createElement('button');
+inviteBtn.id = 'telegramInviteBtn';
+inviteBtn.textContent = 'Пригласить друга';
 
-  // Добавляем кнопку на страницу
-  document.body.appendChild(shareBtn);
+// Стилизуем кнопку
+Object.assign(inviteBtn.style, {
+  padding: '12px 24px',
+  background: '#31B545',
+  color: 'white',
+  borderRadius: '24px',
+  fontWeight: 'bold',
+  cursor: 'pointer',
+  border: 'none',
+  fontSize: '16px',
+  margin: '10px',
+  boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+});
 
-  // Обработчик клика
-  shareBtn.addEventListener('click', function() {
-    const tg = window.Telegram?.WebApp;
-    
-    // Проверяем, что мы в Telegram WebApp
-    if (!tg) {
-      showFeedback(shareBtn, 'Только в Telegram!', '#FF9800');
-      return;
-    }
+// Добавляем кнопку в тело документа
+document.body.appendChild(inviteBtn);
 
-    // Показываем статус "Отправка..."
-    showFeedback(shareBtn, 'Отправка...', '#2196F3');
+// Обработчик клика
+inviteBtn.addEventListener('click', function() {
+  const message = {
+    text: 'Привет! Нажми на кнопку и играй в греблю 🚣‍♂️',
+    buttonText: 'Играть 👆',
+    link: 'https://t.me/rowlivebot/row',
+    image: 'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png'
+  };
 
-    // Формируем сообщение
-    const message = {
-      text: 'Привет! Нажми на кнопку и играй в греблю 🚣‍♂️',
-      button_text: 'Играть 👆',
-      link: 'https://t.me/rowlivebot/row'
-    };
-
-    // Пытаемся отправить через WebApp API
-    if (tg.shareMessage) {
-      try {
-        tg.shareMessage(message, function(success) {
-          if (success) {
-            showFeedback(shareBtn, 'Отправлено!', '#4CAF50');
-          } else {
-            showFeedback(shareBtn, 'Отменено', '#F44336');
-          }
-          resetButton(shareBtn);
-        });
-      } catch (error) {
-        showFeedback(shareBtn, 'Ошибка!', '#F44336');
-        resetButton(shareBtn);
-      }
-    } else {
-      // Альтернативный способ для старых версий
-      try {
-        tg.openTelegramLink(
-          `https://t.me/share/url?url=${encodeURIComponent(message.link)}&text=${encodeURIComponent(message.text)}`
-        );
-        showFeedback(shareBtn, 'Отправлено!', '#4CAF50');
-      } catch (error) {
-        showFeedback(shareBtn, 'Не поддерживается', '#FF9800');
-      }
-      resetButton(shareBtn);
-    }
-  });
-
-  // Функция для показа статуса
-  function showFeedback(button, text, color) {
-    button.textContent = text;
-    button.style.background = color;
+  // Пытаемся использовать Telegram WebApp
+  const tg = window.Telegram?.WebApp;
+  if (tg?.shareMessage) {
+    tg.shareMessage({
+      text: message.text,
+      button_text: message.buttonText,
+      link: message.link,
+      photo_url: message.image
+    });
+    return;
   }
 
-  // Функция для сброса кнопки
-  function resetButton(button) {
-    setTimeout(() => {
-      button.textContent = 'Пригласить друга';
-      button.style.background = '#31B545';
-    }, 2000);
+  // Альтернативные способы для других платформ
+  if (navigator.share) {
+    navigator.share({
+      title: 'Приглашение в игру',
+      text: message.text,
+      url: message.link
+    }).catch(e => console.error('Ошибка:', e));
+  } else {
+    navigator.clipboard.writeText(`${message.text}\n${message.link}`)
+      .then(() => alert('Ссылка скопирована! Вставьте её в чат'))
+      .catch(() => prompt('Скопируйте ссылку:', message.link));
   }
 });
 
