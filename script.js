@@ -1928,60 +1928,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// Создаем кнопку
-const inviteBtn = document.createElement('button');
-inviteBtn.id = 'telegramInviteBtn';
-inviteBtn.textContent = 'Пригласить друга';
+// 1. Создаем кнопку
+const btn = document.createElement('button');
+btn.textContent = 'Пригласить друга';
+btn.style.cssText = `
+  padding: 12px 24px;
+  background: #31B545;
+  color: white;
+  border-radius: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  margin: 10px;
+`;
 
-// Стилизуем кнопку
-Object.assign(inviteBtn.style, {
-  padding: '12px 24px',
-  background: '#31B545',
-  color: 'white',
-  borderRadius: '24px',
-  fontWeight: 'bold',
-  cursor: 'pointer',
-  border: 'none',
-  fontSize: '16px',
-  margin: '10px',
-  boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-});
+document.body.appendChild(btn);
 
-// Добавляем кнопку в тело документа
-document.body.appendChild(inviteBtn);
+// 2. Обработчик с детальной проверкой
+btn.addEventListener('click', () => {
 
-// Обработчик клика
-inviteBtn.addEventListener('click', function() {
-  const message = {
-    text: 'Привет! Нажми на кнопку и играй в греблю 🚣‍♂️',
-    buttonText: 'Играть 👆',
-    link: 'https://t.me/rowlivebot/row',
-    image: 'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png'
-  };
-
-  // Пытаемся использовать Telegram WebApp
-  const tg = window.Telegram?.WebApp;
-  if (tg?.shareMessage) {
-    tg.shareMessage({
-      text: message.text,
-      button_text: message.buttonText,
-      link: message.link,
-      photo_url: message.image
-    });
+  
+  if (!tg) {
+    alert('Запустите в Telegram Mini App!');
     return;
   }
 
-  // Альтернативные способы для других платформ
-  if (navigator.share) {
-    navigator.share({
-      title: 'Приглашение в игру',
-      text: message.text,
-      url: message.link
-    }).catch(e => console.error('Ошибка:', e));
+  console.log('Telegram WebApp detected:', tg);
+  console.log('Available methods:', Object.keys(tg));
+
+  // Параметры сообщения
+  const message = {
+    text: 'Привет! Нажми и играй в греблю 🚣‍♂️',
+    button_text: 'Играть 👆',
+    link: 'https://t.me/rowlivebot/row',
+    photo_url: 'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png'
+  };
+
+  // Проверяем метод shareMessage
+  if (typeof tg.shareMessage === 'function') {
+    console.log('Trying shareMessage...');
+    tg.shareMessage(message, (success) => {
+      console.log('Share result:', success);
+      alert(success ? 'Отправлено!' : 'Отменено');
+    });
   } else {
-    navigator.clipboard.writeText(`${message.text}\n${message.link}`)
-      .then(() => alert('Ссылка скопирована! Вставьте её в чат'))
-      .catch(() => prompt('Скопируйте ссылку:', message.link));
+    console.error('shareMessage not available');
+    alert('Ваша версия Telegram не поддерживает отправку');
+    
+    // Альтернатива через deep link
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(message.link)}&text=${encodeURIComponent(message.text)}`;
+    tg.openLink(shareUrl);
   }
 });
 
