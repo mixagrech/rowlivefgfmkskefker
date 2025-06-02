@@ -1928,111 +1928,81 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+// Функция для отправки сообщения
+function shareMessage() {
+    if (!window.Telegram?.WebApp) {
+        console.error('Telegram WebApp is not available');
+        return;
+    }
+
+    Telegram.WebApp.shareMessage({
+        text: 'Привет! Нажмите кнопку для игры в греблю 🚣‍♂️',
+        button_text: 'Играть сейчас', // Обязательное поле
+        link: 'https://t.me/rowlivebot/row', // Используем link вместо url
+        photo_url: 'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png' // Опционально
+    });
+}
+
+document.querySelector('.TestMessageSent').addEventListener('click', () => {
+    shareMessage();
+})
+
+
 // Создаем кнопку для Stories
-const storiesBtn = document.createElement('div');
-storiesBtn.className = 'ShareToStoriesBtn';
-storiesBtn.innerHTML = 'Поделиться в Stories';
+const storiesBtn = document.createElement('button');
+storiesBtn.textContent = 'Опубликовать в Stories';
 Object.assign(storiesBtn.style, {
-  position: 'absolute',
-  top: '60%',
-  left: '10%',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  backgroundColor: '#9C27B0',
+  padding: '12px 24px',
+  background: 'linear-gradient(45deg, #FF0076, #8A2BE2)',
   color: 'white',
-  width: '100px',
-  height: '47px',
-  borderRadius: '7px',
-  cursor: 'pointer'
+  borderRadius: '24px',
+  fontWeight: 'bold',
+  cursor: 'pointer',
+  border: 'none',
+  fontSize: '16px',
+  margin: '10px',
+  boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
 });
+
+// Добавляем кнопку на страницу
 document.body.appendChild(storiesBtn);
 
 // Обработчик клика
-storiesBtn.addEventListener('click', function() {
-  if (window.Telegram?.WebApp?.shareToStory) {
-    const imageUrl = 'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png';
-    
-    Telegram.WebApp.shareToStory({
-      asset: {
-        type: 'photo',
-        file: imageUrl
-      },
-      caption: 'Попробуйте мою игру про греблю!',
-      url: 'https://t.me/rowlivebot/row'
-    }, (success) => {
-      if (success) {
-        storiesBtn.textContent = 'Опубликовано!';
-        storiesBtn.style.backgroundColor = '#4CAF50';
-      } else {
-        storiesBtn.textContent = 'Отменено';
-        storiesBtn.style.backgroundColor = '#F44336';
-      }
-      
-      setTimeout(() => {
-        storiesBtn.textContent = 'Поделиться в Stories';
-        storiesBtn.style.backgroundColor = '#9C27B0';
-      }, 2000);
-    });
-  } else {
-    storiesBtn.textContent = 'Недоступно';
-    storiesBtn.style.backgroundColor = '#FF9800';
-    
-    setTimeout(() => {
-      storiesBtn.textContent = 'Поделиться в Stories';
-      storiesBtn.style.backgroundColor = '#9C27B0';
-    }, 2000);
-  }
-});
-
-// Ваш существующий код для shareMessage (немного модифицирован)
-document.querySelector('.TestMessageSent').addEventListener('click', async function() {
-  if (!window.Telegram?.WebApp) {
-    this.textContent = "Только в Telegram!";
-    this.style.backgroundColor = "#FF9800";
-    setTimeout(() => {
-      this.textContent = "Sent";
-      this.style.backgroundColor = "aqua";
-    }, 2000);
+storiesBtn.addEventListener('click', () => {
+  if (!window.Telegram?.WebApp?.shareToStory) {
+    alert('Функция доступна только в Telegram приложении');
     return;
   }
 
-  const tg = Telegram.WebApp;
-  
-  // 1. Сначала показываем "Отправка..."
-  this.textContent = "Отправка...";
-  this.style.backgroundColor = "#2196F3";
+  const imageUrl = 'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png';
+  const gameUrl = 'https://t.me/rowlivebot/row';
 
-  try {
-    // 2. Используем расширенный формат сообщения
-    const result = await tg.sendData(JSON.stringify({
-      method: "shareMessage",
-      params: {
-        message: {
-          text: "Привет! Нажми и играй в греблю 🚣‍♂️",
-          button_text: "Играть 👆",
-          link: "https://t.me/rowlivebot/row",
-          photo_url: "https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png"
-        }
-      }
-    }));
+  // Показываем статус загрузки
+  storiesBtn.textContent = 'Загрузка...';
+  storiesBtn.disabled = true;
 
-    // 3. Проверяем реальный результат отправки
-    if (result?.status === "sent") {
-      this.textContent = "Отправлено!";
-      this.style.backgroundColor = "#4CAF50";
+  Telegram.WebApp.shareToStory({
+    asset: {
+      type: 'photo',
+      file: imageUrl
+    },
+    caption: 'Присоединяйся к игре! 🚣‍♂️',
+    url: gameUrl
+  }, (success) => {
+    // Возвращаем исходное состояние кнопки
+    storiesBtn.textContent = 'Опубликовать в Stories';
+    storiesBtn.disabled = false;
+
+    if (success) {
+      storiesBtn.style.background = 'linear-gradient(45deg, #4CAF50, #2E8B57)';
+      setTimeout(() => {
+        storiesBtn.style.background = 'linear-gradient(45deg, #FF0076, #8A2BE2)';
+      }, 2000);
     } else {
-      throw new Error("Пользователь отменил");
+      storiesBtn.style.background = 'linear-gradient(45deg, #FF5722, #F44336)';
+      setTimeout(() => {
+        storiesBtn.style.background = 'linear-gradient(45deg, #FF0076, #8A2BE2)';
+      }, 2000);
     }
-  } catch (error) {
-    this.textContent = "Не отправлено";
-    this.style.backgroundColor = "#F44336";
-    console.error("Ошибка:", error);
-  }
-
-  // 4. Возвращаем исходное состояние
-  setTimeout(() => {
-    this.textContent = "Sent";
-    this.style.backgroundColor = "aqua";
-  }, 2000);
+  });
 });
