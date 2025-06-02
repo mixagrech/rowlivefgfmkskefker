@@ -1919,32 +1919,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     
-document.getElementById("SentMesageInvFriendBtn").addEventListener("click", () => {
-            // Подготавливаем сообщение с картинкой и кнопкой
-    const message = {
+// Ждем полной загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+  const shareBtn = document.querySelector('.TestMessageSent');
+  
+  shareBtn.addEventListener('click', function() {
+    // Проверяем, что мы в Telegram WebApp
+    if (window.Telegram && Telegram.WebApp) {
+      const message = {
         text: "Привет! Нажми на кнопку и погрузись в мир гребли на байдарке! 🚣‍♂️",
         button_text: "Играть 👆",
         link: "https://t.me/rowlivebot/row",
-        photo_url: "https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png" // Замените на реальный URL
-    };
-
-    // Пытаемся отправить через Telegram
-    if (tg.shareMessage) {
-        tg.shareMessage(message);
+        photo_url: "https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png"
+      };
+      
+      // Пытаемся отправить сообщение
+      try {
+        Telegram.WebApp.shareMessage(message);
+        
+        // Показываем подтверждение отправки
+        shareBtn.textContent = "Отправлено!";
+        shareBtn.style.backgroundColor = "#4CAF50"; // Зеленый цвет
+        
+        // Возвращаем исходное состояние через 2 секунды
+        setTimeout(() => {
+          shareBtn.textContent = "Sent";
+          shareBtn.style.backgroundColor = "aqua";
+        }, 2000);
+        
+      } catch (error) {
+        console.error("Ошибка при отправке:", error);
+        shareBtn.textContent = "Ошибка!";
+        shareBtn.style.backgroundColor = "#F44336"; // Красный цвет
+        
+        setTimeout(() => {
+          shareBtn.textContent = "Sent";
+          shareBtn.style.backgroundColor = "aqua";
+        }, 2000);
+      }
     } else {
-        // Фолбэк для других платформ
-        const shareText = `${message.text}\n\n${message.button_text}: ${message.link}`;
-        if (navigator.share) {
-            navigator.share({
-                title: "Приглашение в игру",
-                text: shareText,
-                url: message.link
-            }).catch(() => {
-                copyToClipboard(shareText);
-            });
-        } else {
-            copyToClipboard(shareText);
-        }
+      // Если не в Telegram, показываем сообщение
+      shareBtn.textContent = "Только в Telegram!";
+      shareBtn.style.backgroundColor = "#FF9800"; // Оранжевый цвет
+      
+      setTimeout(() => {
+        shareBtn.textContent = "Sent";
+        shareBtn.style.backgroundColor = "aqua";
+      }, 2000);
     }
+  });
 });
-
