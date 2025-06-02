@@ -1928,59 +1928,97 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// Создаем кнопку
-const messageBtn = document.createElement('button');
-messageBtn.textContent = 'Пригласить друга';
-Object.assign(messageBtn.style, {
-  padding: '12px 24px',
-  background: '#31B545',
-  color: 'white',
-  borderRadius: '24px',
-  fontWeight: 'bold',
-  cursor: 'pointer',
-  margin: '10px',
-  border: 'none'
-});
-document.body.appendChild(messageBtn);
-
-// Обработчик клика
-messageBtn.addEventListener('click', () => {
-  const tg = window.Telegram?.WebApp;
+// Проверяем, что код выполняется в браузере (а не в Node.js)
+// Ждем загрузки страницы
+document.addEventListener('DOMContentLoaded', function() {
+  // Создаем кнопку
+  const shareBtn = document.createElement('button');
+  shareBtn.textContent = 'Пригласить друга';
   
-  if (!tg?.shareMessage) {
-    alert('Функция доступна только в последних версиях Telegram');
-    return;
+  // Стили кнопки
+  Object.assign(shareBtn.style, {
+    padding: '12px 24px',
+    background: '#31B545',
+    color: 'white',
+    borderRadius: '24px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    border: 'none',
+    fontSize: '16px',
+    margin: '10px',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+  });
+
+  // Добавляем кнопку на страницу
+  document.body.appendChild(shareBtn);
+
+  // Обработчик клика
+  shareBtn.addEventListener('click', function() {
+    const tg = window.Telegram?.WebApp;
+    
+    // Проверяем, что мы в Telegram WebApp
+    if (!tg) {
+      showFeedback(shareBtn, 'Только в Telegram!', '#FF9800');
+      return;
+    }
+
+    // Показываем статус "Отправка..."
+    showFeedback(shareBtn, 'Отправка...', '#2196F3');
+
+    // Формируем сообщение
+    const message = {
+      text: 'Привет! Нажми на кнопку и играй в греблю 🚣‍♂️',
+      button_text: 'Играть 👆',
+      link: 'https://t.me/rowlivebot/row'
+    };
+
+    // Пытаемся отправить через WebApp API
+    if (tg.shareMessage) {
+      try {
+        tg.shareMessage(message, function(success) {
+          if (success) {
+            showFeedback(shareBtn, 'Отправлено!', '#4CAF50');
+          } else {
+            showFeedback(shareBtn, 'Отменено', '#F44336');
+          }
+          resetButton(shareBtn);
+        });
+      } catch (error) {
+        showFeedback(shareBtn, 'Ошибка!', '#F44336');
+        resetButton(shareBtn);
+      }
+    } else {
+      // Альтернативный способ для старых версий
+      try {
+        tg.openTelegramLink(
+          `https://t.me/share/url?url=${encodeURIComponent(message.link)}&text=${encodeURIComponent(message.text)}`
+        );
+        showFeedback(shareBtn, 'Отправлено!', '#4CAF50');
+      } catch (error) {
+        showFeedback(shareBtn, 'Не поддерживается', '#FF9800');
+      }
+      resetButton(shareBtn);
+    }
+  });
+
+  // Функция для показа статуса
+  function showFeedback(button, text, color) {
+    button.textContent = text;
+    button.style.background = color;
   }
 
-  // Параметры сообщения
-  const message = {
-    text: 'Привет! Нажми и играй в греблю 🚣‍♂️',
-    button_text: 'Играть 👆',
-    link: 'https://t.me/rowlivebot/row',
-    photo_url: 'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png'
-  };
-
-  // Показываем статус загрузки
-  messageBtn.textContent = 'Отправка...';
-  messageBtn.disabled = true;
-
-  // Пытаемся отправить
-  tg.shareMessage(message, (success) => {
-    messageBtn.disabled = false;
-    if (success) {
-      messageBtn.textContent = 'Отправлено!';
-      messageBtn.style.background = '#4CAF50';
-    } else {
-      messageBtn.textContent = 'Отменено';
-      messageBtn.style.background = '#F44336';
-    }
-    
+  // Функция для сброса кнопки
+  function resetButton(button) {
     setTimeout(() => {
-      messageBtn.textContent = 'Пригласить друга';
-      messageBtn.style.background = '#31B545';
+      button.textContent = 'Пригласить друга';
+      button.style.background = '#31B545';
     }, 2000);
-  });
+  }
 });
+
+
+
+// ====== Story ====== // 
 
 
 // Создаем кнопку
