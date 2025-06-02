@@ -1919,53 +1919,102 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     
-// Ждем полной загрузки DOM
-document.addEventListener('DOMContentLoaded', function() {
-  const shareBtn = document.querySelector('.TestMessageSent');
-  
-  shareBtn.addEventListener('click', function() {
-    // Проверяем, что мы в Telegram WebApp
-    if (window.Telegram && Telegram.WebApp) {
-      const message = {
-        text: "Привет! Нажми на кнопку и погрузись в мир гребли на байдарке! 🚣‍♂️",
-        button_text: "Играть 👆",
-        link: "https://t.me/rowlivebot/row",
-        photo_url: "https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png"
-      };
-      
-      // Пытаемся отправить сообщение
-      try {
-        Telegram.WebApp.shareMessage(message);
-        
-        // Показываем подтверждение отправки
-        shareBtn.textContent = "Отправлено!";
-        shareBtn.style.backgroundColor = "#4CAF50"; // Зеленый цвет
-        
-        // Возвращаем исходное состояние через 2 секунды
-        setTimeout(() => {
-          shareBtn.textContent = "Sent";
-          shareBtn.style.backgroundColor = "aqua";
-        }, 2000);
-        
-      } catch (error) {
-        console.error("Ошибка при отправке:", error);
-        shareBtn.textContent = "Ошибка!";
-        shareBtn.style.backgroundColor = "#F44336"; // Красный цвет
-        
-        setTimeout(() => {
-          shareBtn.textContent = "Sent";
-          shareBtn.style.backgroundColor = "aqua";
-        }, 2000);
+
+
+
+
+
+
+
+
+
+// Создаем кнопку для Stories
+const storiesBtn = document.createElement('div');
+storiesBtn.className = 'ShareToStoriesBtn';
+storiesBtn.innerHTML = 'Поделиться в Stories';
+Object.assign(storiesBtn.style, {
+  position: 'absolute',
+  top: '60%',
+  left: '10%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: '#9C27B0',
+  color: 'white',
+  width: '100px',
+  height: '47px',
+  borderRadius: '7px',
+  cursor: 'pointer'
+});
+document.body.appendChild(storiesBtn);
+
+// Обработчик клика
+storiesBtn.addEventListener('click', function() {
+  if (window.Telegram?.WebApp?.shareToStory) {
+    const imageUrl = 'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png';
+    
+    Telegram.WebApp.shareToStory({
+      asset: {
+        type: 'photo',
+        file: imageUrl
+      },
+      caption: 'Попробуйте мою игру про греблю!',
+      url: 'https://t.me/rowlivebot/row'
+    }, (success) => {
+      if (success) {
+        storiesBtn.textContent = 'Опубликовано!';
+        storiesBtn.style.backgroundColor = '#4CAF50';
+      } else {
+        storiesBtn.textContent = 'Отменено';
+        storiesBtn.style.backgroundColor = '#F44336';
       }
-    } else {
-      // Если не в Telegram, показываем сообщение
-      shareBtn.textContent = "Только в Telegram!";
-      shareBtn.style.backgroundColor = "#FF9800"; // Оранжевый цвет
       
       setTimeout(() => {
-        shareBtn.textContent = "Sent";
-        shareBtn.style.backgroundColor = "aqua";
+        storiesBtn.textContent = 'Поделиться в Stories';
+        storiesBtn.style.backgroundColor = '#9C27B0';
       }, 2000);
+    });
+  } else {
+    storiesBtn.textContent = 'Недоступно';
+    storiesBtn.style.backgroundColor = '#FF9800';
+    
+    setTimeout(() => {
+      storiesBtn.textContent = 'Поделиться в Stories';
+      storiesBtn.style.backgroundColor = '#9C27B0';
+    }, 2000);
+  }
+});
+
+// Ваш существующий код для shareMessage (немного модифицирован)
+document.querySelector('.TestMessageSent').addEventListener('click', function() {
+  if (window.Telegram?.WebApp?.shareMessage) {
+    const message = {
+      text: "Привет! Нажми на кнопку и погрузись в мир гребли на байдарке! 🚣‍♂️",
+      button_text: "Играть 👆",
+      link: "https://t.me/rowlivebot/row",
+      photo_url: "https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png"
+    };
+    
+    try {
+      Telegram.WebApp.shareMessage(message);
+      this.textContent = "Отправлено!";
+      this.style.backgroundColor = "#4CAF50";
+    } catch (error) {
+      this.textContent = "Ошибка!";
+      this.style.backgroundColor = "#F44336";
     }
-  });
+    
+    setTimeout(() => {
+      this.textContent = "Sent";
+      this.style.backgroundColor = "aqua";
+    }, 2000);
+  } else {
+    this.textContent = "Только в Telegram!";
+    this.style.backgroundColor = "#FF9800";
+    
+    setTimeout(() => {
+      this.textContent = "Sent";
+      this.style.backgroundColor = "aqua";
+    }, 2000);
+  }
 });
