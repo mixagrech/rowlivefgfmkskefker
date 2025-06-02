@@ -1928,28 +1928,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// Функция для отправки сообщения
-function shareMessage() {
-    if (!window.Telegram?.WebApp) {
-        console.error('Telegram WebApp is not available');
-        return;
+// Создаем кнопку
+const messageBtn = document.createElement('button');
+messageBtn.textContent = 'Пригласить друга';
+Object.assign(messageBtn.style, {
+  padding: '12px 24px',
+  background: '#31B545',
+  color: 'white',
+  borderRadius: '24px',
+  fontWeight: 'bold',
+  cursor: 'pointer',
+  margin: '10px',
+  border: 'none'
+});
+document.body.appendChild(messageBtn);
+
+// Обработчик клика
+messageBtn.addEventListener('click', () => {
+  const tg = window.Telegram?.WebApp;
+  
+  if (!tg?.shareMessage) {
+    alert('Функция доступна только в последних версиях Telegram');
+    return;
+  }
+
+  // Параметры сообщения
+  const message = {
+    text: 'Привет! Нажми и играй в греблю 🚣‍♂️',
+    button_text: 'Играть 👆',
+    link: 'https://t.me/rowlivebot/row',
+    photo_url: 'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png'
+  };
+
+  // Показываем статус загрузки
+  messageBtn.textContent = 'Отправка...';
+  messageBtn.disabled = true;
+
+  // Пытаемся отправить
+  tg.shareMessage(message, (success) => {
+    messageBtn.disabled = false;
+    if (success) {
+      messageBtn.textContent = 'Отправлено!';
+      messageBtn.style.background = '#4CAF50';
+    } else {
+      messageBtn.textContent = 'Отменено';
+      messageBtn.style.background = '#F44336';
     }
-
-    Telegram.WebApp.shareMessage({
-        text: 'Привет! Нажмите кнопку для игры в греблю 🚣‍♂️',
-        button_text: 'Играть сейчас', // Обязательное поле
-        link: 'https://t.me/rowlivebot/row', // Используем link вместо url
-        photo_url: 'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png' // Опционально
-    });
-}
-
-document.querySelector('.TestMessageSent').addEventListener('click', () => {
-    shareMessage();
-})
+    
+    setTimeout(() => {
+      messageBtn.textContent = 'Пригласить друга';
+      messageBtn.style.background = '#31B545';
+    }, 2000);
+  });
+});
 
 
-// Создаем кнопку для Stories
-const storiesBtn = document.createElement('button');
+// Создаем кнопку
+const storiesBtn = document.querySelector('.TestMessageSent');
 storiesBtn.textContent = 'Опубликовать в Stories';
 Object.assign(storiesBtn.style, {
   padding: '12px 24px',
@@ -1958,51 +1993,51 @@ Object.assign(storiesBtn.style, {
   borderRadius: '24px',
   fontWeight: 'bold',
   cursor: 'pointer',
-  border: 'none',
-  fontSize: '16px',
   margin: '10px',
-  boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+  border: 'none'
 });
-
-// Добавляем кнопку на страницу
 document.body.appendChild(storiesBtn);
 
 // Обработчик клика
 storiesBtn.addEventListener('click', () => {
-  if (!window.Telegram?.WebApp?.shareToStory) {
-    alert('Функция доступна только в Telegram приложении');
+  const tg = window.Telegram?.WebApp;
+  
+  if (!tg?.shareToStory) {
+    alert('Функция доступна только в Telegram 7.8+');
     return;
   }
 
-  const imageUrl = 'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png';
-  const gameUrl = 'https://t.me/rowlivebot/row';
+  // Параметры Stories
+  const params = {
+    text: 'Присоединяйся к игре! 🚣‍♂️',
+    widget_link: {
+      url: 'https://t.me/rowlivebot/row',
+      name: 'Играть сейчас'
+    }
+  };
 
   // Показываем статус загрузки
   storiesBtn.textContent = 'Загрузка...';
   storiesBtn.disabled = true;
 
-  Telegram.WebApp.shareToStory({
-    asset: {
-      type: 'photo',
-      file: imageUrl
-    },
-    caption: 'Присоединяйся к игре! 🚣‍♂️',
-    url: gameUrl
-  }, (success) => {
-    // Возвращаем исходное состояние кнопки
-    storiesBtn.textContent = 'Опубликовать в Stories';
-    storiesBtn.disabled = false;
-
-    if (success) {
-      storiesBtn.style.background = 'linear-gradient(45deg, #4CAF50, #2E8B57)';
+  // Пытаемся отправить
+  tg.shareToStory(
+    'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png',
+    params,
+    (success) => {
+      storiesBtn.disabled = false;
+      if (success) {
+        storiesBtn.textContent = 'Опубликовано!';
+        storiesBtn.style.background = 'linear-gradient(45deg, #4CAF50, #2E8B57)';
+      } else {
+        storiesBtn.textContent = 'Отменено';
+        storiesBtn.style.background = 'linear-gradient(45deg, #FF5722, #F44336)';
+      }
+      
       setTimeout(() => {
-        storiesBtn.style.background = 'linear-gradient(45deg, #FF0076, #8A2BE2)';
-      }, 2000);
-    } else {
-      storiesBtn.style.background = 'linear-gradient(45deg, #FF5722, #F44336)';
-      setTimeout(() => {
+        storiesBtn.textContent = 'Опубликовать в Stories';
         storiesBtn.style.background = 'linear-gradient(45deg, #FF0076, #8A2BE2)';
       }, 2000);
     }
-  });
+  );
 });
