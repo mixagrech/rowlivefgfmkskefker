@@ -1940,41 +1940,24 @@ const BUTTON_STYLES = {
   margin: '10px'
 };
 
-// 1. Создаем кнопку с типом "default"
+// 1. Создаем кнопку
 const btn = document.createElement('button');
 btn.textContent = 'Пригласить друга';
 btn.type = 'button';
-
-// Применяем стили из констант
 Object.assign(btn.style, BUTTON_STYLES);
 document.body.appendChild(btn);
 
-// 2. Обработчик с проверками
+// 2. Обработчик клика
 btn.addEventListener('click', async () => {
-  // Деструктуризация WebApp
-  const { WebApp } = window.Telegram || {};
-  
   // Проверяем наличие Telegram WebApp
-  if (!WebApp) {
+  if (!window.Telegram?.WebApp) {
     alert('Пожалуйста, запустите в Telegram Mini App!');
     return;
   }
 
-  // Деструктуризация нужных методов
-  const { 
-    shareMessage, 
-    openLink, 
-    version, 
-    initDataUnsafe: { user } 
-  } = WebApp;
-
-  // Проверяем версию WebApp (shareMessage доступен с версии 6.1+)
-  const [major, minor] = version.split('.').map(Number);
-  const isShareSupported = major > 6 || (major === 6 && minor >= 1);
+  const tg = window.Telegram.WebApp;
+  console.log('Telegram WebApp version:', tg.version);
   
-  console.log(`WebApp version: ${version}, share supported: ${isShareSupported}`);
-  console.log('User:', user?.id ? `id${user.id}` : 'not authorized');
-
   // Параметры сообщения
   const message = {
     text: 'Привет! Нажми и играй в греблю 🚣‍♂️',
@@ -1982,30 +1965,27 @@ btn.addEventListener('click', async () => {
     link: 'https://t.me/rowlivebot/row'
   };
 
-  // Если метод доступен и поддерживается версией
-  if (shareMessage && isShareSupported) {
-    console.log('Trying to use shareMessage...');
-    
+  // Проверяем поддержку shareMessage через isVersionAtLeast
+  if (tg.isVersionAtLeast?.('6.1')) {
     try {
-      const success = await shareMessage(message);
-      console.log('Share result:', success);
-      alert(success ? 'Приглашение отправлено!' : 'Отправка отменена');
+      console.log('Пытаемся использовать shareMessage...');
+      const result = await tg.shareMessage(message);
+      alert(result ? 'Приглашение отправлено!' : 'Отправка отменена');
     } catch (error) {
-      console.error('Share error:', error);
-      alert('Ошибка при отправке: ' + error.message);
-      openFallbackShare(message, openLink);
+      console.error('Ошибка shareMessage:', error);
+      openFallbackShare(tg, message);
     }
   } else {
-    console.log('shareMessage not supported, using fallback');
-    openFallbackShare(message, openLink);
+    console.log('Версия слишком старая для shareMessage (<6.1)');
+    openFallbackShare(tg, message);
   }
 });
 
-// Функция для альтернативного способа поделиться
-function openFallbackShare(message, openLink) {
-  if (openLink) {
+// Функция для fallback-решения
+function openFallbackShare(tg, message) {
+  if (tg.openLink) {
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(message.link)}&text=${encodeURIComponent(message.text)}`;
-    openLink(shareUrl);
+    tg.openLink(shareUrl);
   } else {
     alert('Ваша версия Telegram не поддерживает отправку приглашений');
   }
@@ -2019,7 +1999,7 @@ function openFallbackShare(message, openLink) {
 
 
 // Создаем кнопку
-const storiesBtn = document.querySelector('.TestMessageSent');
+const storiesBtn = document.querySelector('.TestMessageSent') || document.createElement('button');
 storiesBtn.textContent = 'Опубликовать в Stories';
 Object.assign(storiesBtn.style, {
   padding: '12px 24px',
@@ -2032,6 +2012,11 @@ Object.assign(storiesBtn.style, {
   border: 'none'
 });
 document.body.appendChild(storiesBtn);
+
+// Проверяем, есть ли флаг о публикации в localStorage
+if (localStorage.getItem('storyPublished') === 'true') {
+  alert("Спасибо!");
+}
 
 // Обработчик клика
 storiesBtn.addEventListener('click', () => {
@@ -2064,6 +2049,9 @@ storiesBtn.addEventListener('click', () => {
       if (success) {
         storiesBtn.textContent = 'Опубликовано!';
         storiesBtn.style.background = 'linear-gradient(45deg, #4CAF50, #2E8B57)';
+        // Сохраняем факт публикации в localStorage
+        localStorage.setItem('storyPublished', 'true');
+        alert("Спасибо!");
       } else {
         storiesBtn.textContent = 'Отменено';
         storiesBtn.style.background = 'linear-gradient(45deg, #FF5722, #F44336)';
