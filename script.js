@@ -1925,9 +1925,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-
-
-
 // Константы для стилей
 const BUTTON_STYLES = {
   padding: '12px 24px',
@@ -1949,49 +1946,102 @@ document.body.appendChild(btn);
 
 // 2. Обработчик клика
 btn.addEventListener('click', async () => {
-  // Проверяем наличие Telegram WebApp
-  if (!window.Telegram?.WebApp) {
-    alert('Пожалуйста, запустите в Telegram Mini App!');
-    return;
-  }
+  try {
+    if (!window.Telegram?.WebApp) {
+      throw new Error('Запустите в Telegram Mini App');
+    }
 
-  const tg = window.Telegram.WebApp;
-  console.log('Telegram WebApp version:', tg.version);
-  
-  // Параметры сообщения
-  const message = {
-    text: 'Привет! Нажми и играй в греблю 🚣‍♂️',
-    button_text: 'Играть 👆',
-    link: 'https://t.me/rowlivebot/row'
-  };
+    const tg = window.Telegram.WebApp;
+    const message = {
+      text: 'Привет! Нажми и играй в греблю 🚣‍♂️',
+      button_text: 'Играть 👆',
+      link: 'https://t.me/rowlivebot/row'
+    };
 
-  // Проверяем поддержку shareMessage через isVersionAtLeast
-  if (tg.isVersionAtLeast?.('6.1')) {
-    try {
+    // Пробуем использовать shareMessage если доступен
+    if (canUseShareMessage(tg)) {
       console.log('Пытаемся использовать shareMessage...');
       const result = await tg.shareMessage(message);
-      alert(result ? 'Приглашение отправлено!' : 'Отправка отменена');
-    } catch (error) {
-      console.error('Ошибка shareMessage:', error);
-      openFallbackShare(tg, message);
+      
+      if (result === undefined) {
+        // Если результат undefined - метод не сработал, пробуем fallback
+        console.warn('shareMessage вернул undefined, используем fallback');
+        await tryFallbackShare(tg, message);
+      } else if (!result) {
+        // Пользователь отменил отправку
+        console.log('Пользователь отменил отправку');
+        showToast('Отправка отменена');
+      } else {
+        // Успешная отправка
+        console.log('Приглашение отправлено');
+        showToast('Приглашение отправлено!');
+      }
+    } else {
+      // Метод недоступен - сразу используем fallback
+      console.log('shareMessage недоступен, используем fallback');
+      await tryFallbackShare(tg, message);
     }
-  } else {
-    console.log('Версия слишком старая для shareMessage (<6.1)');
-    openFallbackShare(tg, message);
+  } catch (error) {
+    console.error('Ошибка:', error);
+    showToast(`Ошибка: ${error.message}`);
   }
 });
 
-// Функция для fallback-решения
-function openFallbackShare(tg, message) {
-  if (tg.openLink) {
-    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(message.link)}&text=${encodeURIComponent(message.text)}`;
-    tg.openLink(shareUrl);
-  } else {
-    alert('Ваша версия Telegram не поддерживает отправку приглашений');
+// Проверяем доступность shareMessage
+function canUseShareMessage(tg) {
+  try {
+    // Проверяем и версию, и наличие метода
+    return tg.isVersionAtLeast?.('6.1') && typeof tg.shareMessage === 'function';
+  } catch (e) {
+    return false;
   }
 }
 
+// Пробуем fallback-методы
+async function tryFallbackShare(tg, message) {
+  // Сначала пробуем openTelegramLink
+  if (tg.openTelegramLink) {
+    try {
+      const link = `https://t.me/share/url?url=${encodeURIComponent(message.link)}&text=${encodeURIComponent(message.text)}`;
+      tg.openTelegramLink(link);
+      return true;
+    } catch (e) {
+      console.warn('Ошибка openTelegramLink:', e);
+    }
+  }
+  
+  // Затем пробуем обычный openLink
+  if (tg.openLink) {
+    try {
+      const link = `https://t.me/share/url?url=${encodeURIComponent(message.link)}&text=${encodeURIComponent(message.text)}`;
+      tg.openLink(link);
+      return true;
+    } catch (e) {
+      console.warn('Ошибка openLink:', e);
+    }
+  }
+  
+  // Если ничего не сработало
+  throw new Error('Не удалось отправить приглашение');
+}
 
+// Показываем уведомление
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  toast.style.position = 'fixed';
+  toast.style.bottom = '20px';
+  toast.style.left = '50%';
+  toast.style.transform = 'translateX(-50%)';
+  toast.style.backgroundColor = '#333';
+  toast.style.color = 'white';
+  toast.style.padding = '10px 20px';
+  toast.style.borderRadius = '5px';
+  toast.style.zIndex = '1000';
+  
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
 
 
 
