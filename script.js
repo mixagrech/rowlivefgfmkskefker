@@ -1928,58 +1928,90 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// 1. Создаем кнопку
+// Константы для стилей
+const BUTTON_STYLES = {
+  padding: '12px 24px',
+  background: '#31B545',
+  color: 'white',
+  borderRadius: '24px',
+  fontWeight: 'bold',
+  cursor: 'pointer',
+  border: 'none',
+  margin: '10px'
+};
+
+// 1. Создаем кнопку с типом "default"
 const btn = document.createElement('button');
 btn.textContent = 'Пригласить друга';
-btn.style.cssText = `
-  padding: 12px 24px;
-  background: #31B545;
-  color: white;
-  border-radius: 24px;
-  font-weight: bold;
-  cursor: pointer;
-  border: none;
-  margin: 10px;
-`;
+btn.type = 'button';
 
+// Применяем стили из констант
+Object.assign(btn.style, BUTTON_STYLES);
 document.body.appendChild(btn);
 
-// 2. Обработчик с детальной проверкой
-btn.addEventListener('click', () => {
-
+// 2. Обработчик с проверками
+btn.addEventListener('click', async () => {
+  // Деструктуризация WebApp
+  const { WebApp } = window.Telegram || {};
   
-  if (!tg) {
-    alert('Запустите в Telegram Mini App!');
+  // Проверяем наличие Telegram WebApp
+  if (!WebApp) {
+    alert('Пожалуйста, запустите в Telegram Mini App!');
     return;
   }
 
-  console.log('Telegram WebApp detected:', tg);
-  console.log('Available methods:', Object.keys(tg));
+  // Деструктуризация нужных методов
+  const { 
+    shareMessage, 
+    openLink, 
+    version, 
+    initDataUnsafe: { user } 
+  } = WebApp;
+
+  // Проверяем версию WebApp (shareMessage доступен с версии 6.1+)
+  const [major, minor] = version.split('.').map(Number);
+  const isShareSupported = major > 6 || (major === 6 && minor >= 1);
+  
+  console.log(`WebApp version: ${version}, share supported: ${isShareSupported}`);
+  console.log('User:', user?.id ? `id${user.id}` : 'not authorized');
 
   // Параметры сообщения
   const message = {
     text: 'Привет! Нажми и играй в греблю 🚣‍♂️',
     button_text: 'Играть 👆',
-    link: 'https://t.me/rowlivebot/row',
-    photo_url: 'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png'
+    link: 'https://t.me/rowlivebot/row'
   };
 
-  // Проверяем метод shareMessage
-  if (typeof tg.shareMessage === 'function') {
-    console.log('Trying shareMessage...');
-    tg.shareMessage(message, (success) => {
-      console.log('Share result:', success);
-      alert(success ? 'Отправлено!' : 'Отменено');
-    });
-  } else {
-    console.error('shareMessage not available');
-    alert('Ваша версия Telegram не поддерживает отправку');
+  // Если метод доступен и поддерживается версией
+  if (shareMessage && isShareSupported) {
+    console.log('Trying to use shareMessage...');
     
-    // Альтернатива через deep link
-    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(message.link)}&text=${encodeURIComponent(message.text)}`;
-    tg.openLink(shareUrl);
+    try {
+      const success = await shareMessage(message);
+      console.log('Share result:', success);
+      alert(success ? 'Приглашение отправлено!' : 'Отправка отменена');
+    } catch (error) {
+      console.error('Share error:', error);
+      alert('Ошибка при отправке: ' + error.message);
+      openFallbackShare(message, openLink);
+    }
+  } else {
+    console.log('shareMessage not supported, using fallback');
+    openFallbackShare(message, openLink);
   }
 });
+
+// Функция для альтернативного способа поделиться
+function openFallbackShare(message, openLink) {
+  if (openLink) {
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(message.link)}&text=${encodeURIComponent(message.text)}`;
+    openLink(shareUrl);
+  } else {
+    alert('Ваша версия Telegram не поддерживает отправку приглашений');
+  }
+}
+
+
 
 
 
