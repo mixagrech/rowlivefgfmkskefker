@@ -1924,7 +1924,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// 1. Создаем кнопку (видна всегда)
+// 1. Создаем кнопку
 const btn = document.createElement('button');
 btn.textContent = 'Пригласить друга';
 btn.style.cssText = `
@@ -1942,42 +1942,65 @@ btn.style.cssText = `
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   z-index: 999;
 `;
+document.body.appendChild(btn);
 
-// 2. Вешаем обработчик
-btn.addEventListener('click', () => {
-  if (!window.Telegram?.WebApp) {
-    alert('Откройте в Telegram для отправки');
-    return;
-  }
+// 2. Обработчик клика
+btn.addEventListener('click', async () => {
+  try {
+    if (!window.Telegram?.WebApp) {
+      throw new Error('Откройте в Telegram WebApp');
+    }
 
-  const tg = window.Telegram.WebApp;
-  
-  // Вариант 1: Используем shareMessage (если доступен)
-  if (tg.shareMessage) {
-    tg.shareMessage({
+    const tg = window.Telegram.WebApp;
+    
+    // Проверяем поддержку shareMessage
+    if (!tg.shareMessage) {
+      throw new Error('UNSUPPORTED');
+    }
+
+    // Создаем сообщение согласно PreparedInlineMessage
+    const message = {
       text: "Привет! Попробуй эту крутую игру в гребле! 🚣‍♂️",
-      button_text: "Играть",
+      button_text: "Перейти к игре",
       link: "https://t.me/rowlivebot/row"
-    })
-    .then(success => {
-      if (!success) alert('Отправка отменена');
-    })
-    .catch(error => {
-      alert(`Ошибка: ${error.message}`);
+    };
+
+    // Подписываемся на события
+    tg.onEvent('shareMessageSent', () => {
+      alert('Сообщение успешно отправлено!');
+      tg.offEvent('shareMessageSent');
     });
-  } 
-  // Вариант 2: Открываем стандартный диалог (fallback)
-  else if (tg.openLink) {
-    tg.openLink(
-      `https://t.me/share/url?url=${encodeURIComponent('https://t.me/rowlivebot/row')}&text=${encodeURIComponent('Привет! Попробуй эту игру!')}`
-    );
-  } else {
-    alert('Функция отправки недоступна');
+
+    tg.onEvent('shareMessageFailed', (e) => {
+      const errors = {
+        'UNSUPPORTED': 'Функция не поддерживается',
+        'MESSAGE_EXPIRED': 'Сообщение устарело',
+        'MESSAGE_SEND_FAILED': 'Ошибка отправки',
+        'USER_DECLINED': 'Отправка отменена',
+        'UNKNOWN_ERROR': 'Неизвестная ошибка'
+      };
+      alert(`Ошибка: ${errors[e.error] || e.error}`);
+      tg.offEvent('shareMessageFailed');
+    });
+
+    // Вызываем нативный интерфейс
+    const result = await tg.shareMessage(message);
+    
+    if (result === false) {
+      alert('Отправка отменена пользователем');
+    }
+
+  } catch (error) {
+    // Fallback для старых версий
+    if (error.message === 'UNSUPPORTED' && window.Telegram?.WebApp?.openLink) {
+      window.Telegram.WebApp.openLink(
+        `https://t.me/share/url?url=${encodeURIComponent('https://t.me/rowlivebot/row')}&text=${encodeURIComponent('Привет! Попробуй эту игру!')}`
+      );
+    } else {
+      alert(`Ошибка: ${error.message}`);
+    }
   }
 });
-
-// 3. Добавляем кнопку на страницу
-document.body.appendChild(btn);
 
 
 
