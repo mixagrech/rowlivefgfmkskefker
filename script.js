@@ -2074,3 +2074,6 @@ storiesBtn.addEventListener('click', () => {
     }
   );
 });
+
+
+tg.shareMessage("Привет, посмотрите это!");
