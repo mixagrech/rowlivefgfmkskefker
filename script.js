@@ -1924,130 +1924,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// Стили для Telegram-like интерфейса
-const TG_STYLES = `
-  .tg-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--tg-theme-bg-color, #ffffff);
-    z-index: 1000;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  }
-  .tg-header {
-    padding: 12px 16px;
-    font-weight: 500;
-    font-size: 17px;
-    text-align: center;
-    border-bottom: 1px solid var(--tg-theme-secondary-bg-color, #f2f2f2);
-  }
-  .tg-message-preview {
-    padding: 16px;
-    border-bottom: 1px solid var(--tg-theme-secondary-bg-color, #f2f2f2);
-  }
-  .tg-message {
-    background: var(--tg-theme-secondary-bg-color, #f2f2f2);
-    border-radius: 12px;
-    padding: 10px 12px;
-    max-width: 70%;
-    margin: 0 auto;
-    font-size: 16px;
-    line-height: 1.4;
-  }
-  .tg-buttons {
-    display: flex;
-    padding: 8px;
-    gap: 8px;
-  }
-  .tg-button {
-    flex: 1;
-    padding: 12px;
-    border-radius: 10px;
-    text-align: center;
-    font-weight: 500;
-    cursor: pointer;
-  }
-  .tg-cancel {
-    background: var(--tg-theme-secondary-bg-color, #f2f2f2);
-    color: var(--tg-theme-text-color, #000000);
-  }
-  .tg-confirm {
-    background: var(--tg-theme-button-color, #2ea6ff);
-    color: var(--tg-theme-button-text-color, #ffffff);
-  }
+// 1. Создаем кнопку (видна всегда)
+const btn = document.createElement('button');
+btn.textContent = 'Пригласить друга';
+btn.style.cssText = `
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  background: #31B545;
+  color: white;
+  border-radius: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 999;
 `;
 
-// Создаем модальное окно в стиле Telegram
-const createTelegramModal = () => {
-  const modal = document.createElement('div');
-  modal.className = 'tg-modal';
-  
-  modal.innerHTML = `
-    <div class="tg-header">Отправить сообщение</div>
-    <div class="tg-message-preview">
-      <div class="tg-message">
-        Привет! Попробуй эту крутую игру в гребле! 🚣‍♂️<br>
-        <a href="https://t.me/rowlivebot/row">rowlivebot</a>
-      </div>
-    </div>
-    <div class="tg-buttons">
-      <div class="tg-button tg-cancel">Отмена</div>
-      <div class="tg-button tg-confirm">Выбрать получателей...</div>
-    </div>
-  `;
+// 2. Вешаем обработчик
+btn.addEventListener('click', () => {
+  if (!window.Telegram?.WebApp) {
+    alert('Откройте в Telegram для отправки');
+    return;
+  }
 
-  return modal;
-};
-
-// Инициализация WebApp
-const initWebApp = () => {
-  if (!window.Telegram?.WebApp) return;
-  
   const tg = window.Telegram.WebApp;
-  const MainButton = tg.MainButton;
   
-  // Настройка основной кнопки
-  MainButton.setText("Пригласить друга")
-    .setParams({
-      color: tg.themeParams.button_color || "#31B545",
-      text_color: tg.themeParams.button_text_color || "#ffffff"
+  // Вариант 1: Используем shareMessage (если доступен)
+  if (tg.shareMessage) {
+    tg.shareMessage({
+      text: "Привет! Попробуй эту крутую игру в гребле! 🚣‍♂️",
+      button_text: "Играть",
+      link: "https://t.me/rowlivebot/row"
     })
-    .show();
-
-  // Обработчик клика
-  MainButton.onClick(() => {
-    const modal = createTelegramModal();
-    document.body.appendChild(modal);
-    
-    // Обработчики кнопок
-    modal.querySelector('.tg-cancel').addEventListener('click', () => {
-      modal.remove();
+    .then(success => {
+      if (!success) alert('Отправка отменена');
+    })
+    .catch(error => {
+      alert(`Ошибка: ${error.message}`);
     });
-    
-    modal.querySelector('.tg-confirm').addEventListener('click', () => {
-      modal.remove();
-      if (tg.shareMessage) {
-        tg.shareMessage({
-          text: "Привет! Попробуй эту крутую игру в гребле! 🚣‍♂️",
-          button_text: "Играть",
-          link: "https://t.me/rowlivebot/row"
-        });
-      } else {
-        tg.openLink(`https://t.me/share/url?url=https://t.me/rowlivebot/row&text=Привет! Попробуй эту крутую игру!`);
-      }
-    });
-  });
-};
+  } 
+  // Вариант 2: Открываем стандартный диалог (fallback)
+  else if (tg.openLink) {
+    tg.openLink(
+      `https://t.me/share/url?url=${encodeURIComponent('https://t.me/rowlivebot/row')}&text=${encodeURIComponent('Привет! Попробуй эту игру!')}`
+    );
+  } else {
+    alert('Функция отправки недоступна');
+  }
+});
 
-// Добавляем стили
-const style = document.createElement('style');
-style.textContent = TG_STYLES;
-document.head.appendChild(style);
+// 3. Добавляем кнопку на страницу
+document.body.appendChild(btn);
 
-// Запускаем приложение
-initWebApp();
+
 
 
 // ====== Story ====== // 
