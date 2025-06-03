@@ -1924,125 +1924,130 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+// Стили для Telegram-like интерфейса
+const TG_STYLES = `
+  .tg-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--tg-theme-bg-color, #ffffff);
+    z-index: 1000;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  .tg-header {
+    padding: 12px 16px;
+    font-weight: 500;
+    font-size: 17px;
+    text-align: center;
+    border-bottom: 1px solid var(--tg-theme-secondary-bg-color, #f2f2f2);
+  }
+  .tg-message-preview {
+    padding: 16px;
+    border-bottom: 1px solid var(--tg-theme-secondary-bg-color, #f2f2f2);
+  }
+  .tg-message {
+    background: var(--tg-theme-secondary-bg-color, #f2f2f2);
+    border-radius: 12px;
+    padding: 10px 12px;
+    max-width: 70%;
+    margin: 0 auto;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  .tg-buttons {
+    display: flex;
+    padding: 8px;
+    gap: 8px;
+  }
+  .tg-button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .tg-cancel {
+    background: var(--tg-theme-secondary-bg-color, #f2f2f2);
+    color: var(--tg-theme-text-color, #000000);
+  }
+  .tg-confirm {
+    background: var(--tg-theme-button-color, #2ea6ff);
+    color: var(--tg-theme-button-text-color, #ffffff);
+  }
+`;
 
-// Константы для стилей
-const BUTTON_STYLES = {
-  padding: '12px 24px',
-  background: '#31B545',
-  color: 'white',
-  borderRadius: '24px',
-  fontWeight: 'bold',
-  cursor: 'pointer',
-  border: 'none',
-  margin: '10px'
+// Создаем модальное окно в стиле Telegram
+const createTelegramModal = () => {
+  const modal = document.createElement('div');
+  modal.className = 'tg-modal';
+  
+  modal.innerHTML = `
+    <div class="tg-header">Отправить сообщение</div>
+    <div class="tg-message-preview">
+      <div class="tg-message">
+        Привет! Попробуй эту крутую игру в гребле! 🚣‍♂️<br>
+        <a href="https://t.me/rowlivebot/row">rowlivebot</a>
+      </div>
+    </div>
+    <div class="tg-buttons">
+      <div class="tg-button tg-cancel">Отмена</div>
+      <div class="tg-button tg-confirm">Выбрать получателей...</div>
+    </div>
+  `;
+
+  return modal;
 };
 
-// 1. Создаем кнопку
-const btn = document.createElement('button');
-btn.textContent = 'Пригласить друга';
-btn.type = 'button';
-Object.assign(btn.style, BUTTON_STYLES);
-document.body.appendChild(btn);
+// Инициализация WebApp
+const initWebApp = () => {
+  if (!window.Telegram?.WebApp) return;
+  
+  const tg = window.Telegram.WebApp;
+  const MainButton = tg.MainButton;
+  
+  // Настройка основной кнопки
+  MainButton.setText("Пригласить друга")
+    .setParams({
+      color: tg.themeParams.button_color || "#31B545",
+      text_color: tg.themeParams.button_text_color || "#ffffff"
+    })
+    .show();
 
-// 2. Обработчик клика
-btn.addEventListener('click', async () => {
-  try {
-    if (!window.Telegram?.WebApp) {
-      throw new Error('Запустите в Telegram Mini App');
-    }
-
-    const tg = window.Telegram.WebApp;
-    const message = {
-      text: 'Привет! Нажми и играй в греблю 🚣‍♂️',
-      button_text: 'Играть 👆',
-      link: 'https://t.me/rowlivebot/row'
-    };
-
-    // Пробуем использовать shareMessage если доступен
-    if (canUseShareMessage(tg)) {
-      console.log('Пытаемся использовать shareMessage...');
-      const result = await tg.shareMessage(message);
-      
-      if (result === undefined) {
-        // Если результат undefined - метод не сработал, пробуем fallback
-        console.warn('shareMessage вернул undefined, используем fallback');
-        await tryFallbackShare(tg, message);
-      } else if (!result) {
-        // Пользователь отменил отправку
-        console.log('Пользователь отменил отправку');
-        showToast('Отправка отменена');
+  // Обработчик клика
+  MainButton.onClick(() => {
+    const modal = createTelegramModal();
+    document.body.appendChild(modal);
+    
+    // Обработчики кнопок
+    modal.querySelector('.tg-cancel').addEventListener('click', () => {
+      modal.remove();
+    });
+    
+    modal.querySelector('.tg-confirm').addEventListener('click', () => {
+      modal.remove();
+      if (tg.shareMessage) {
+        tg.shareMessage({
+          text: "Привет! Попробуй эту крутую игру в гребле! 🚣‍♂️",
+          button_text: "Играть",
+          link: "https://t.me/rowlivebot/row"
+        });
       } else {
-        // Успешная отправка
-        console.log('Приглашение отправлено');
-        showToast('Приглашение отправлено!');
+        tg.openLink(`https://t.me/share/url?url=https://t.me/rowlivebot/row&text=Привет! Попробуй эту крутую игру!`);
       }
-    } else {
-      // Метод недоступен - сразу используем fallback
-      console.log('shareMessage недоступен, используем fallback');
-      await tryFallbackShare(tg, message);
-    }
-  } catch (error) {
-    console.error('Ошибка:', error);
-    showToast(`Ошибка: ${error.message}`);
-  }
-});
+    });
+  });
+};
 
-// Проверяем доступность shareMessage
-function canUseShareMessage(tg) {
-  try {
-    // Проверяем и версию, и наличие метода
-    return tg.isVersionAtLeast?.('6.1') && typeof tg.shareMessage === 'function';
-  } catch (e) {
-    return false;
-  }
-}
+// Добавляем стили
+const style = document.createElement('style');
+style.textContent = TG_STYLES;
+document.head.appendChild(style);
 
-// Пробуем fallback-методы
-async function tryFallbackShare(tg, message) {
-  // Сначала пробуем openTelegramLink
-  if (tg.openTelegramLink) {
-    try {
-      const link = `https://t.me/share/url?url=${encodeURIComponent(message.link)}&text=${encodeURIComponent(message.text)}`;
-      tg.openTelegramLink(link);
-      return true;
-    } catch (e) {
-      console.warn('Ошибка openTelegramLink:', e);
-    }
-  }
-  
-  // Затем пробуем обычный openLink
-  if (tg.openLink) {
-    try {
-      const link = `https://t.me/share/url?url=${encodeURIComponent(message.link)}&text=${encodeURIComponent(message.text)}`;
-      tg.openLink(link);
-      return true;
-    } catch (e) {
-      console.warn('Ошибка openLink:', e);
-    }
-  }
-  
-  // Если ничего не сработало
-  throw new Error('Не удалось отправить приглашение');
-}
-
-// Показываем уведомление
-function showToast(message) {
-  const toast = document.createElement('div');
-  toast.textContent = message;
-  toast.style.position = 'fixed';
-  toast.style.bottom = '20px';
-  toast.style.left = '50%';
-  toast.style.transform = 'translateX(-50%)';
-  toast.style.backgroundColor = '#333';
-  toast.style.color = 'white';
-  toast.style.padding = '10px 20px';
-  toast.style.borderRadius = '5px';
-  toast.style.zIndex = '1000';
-  
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
-}
-
+// Запускаем приложение
+initWebApp();
 
 
 // ====== Story ====== // 
