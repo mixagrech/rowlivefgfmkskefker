@@ -1925,21 +1925,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const preparedId = urlParams.get('prepared_id');
+            const urlParams = new URLSearchParams(window.location.search);
+            const preparedId = urlParams.get('prepared_id');
+            const btn = document.getElementById('shareBtn');
             
-    if (preparedId && Telegram.WebApp.shareMessage) {
-        Telegram.WebApp.shareMessage(preparedId, function(success) {
-            if (success) {
-                Telegram.WebApp.close();
-            } else {
-                alert('Не удалось поделиться сообщением');
-            }
-        });
-    } else {
-        alert('Функция доступна только в последних версиях Telegram');
-        Telegram.WebApp.close();
-    }
+            btn.addEventListener('click', function() {
+                if (window.Telegram && Telegram.WebApp && Telegram.WebApp.shareMessage) {
+                    if (preparedId) {
+                        Telegram.WebApp.shareMessage(preparedId, function(success) {
+                            if (success) {
+                                Telegram.WebApp.close();
+                            } else {
+                                alert('Сообщение не было отправлено');
+                            }
+                        });
+                    } else {
+                        alert('Не найден ID сообщения');
+                    }
+                } else {
+                    alert('Эта функция доступна только в последних версиях Telegram (8.0+)');
+                    Telegram.WebApp?.close();
+                }
+            });
+            
+            // Автоматически развернуть WebApp на весь экран
+            Telegram.WebApp?.expand();
 });
 
 
