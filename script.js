@@ -1925,87 +1925,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Создаем стили для кнопки
-  const style = document.createElement('style');
-  style.textContent = `
-    #shareBtn {
-      padding: 12px 24px;
-      background-color: #0088cc;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      margin: 20px;
-    }
-    #shareBtn:hover {
-      background-color: #0077b3;
-    }
+  // 1. Создаем кнопку
+  const btn = document.createElement('button');
+  btn.textContent = 'Поделиться ботом';
+  btn.style.cssText = `
+    padding: 12px 24px;
+    background: #0088cc;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 20px;
   `;
-  document.head.appendChild(style);
+  document.body.appendChild(btn);
 
-  // Создаем кнопку для запуска функции
-  const button = document.createElement('button');
-  button.id = 'shareBtn';
-  button.textContent = 'Поделиться ботом';
-  document.body.appendChild(button);
-
-  // Функция для отправки сообщения
+  // 2. Функция для отправки
   function shareBot() {
-    const imageUrl = 'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png';
-    const botLink = 'https://t.me/rowlivebot/row';
-    
-    // Формируем HTML-текст сообщения с картинкой
-    const messageText = `
-      <a href="${imageUrl}">&#8205;</a> <!-- Невидимый символ с привязкой к картинке -->
-      <b>RowLive Bot</b> - лучший бот для трансляций!
-    `;
-    
-    // Создаем массив с одной кнопкой
-    const buttons = [{
-      text: "Перейти в бота",
-      button_id: "go_to_bot",
-      url: botLink  // Прямая ссылка для перехода
-    }];
-
-    // Проверяем доступность Telegram WebApp API
-    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.shareMessage) {
+    // Проверяем, что мы в Telegram WebApp
+    if (window.Telegram && Telegram.WebApp) {
       try {
-        // Отправляем сообщение через Telegram WebApp
-        Telegram.WebApp.shareMessage(messageText, "Рекомендую бота", buttons);
-        
-        // Обработчик нажатия кнопки (не требуется, так как используется прямая ссылка)
-        Telegram.WebApp.onEvent('buttonClicked', (event) => {
-          if (event.button_id === 'go_to_bot') {
-            console.log('Пользователь нажал на кнопку бота');
+        // Формируем сообщение с HTML (картинка + текст)
+        const message = `
+          <a href="https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png">&#8205;</a>
+          <b>RowLive Bot</b> - лучший бот для трансляций!
+        `;
+
+        // Создаем кнопку с ссылкой
+        const button = {
+          text: "Перейти в бота",
+          url: "https://t.me/rowlivebot/row"
+        };
+
+        // Отправляем через Telegram WebApp
+        Telegram.WebApp.showPopup({
+          title: "Поделиться ботом",
+          message: message,
+          buttons: [button]
+        }, function(btnId) {
+          if (btnId === button.url) {
+            Telegram.WebApp.openLink(button.url);
           }
         });
-        
+
       } catch (e) {
-        console.error('Ошибка при отправке:', e);
-        alert('Не удалось открыть диалог отправки');
+        console.error('Ошибка:', e);
+        Telegram.WebApp.showAlert("Не удалось открыть диалог");
       }
     } else {
-      // Режим обычного браузера - имитируем поведение
-      const previewHtml = `
-        <div style="border: 1px solid #ddd; padding: 15px; max-width: 400px; margin: 20px auto;">
-          <img src="${imageUrl}" style="max-width: 100%; height: auto; display: block; margin-bottom: 10px;">
-          <p><b>RowLive Bot</b> - лучший бот для трансляций!</p>
-          <a href="${botLink}" style="display: inline-block; padding: 8px 15px; background: #0088cc; color: white; text-decoration: none; border-radius: 5px;">
-            Перейти в бота
-          </a>
-        </div>
-      `;
-      document.body.insertAdjacentHTML('beforeend', previewHtml);
-      alert('В Telegram WebApp открылся бы диалог отправки');
+      alert("Эта функция работает только в Telegram");
     }
   }
 
-  // Назначаем обработчик клика
-  button.addEventListener('click', shareBot);
+  // 3. Вешаем обработчик
+  btn.addEventListener('click', shareBot);
 });
-
 
 
 // ====== Story ====== // 
