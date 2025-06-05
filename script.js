@@ -1924,45 +1924,107 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// Инициализация WebApp
+// Инициализация Telegram WebApp
 const webApp = Telegram.WebApp;
-        
-// Устанавливаем поведение при свайпе
-webApp.setupBackButton(function() {
-    webApp.close();
-});
-        
-// Развернуть WebApp на весь экран
-webApp.expand();
-        
-document.addEventListener('DOMContentLoaded', function() {
-    const shareButton = document.getElementById('shareButton');
-    const urlParams = new URLSearchParams(window.location.search);
-    const preparedId = urlParams.get('prepared_id');
-            
-    shareButton.addEventListener('click', function() {
-        if (!preparedId) {
-            webApp.showAlert('Ошибка: не найден ID сообщения');
-            return;
-        }
-                
-        if (webApp.shareMessage) {
-            webApp.shareMessage(preparedId, function(isShared) {
-                if (isShared) {
-                    webApp.close();
-                } else {
-                    webApp.showAlert('Сообщение не было отправлено');
-                }
-            });
-        } else {
-            webApp.showAlert('Функция доступна только в последних версиях Telegram');
-            webApp.close();
-        }
+
+// Создаем стили для кнопки
+const style = document.createElement('style');
+style.textContent = `
+  #shareButton {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #0088cc, #006699);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin: 20px auto;
+    display: block;
+    width: 80%;
+    max-width: 300px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+  }
+  #shareButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  }
+  #shareButton:active {
+    transform: translateY(0);
+  }
+`;
+document.head.appendChild(style);
+
+// Создаем кнопку
+const button1 = document.createElement('button1');
+button1.id = 'shareButton';
+button1.textContent = 'Поделиться ботом';
+document.body.appendChild(button1);
+
+// Функция для создания prepared message через API бота
+async function createPreparedMessage(userId) {
+  try {
+    const response = await fetch('https://ваш-сервер.com/create_prepared_message', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ user_id: userId })
     });
     
-    // Инициализация данных WebApp
-    webApp.ready();
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating prepared message:', error);
+    return null;
+  }
+}
+
+// Основная функция для отправки сообщения
+async function shareBot() {
+  // Проверяем, что мы в Telegram WebApp
+  if (!webApp.initDataUnsafe?.user?.id) {
+    alert('Пожалуйста, откройте это в Telegram');
+    return;
+  }
+
+  const userId = webApp.initDataUnsafe.user.id;
+  
+  // Создаем prepared message
+  const preparedMsg = await createPreparedMessage(userId);
+  
+  if (!preparedMsg?.id) {
+    webApp.showAlert('Не удалось создать сообщение');
+    return;
+  }
+
+  // Пытаемся отправить через shareMessage
+  if (webApp.shareMessage) {
+    webApp.shareMessage(preparedMsg.id, (success) => {
+      if (success) {
+        webApp.close();
+      } else {
+        webApp.showAlert('Сообщение не было отправлено');
+      }
+    });
+  } else {
+    webApp.showAlert('Ваша версия Telegram не поддерживает эту функцию');
+  }
+}
+
+// Инициализация при загрузке
+document.addEventListener('DOMContentLoaded', () => {
+  // Развернуть WebApp на весь экран
+  webApp.expand();
+  
+  // Назначить обработчик кнопки
+  document.getElementById('shareButton').addEventListener('click', shareBot);
+  
+  // Готовность WebApp
+  webApp.ready();
 });
+
+
 // ====== Story ====== // 
 
 
