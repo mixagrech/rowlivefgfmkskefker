@@ -1924,85 +1924,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// 1. Создаем кнопку
-const btn = document.createElement('button');
-btn.textContent = 'Пригласить друга';
-btn.style.cssText = `
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 12px 24px;
-  background: #31B545;
-  color: white;
-  border-radius: 24px;
-  font-weight: bold;
-  cursor: pointer;
-  border: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  z-index: 999;
-`;
-document.body.appendChild(btn);
+document.addEventListener('DOMContentLoaded', function() {
+  const button = document.createElement('button');
+  button.textContent = 'Отправить сообщение';
+  button.style.padding = '10px 20px';
+  button.style.backgroundColor = '#0088cc';
+  button.style.color = 'white';
+  button.style.border = 'none';
+  button.style.borderRadius = '5px';
+  button.style.cursor = 'pointer';
+  button.style.margin = '20px';
+  
+  document.body.appendChild(button);
 
-// 2. Обработчик клика
-btn.addEventListener('click', async () => {
-  try {
+  button.addEventListener('click', function() {
+    // Проверяем, доступен ли Telegram WebApp
     if (!window.Telegram?.WebApp) {
-      throw new Error('Откройте в Telegram WebApp');
+      alert('Это работает только в Telegram!');
+      return;
     }
 
-    const tg = window.Telegram.WebApp;
-    
-    // Проверяем поддержку shareMessage
-    if (!tg.shareMessage) {
-      throw new Error('UNSUPPORTED');
+    // Проверяем версию Telegram (нужна 8.0+)
+    const webAppVersion = Telegram.WebApp.version;
+    const isVersionSupported = webAppVersion && compareVersions(webAppVersion, '8.0') >= 0;
+
+    if (!isVersionSupported) {
+      alert(`Ваша версия Telegram (${webAppVersion}) не поддерживает shareMessage. Нужна 8.0+`);
+      return;
     }
 
-    // Создаем сообщение согласно PreparedInlineMessage
-    const message = {
-      text: "Привет! Попробуй эту крутую игру в гребле! 🚣‍♂️",
-      button_text: "Перейти к игре",
-      link: "https://t.me/rowlivebot/row"
-    };
-
-    // Подписываемся на события
-    tg.onEvent('shareMessageSent', () => {
-      alert('Сообщение успешно отправлено!');
-      tg.offEvent('shareMessageSent');
-    });
-
-    tg.onEvent('shareMessageFailed', (e) => {
-      const errors = {
-        'UNSUPPORTED': 'Функция не поддерживается',
-        'MESSAGE_EXPIRED': 'Сообщение устарело',
-        'MESSAGE_SEND_FAILED': 'Ошибка отправки',
-        'USER_DECLINED': 'Отправка отменена',
-        'UNKNOWN_ERROR': 'Неизвестная ошибка'
-      };
-      alert(`Ошибка: ${errors[e.error] || e.error}`);
-      tg.offEvent('shareMessageFailed');
-    });
-
-    // Вызываем нативный интерфейс
-    const result = await tg.shareMessage(message);
-    
-    if (result === false) {
-      alert('Отправка отменена пользователем');
-    }
-
-  } catch (error) {
-    // Fallback для старых версий
-    if (error.message === 'UNSUPPORTED' && window.Telegram?.WebApp?.openLink) {
-      window.Telegram.WebApp.openLink(
-        `https://t.me/share/url?url=${encodeURIComponent('https://t.me/rowlivebot/row')}&text=${encodeURIComponent('Привет! Попробуй эту игру!')}`
-      );
+    // Если метод доступен, пробуем отправить сообщение
+    if (typeof Telegram.WebApp.shareMessage === 'function') {
+      try {
+        // ❗ Нужен msg_id, а не просто текст!
+        // В реальном приложении его нужно получить через PreparedInlineMessage
+        const dummyMsgId = '12345'; // Замените на реальный msg_id
+        Telegram.WebApp.shareMessage(dummyMsgId, (success) => {
+          if (success) {
+            console.log('Сообщение отправлено!');
+          } else {
+            console.log('Ошибка отправки');
+          }
+        });
+      } catch (e) {
+        console.error('Ошибка shareMessage:', e);
+        alert('Не удалось отправить сообщение');
+      }
     } else {
-      alert(`Ошибка: ${error.message}`);
+      alert('Метод shareMessage недоступен');
     }
-  }
+  });
 });
 
-
+// Функция для сравнения версий (например, "8.1" > "8.0")
+function compareVersions(a, b) {
+  const partsA = a.split('.').map(Number);
+  const partsB = b.split('.').map(Number);
+  for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+    const partA = partsA[i] || 0;
+    const partB = partsB[i] || 0;
+    if (partA > partB) return 1;
+    if (partA < partB) return -1;
+  }
+  return 0;
+}
 
 
 // ====== Story ====== // 
@@ -2074,6 +2059,3 @@ storiesBtn.addEventListener('click', () => {
     }
   );
 });
-
-
-tg.shareMessage("Привет, посмотрите это!");
