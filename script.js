@@ -6,7 +6,7 @@ let tg = window.Telegram.WebApp;
 
 let champrangt = document.getElementById('heder_acc_age');
 let accountage = document.getElementById('account_age').style.display = 'none';
-let buttonbackage_btn = document.getElementById('buttonbackage_btn');
+let buttonbackage = document.querySelector('.buttonbackage');
 
 champrangt.addEventListener('click', () => {
     document.getElementById('main').style.display = 'none';
@@ -20,7 +20,7 @@ champrangt.addEventListener('click', () => {
     }, 2000);
 })
 
-buttonbackage_btn.addEventListener('click', () => {
+buttonbackage.addEventListener('click', () => {
     document.getElementById('main').style.display = 'block';
     document.getElementById('account_age').style.display = 'none';
     document.getElementById("user-avatar").style.display = "none"; // Скрываем аватар
@@ -397,10 +397,10 @@ function initAgeReward() {
         ? ageRewardState.amount 
         : randomNumbRewDay;
 
-    if (buttonbackage_btn) {
-        buttonbackage_btn.addEventListener('click', ageReward);
+    if (buttonbackage) {
+        buttonbackage.addEventListener('click', ageReward);
     } else {
-        console.error('Элемент buttonbackage_btn не найден');
+        console.error('Элемент buttonbackage не найден');
     }
 }
 
@@ -1955,47 +1955,42 @@ button2.addEventListener('click', function() {
   // Проверяем, что мы в Telegram WebApp
   if (window.Telegram && Telegram.WebApp) {
     try {
-      // Пытаемся отправить сообщение
-      Telegram.WebApp.sendData('Привет');
-      
-      // Можно закрыть WebApp после отправки
-      Telegram.WebApp.close();
+      // Используем shareMessage вместо sendData
+      if (typeof Telegram.WebApp.shareMessage === 'function') {
+        Telegram.WebApp.shareMessage(
+          'your_message_id_here', // Замените на реальный ID сообщения
+          function(isShared) {
+            if (isShared) {
+              console.log('Сообщение успешно отправлено');
+            } else {
+              console.log('Пользователь отменил отправку');
+            }
+          }
+        );
+      } else {
+        // Fallback для старых версий
+        Telegram.WebApp.openTelegramLink('https://t.me/share/url?url=&text=Привет');
+      }
     } catch (e) {
       console.error('Ошибка при отправке:', e);
-      alert('Не удалось отправить сообщение');
+      Telegram.WebApp.showAlert('Не удалось отправить сообщение');
     }
   } else {
     // Режим тестирования вне Telegram
     alert('Сообщение отправлено: Привет');
-    console.log('В Telegram WebApp сообщение было бы отправлено через sendData');
+    console.log('В Telegram WebApp сообщение было бы отправлено через shareMessage');
   }
 });
+
+
 
 // ====== Story ====== // 
 
 
-// Создаем кнопку
-const storiesBtn = document.querySelector('.TestMessageSent') || document.createElement('button');
-storiesBtn.textContent = 'Опубликовать в Stories';
-Object.assign(storiesBtn.style, {
-  padding: '12px 24px',
-  background: 'linear-gradient(45deg, #FF0076, #8A2BE2)',
-  color: 'white',
-  borderRadius: '24px',
-  fontWeight: 'bold',
-  cursor: 'pointer',
-  margin: '10px',
-  border: 'none'
-});
-document.body.appendChild(storiesBtn);
-
-// Проверяем, есть ли флаг о публикации в localStorage
-if (localStorage.getItem('storyPublished') === 'true') {
-  alert("Спасибо!");
-}
+const ShareAgeStory = document.querySelector('.ShareAgeStory');
 
 // Обработчик клика
-storiesBtn.addEventListener('click', () => {
+ShareAgeStory.addEventListener('click', () => {
   const tg = window.Telegram?.WebApp;
   
   if (!tg?.shareToStory) {
@@ -2013,29 +2008,25 @@ storiesBtn.addEventListener('click', () => {
   };
 
   // Показываем статус загрузки
-  storiesBtn.textContent = 'Загрузка...';
-  storiesBtn.disabled = true;
+  ShareAgeStory.disabled = true;
 
   // Пытаемся отправить
   tg.shareToStory(
     'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png',
     params,
     (success) => {
-      storiesBtn.disabled = false;
+      ShareAgeStory.disabled = false;
       if (success) {
-        storiesBtn.textContent = 'Опубликовано!';
-        storiesBtn.style.background = 'linear-gradient(45deg, #4CAF50, #2E8B57)';
-        // Сохраняем факт публикации в localStorage
+        ShareAgeStory.textContent = 'Опубликовано!';
+
         localStorage.setItem('storyPublished', 'true');
         alert("Спасибо!");
       } else {
-        storiesBtn.textContent = 'Отменено';
-        storiesBtn.style.background = 'linear-gradient(45deg, #FF5722, #F44336)';
+        ShareAgeStory.textContent = 'Отменено';
       }
       
       setTimeout(() => {
-        storiesBtn.textContent = 'Опубликовать в Stories';
-        storiesBtn.style.background = 'linear-gradient(45deg, #FF0076, #8A2BE2)';
+        ShareAgeStory.textContent = 'Опубликовать в Stories';
       }, 2000);
     }
   );
