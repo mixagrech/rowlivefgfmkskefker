@@ -1924,35 +1924,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+// Инициализация WebApp
+const webApp = Telegram.WebApp;
+        
+// Устанавливаем поведение при свайпе
+webApp.setupBackButton(function() {
+    webApp.close();
+});
+        
+// Развернуть WebApp на весь экран
+webApp.expand();
+        
 document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const preparedId = urlParams.get('prepared_id');
-            const btn = document.getElementById('shareBtn');
+    const shareButton = document.getElementById('shareButton');
+    const urlParams = new URLSearchParams(window.location.search);
+    const preparedId = urlParams.get('prepared_id');
             
-            btn.addEventListener('click', function() {
-                if (window.Telegram && Telegram.WebApp && Telegram.WebApp.shareMessage) {
-                    if (preparedId) {
-                        Telegram.WebApp.shareMessage(preparedId, function(success) {
-                            if (success) {
-                                Telegram.WebApp.close();
-                            } else {
-                                alert('Сообщение не было отправлено');
-                            }
-                        });
-                    } else {
-                        alert('Не найден ID сообщения');
-                    }
+    shareButton.addEventListener('click', function() {
+        if (!preparedId) {
+            webApp.showAlert('Ошибка: не найден ID сообщения');
+            return;
+        }
+                
+        if (webApp.shareMessage) {
+            webApp.shareMessage(preparedId, function(isShared) {
+                if (isShared) {
+                    webApp.close();
                 } else {
-                    alert('Эта функция доступна только в последних версиях Telegram (8.0+)');
-                    Telegram.WebApp?.close();
+                    webApp.showAlert('Сообщение не было отправлено');
                 }
             });
-            
-            // Автоматически развернуть WebApp на весь экран
-            Telegram.WebApp?.expand();
+        } else {
+            webApp.showAlert('Функция доступна только в последних версиях Telegram');
+            webApp.close();
+        }
+    });
+    
+    // Инициализация данных WebApp
+    webApp.ready();
 });
-
-
 // ====== Story ====== // 
 
 
