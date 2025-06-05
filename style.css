@@ -329,16 +329,72 @@ body{
     position: fixed;
     top: 45px;
 }
-.buttonbackage {
-    position: fixed;
-    left: 5%;
-    right: 5%;
-    display: block;
-    text-align: center;
-    bottom: 7%;
-    width: 90%;
-    height: 6.3%;
+
+.buttonbackageCentred {
+    position: absolute;
+    height: 7%;
+    width: 100%;
+    bottom: 6%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
+
+.buttonbackage {
+    width: 90%;
+    height: 100%;
+    background-color: #0098EA;
+    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+}
+
+.ShareAgeStoryCentred {
+    position: absolute;
+    width: 100%;
+    height: 6.5%;
+    bottom: 15%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ShareAgeStory {
+    width: 90%;
+    height: 100%;
+    background: linear-gradient(90deg, #0479FA 0%, #6F91FF 48.56%, #C55CB0 100%);
+    border-radius: 100px;
+    color: #FFFFFF;
+    font-size: 1.2rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ShareAgeStoryContent {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.ShareAgeStoryIcon {
+    width: 1.2rem;
+    height: 1.2rem;
+    flex-shrink: 0;
+    animation: rotate 6s linear infinite;
+    transform-origin: center;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 
 .rowLogoOnDaily{
     position: fixed;
@@ -2436,3 +2492,4 @@ SkinImgStandart2
     z-index: 1000;
     pointer-events: none;
 }
+
