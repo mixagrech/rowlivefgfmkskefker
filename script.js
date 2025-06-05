@@ -1924,71 +1924,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-document.addEventListener('DOMContentLoaded', function() {
-  const button = document.createElement('button');
-  button.textContent = 'Отправить сообщение';
-  button.style.padding = '10px 20px';
-  button.style.backgroundColor = '#0088cc';
-  button.style.color = 'white';
-  button.style.border = 'none';
-  button.style.borderRadius = '5px';
-  button.style.cursor = 'pointer';
-  button.style.margin = '20px';
-  
-  document.body.appendChild(button);
-
-  button.addEventListener('click', function() {
-    // Проверяем, доступен ли Telegram WebApp
-    if (!window.Telegram?.WebApp) {
-      alert('Это работает только в Telegram!');
-      return;
-    }
-
-    // Проверяем версию Telegram (нужна 8.0+)
-    const webAppVersion = Telegram.WebApp.version;
-    const isVersionSupported = webAppVersion && compareVersions(webAppVersion, '8.0') >= 0;
-
-    if (!isVersionSupported) {
-      alert(`Ваша версия Telegram (${webAppVersion}) не поддерживает shareMessage. Нужна 8.0+`);
-      return;
-    }
-
-    // Если метод доступен, пробуем отправить сообщение
-    if (typeof Telegram.WebApp.shareMessage === 'function') {
-      try {
-        // ❗ Нужен msg_id, а не просто текст!
-        // В реальном приложении его нужно получить через PreparedInlineMessage
-        const dummyMsgId = '12345'; // Замените на реальный msg_id
-        Telegram.WebApp.shareMessage(dummyMsgId, (success) => {
-          if (success) {
-            console.log('Сообщение отправлено!');
-          } else {
-            console.log('Ошибка отправки');
-          }
-        });
-      } catch (e) {
-        console.error('Ошибка shareMessage:', e);
-        alert('Не удалось отправить сообщение');
-      }
-    } else {
-      alert('Метод shareMessage недоступен');
-    }
-  });
-});
-
-// Функция для сравнения версий (например, "8.1" > "8.0")
-function compareVersions(a, b) {
-  const partsA = a.split('.').map(Number);
-  const partsB = b.split('.').map(Number);
-  for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
-    const partA = partsA[i] || 0;
-    const partB = partsB[i] || 0;
-    if (partA > partB) return 1;
-    if (partA < partB) return -1;
+// Создаем стили для кнопки
+const style = document.createElement('style');
+style.textContent = `
+  #sendBtn {
+    padding: 12px 24px;
+    background-color: #0088cc;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin: 20px;
   }
-  return 0;
-}
+  #sendBtn:hover {
+    background-color: #0077b3;
+  }
+`;
+document.head.appendChild(style);
 
+// Создаем кнопку
+const button2 = document.createElement('button2');
+button2.id = 'sendBtn';
+button2.textContent = 'Отправить сообщение';
+document.body.appendChild(button2);
+
+// Обработчик нажатия
+button2.addEventListener('click', function() {
+  // Проверяем, что мы в Telegram WebApp
+  if (window.Telegram && Telegram.WebApp) {
+    try {
+      // Пытаемся отправить сообщение
+      Telegram.WebApp.sendData('Привет');
+      
+      // Можно закрыть WebApp после отправки
+      Telegram.WebApp.close();
+    } catch (e) {
+      console.error('Ошибка при отправке:', e);
+      alert('Не удалось отправить сообщение');
+    }
+  } else {
+    // Режим тестирования вне Telegram
+    alert('Сообщение отправлено: Привет');
+    console.log('В Telegram WebApp сообщение было бы отправлено через sendData');
+  }
+});
 
 // ====== Story ====== // 
 
