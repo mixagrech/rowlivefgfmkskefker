@@ -1925,60 +1925,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 document.addEventListener('DOMContentLoaded', function() {
-  // 1. Создаем кнопку
-  const btn = document.createElement('button');
-  btn.textContent = 'Поделиться ботом';
-  btn.style.cssText = `
-    padding: 12px 24px;
-    background: #0088cc;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    cursor: pointer;
-    margin: 20px;
-  `;
-  document.body.appendChild(btn);
-
-  // 2. Функция для отправки
-  function shareBot() {
-    // Проверяем, что мы в Telegram WebApp
-    if (window.Telegram && Telegram.WebApp) {
-      try {
-        // Формируем сообщение с HTML (картинка + текст)
-        const message = `
-          <a href="https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png">&#8205;</a>
-          <b>RowLive Bot</b> - лучший бот для трансляций!
-        `;
-
-        // Создаем кнопку с ссылкой
-        const button = {
-          text: "Перейти в бота",
-          url: "https://t.me/rowlivebot/row"
-        };
-
-        // Отправляем через Telegram WebApp
-        Telegram.WebApp.showPopup({
-          title: "Поделиться ботом",
-          message: message,
-          buttons: [button]
-        }, function(btnId) {
-          if (btnId === button.url) {
-            Telegram.WebApp.openLink(button.url);
-          }
+    const urlParams = new URLSearchParams(window.location.search);
+    const preparedId = urlParams.get('prepared_id');
+            
+    if (preparedId && Telegram.WebApp.shareMessage) {
+        Telegram.WebApp.shareMessage(preparedId, function(success) {
+            if (success) {
+                Telegram.WebApp.close();
+            } else {
+                alert('Не удалось поделиться сообщением');
+            }
         });
-
-      } catch (e) {
-        console.error('Ошибка:', e);
-        Telegram.WebApp.showAlert("Не удалось открыть диалог");
-      }
     } else {
-      alert("Эта функция работает только в Telegram");
+        alert('Функция доступна только в последних версиях Telegram');
+        Telegram.WebApp.close();
     }
-  }
-
-  // 3. Вешаем обработчик
-  btn.addEventListener('click', shareBot);
 });
 
 
