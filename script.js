@@ -1922,59 +1922,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-document.addEventListener('DOMContentLoaded', function() {
-  // Находим все кнопки с классом TestMessageSent
-  const shareButtons = document.querySelectorAll('.TestMessageSent');
-  
-  // Проверяем, что WebApp инициализирован
-  if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
-    // Добавляем обработчик для всех кнопок с классом TestMessageSent
-    shareButtons.forEach(button => {
-      button.addEventListener('click', async function() {
-        try {
-          // Сначала готовим сообщение
-          const result = await Telegram.WebApp.sendData({
-            method: 'savePreparedInlineMessage',
-            params: {
-              user_id: Telegram.WebApp.initDataUnsafe.user?.id,
-              result: {
-                type: 'article',
-                id: '1',
-                title: 'Привет',
-                input_message_content: {
-                  message_text: 'Привет'
-                }
-              },
-              allow_user_chats: true,
-              allow_bot_chats: false,
-              allow_group_chats: true,
-              allow_channel_chats: false
-            }
-          });
-          
-          // Затем отправляем сообщение
-          await Telegram.WebApp.sendData({
-            method: 'shareMessage',
-            params: {
-              id: result.id
-            }
-          });
-          
-        } catch (error) {
-          console.error('Ошибка:', error);
-          alert('Не удалось отправить сообщение: ' + error.message);
-        }
-      });
-    });
-    
-    // Обработка успешной отправки
-    Telegram.WebApp.onEvent('shareMessageSent', function() {
-      console.log('Сообщение "Привет" успешно отправлено!');
-    });
-  } else {
-    console.error('Telegram WebApp не инициализирован');
-  }
-});
+
 
 
 // ====== Story ====== // 
