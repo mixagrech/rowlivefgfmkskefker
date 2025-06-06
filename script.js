@@ -1923,60 +1923,94 @@ document.addEventListener('DOMContentLoaded', () => {
 // Инициализация WebApp
 
 if (!tg) {
-  alert("Пожалуйста, откройте это мини-приложение в Telegram!");
+  alert("Пожалуйста, откройте мини-приложение в Telegram!");
   throw new Error("Telegram WebApp не найден");
 }
 
-tg.ready();
+// Проверка версии API
+function isShareMessageSupported() {
+  try {
+    return typeof tg.shareMessage === 'function' && 
+           tg.version && parseFloat(tg.version) >= 8.0;
+  } catch (e) {
+    return false;
+  }
+}
 
-// Функция для отправки сообщения
-function shareMessage() {
-  // Проверяем поддержку метода
-  if (!tg.shareMessage) {
-    alert("Ваша версия Telegram не поддерживает shareMessage. Обновите приложение!");
+// Функция отправки сообщения
+function shareGameMessage() {
+  if (!isShareMessageSupported()) {
+    alert('Функция доступна только в Telegram 8.0+');
     return;
   }
 
-  // Параметры сообщения (аналогично твоему рабочему shareToStory)
+  // Создаем уникальный ID для сообщения
+  const messageId = `msg_${Date.now()}`;
+  
+  // Параметры сообщения (оптимизированные)
   const message = {
-    text: 'Присоединяйся к игре! 🚣‍♂️\n\nhttps://t.me/rowlivebot/row',
+    text: '🎮 Присоединяйся к нашей игре!\n\n' +
+          'Соревнуйся с друзьями и стань чемпионом!\n\n' +
+          '👇 Нажми кнопку ниже, чтобы начать:',
     parse_mode: 'HTML',
-    // Можно добавить кнопку, если нужно
     reply_markup: {
       inline_keyboard: [[{
-        text: 'Играть сейчас',
+        text: 'Играть сейчас →',
         url: 'https://t.me/rowlivebot/row'
       }]]
     }
   };
 
+  // Сохраняем сообщение (имитация PreparedMessage)
+  tg.sendData(JSON.stringify({
+    method: 'savePreparedMessage',
+    id: messageId,
+    message: message
+  }));
+
   // Пытаемся отправить
-  tg.shareMessage({ message }, (success) => {
-    if (success) {
-      console.log('Сообщение успешно отправлено!');
-      alert('Сообщение отправлено! Спасибо!');
-    } else {
-      console.error('Пользователь отменил отправку');
-      alert('Отправка отменена');
-    }
-  });
+  try {
+    tg.shareMessage(messageId, (success) => {
+      if (success) {
+        console.log('[DEBUG] Сообщение успешно отправлено');
+        alert('Спасибо за распространение игры!');
+      } else {
+        console.warn('[DEBUG] Пользователь отменил отправку');
+      }
+    });
+  } catch (e) {
+    console.error('[DEBUG] Ошибка shareMessage:', e);
+    alert('Ошибка при отправке: ' + e.message);
+  }
 }
 
-// Создаем кнопку
-document.addEventListener('DOMContentLoaded', function() {
-  const button = document.createElement('button');
-  button.textContent = 'Поделиться в чате';
-  button.style.padding = '10px 20px';
-  button.style.backgroundColor = '#0088cc';
-  button.style.color = 'white';
-  button.style.border = 'none';
-  button.style.borderRadius = '5px';
-  button.style.cursor = 'pointer';
-  button.style.margin = '10px';
-
-  button.addEventListener('click', shareMessage);
-  document.body.appendChild(button);
+// Инициализация кнопки
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.createElement('button');
+  btn.textContent = 'Поделиться игрой';
+  btn.style.cssText = `
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #0088cc, #00aced);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+  `;
+  
+  btn.onmouseover = () => btn.style.transform = 'translateY(-2px)';
+  btn.onmouseout = () => btn.style.transform = 'none';
+  
+  btn.onclick = shareGameMessage;
+  document.body.appendChild(btn);
 });
+
+// Обработчики для дебага
+tg.onEvent('shareMessageSent', () => console.log('[EVENT] Сообщение отправлено'));
+tg.onEvent('shareMessageFailed', (e) => console.log('[EVENT] Ошибка:', e.error));
 
 
 // ====== Story ====== // 
