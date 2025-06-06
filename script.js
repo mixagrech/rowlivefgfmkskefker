@@ -1922,27 +1922,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+
+
 if (!tg) {
-  alert('Откройте мини-приложение в Telegram');
+  alert('Пожалуйста, откройте мини-приложение в Telegram');
+  document.body.innerHTML = '<h3 style="color:red">Это приложение работает только в Telegram</h3>';
   throw new Error('Telegram WebApp not found');
 }
 
-tg.ready();
+// Блокировка многократных нажатий
+let isSharing = false;
 
-// Проверка поддержки shareMessage
-function canShareMessage() {
-  return typeof tg.shareMessage === 'function' && 
-         tg.version && parseFloat(tg.version) >= 8.0;
-}
-
-// Улучшенная функция отправки
 async function shareGameMessage() {
-  if (!canShareMessage()) {
-    alert('Обновите Telegram до последней версии для этой функции');
-    return;
-  }
-
-  // Создаем кнопку с loader
+  if (isSharing) return;
+  isSharing = true;
+  
   const btn = document.querySelector('.share-btn');
   if (btn) {
     btn.disabled = true;
@@ -1950,50 +1944,67 @@ async function shareGameMessage() {
   }
 
   try {
-    // Параметры сообщения
+    // Создаем текст сообщения с форматированием
     const message = {
-      text: '🎮 Присоединяйся к крутой игре!\n\n' +
-            'Нажми ниже, чтобы начать:\n\n' +
-            '<a href="https://t.me/rowlivebot/row">🚀 Играть сейчас</a>',
-      parse_mode: 'HTML'
+      message_text: `🎮 *Присоединяйся к игре!*\n\n` +
+                   `Сыграем вместе? Нажми на кнопку ниже:\n\n` +
+                   `[👉 Играть сейчас](https://t.me/rowlivebot/row)`,
+      parse_mode: 'MarkdownV2',
+      link_preview_options: {
+        is_disabled: false,
+        url: 'https://t.me/rowlivebot/row',
+        prefer_large_media: true
+      }
     };
 
-    // Альтернативный вариант через sendData
-    const shareResult = await new Promise((resolve) => {
-      tg.sendData(JSON.stringify({
-        method: 'shareMessage',
-        message: message
-      }));
-      
-      // Обработчики событий
-      const onSuccess = () => {
-        tg.offEvent('shareMessageSent', onSuccess);
-        tg.offEvent('shareMessageFailed', onError);
-        resolve(true);
-      };
-      
-      const onError = (e) => {
-        tg.offEvent('shareMessageSent', onSuccess);
-        tg.offEvent('shareMessageFailed', onError);
-        resolve(false);
-      };
-      
-      tg.onEvent('shareMessageSent', onSuccess);
-      tg.onEvent('shareMessageFailed', onError);
-      
-      // Таймаут на случай проблем
-      setTimeout(() => resolve(false), 5000);
-    });
+    // Вариант 1: Через прямой вызов shareMessage (если доступен)
+    if (typeof tg.shareMessage === 'function') {
+      await new Promise((resolve) => {
+        const timer = setTimeout(() => {
+          tg.offEvent('shareMessageSent', onSuccess);
+          tg.offEvent('shareMessageFailed', onError);
+          resolve(false);
+        }, 5000);
 
-    if (shareResult) {
-      alert('Сообщение отправлено! Спасибо!');
-    } else {
-      alert('Не удалось отправить сообщение');
+        const onSuccess = () => {
+          clearTimeout(timer);
+          resolve(true);
+        };
+
+        const onError = (e) => {
+          clearTimeout(timer);
+          console.error('Share failed:', e.error);
+          resolve(false);
+        };
+
+        tg.onEvent('shareMessageSent', onSuccess);
+        tg.onEvent('shareMessageFailed', onError);
+
+        try {
+          tg.shareMessage(JSON.stringify(message));
+        } catch (e) {
+          console.error('Share error:', e);
+          resolve(false);
+        }
+      });
+    } 
+    // Вариант 2: Через sendData (для старых версий)
+    else {
+      await new Promise((resolve) => {
+        tg.sendData(JSON.stringify({
+          method: 'shareMessage',
+          ...message
+        }));
+        setTimeout(resolve, 3000);
+      });
     }
+
+    alert('Сообщение успешно отправлено! Спасибо!');
   } catch (e) {
-    console.error('Share error:', e);
-    alert('Ошибка: ' + e.message);
+    console.error('Error:', e);
+    alert('Ошибка отправки: ' + (e.message || 'попробуйте позже'));
   } finally {
+    isSharing = false;
     if (btn) {
       btn.disabled = false;
       btn.textContent = 'Поделиться игрой';
@@ -2001,24 +2012,41 @@ async function shareGameMessage() {
   }
 }
 
-// Стили и кнопка
+// Инициализация приложения
 document.addEventListener('DOMContentLoaded', () => {
   const style = document.createElement('style');
   style.textContent = `
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
     .share-btn {
       padding: 12px 24px;
-      background: linear-gradient(135deg, #0088cc, #00aced);
+      background: linear-gradient(135deg, #0088cc, #006699);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 50px;
       font-size: 16px;
+      font-weight: 500;
       cursor: pointer;
-      margin: 20px;
+      margin: 20px auto;
+      display: block;
+      width: 80%;
+      max-width: 300px;
+      box-shadow: 0 4px 12px rgba(0,136,204,0.25);
       transition: all 0.3s;
+    }
+    .share-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,136,204,0.3);
+    }
+    .share-btn:active {
+      transform: translateY(0);
     }
     .share-btn:disabled {
       opacity: 0.7;
-      cursor: wait;
+      transform: none !important;
     }
     .loader {
       display: inline-block;
@@ -2027,7 +2055,7 @@ document.addEventListener('DOMContentLoaded', () => {
       border: 2px solid rgba(255,255,255,0.3);
       border-radius: 50%;
       border-top-color: white;
-      animation: spin 1s ease-in-out infinite;
+      animation: spin 1s linear infinite;
       margin-right: 8px;
       vertical-align: middle;
     }
@@ -2037,11 +2065,15 @@ document.addEventListener('DOMContentLoaded', () => {
   `;
   document.head.appendChild(style);
 
-  const btn = document.createElement('button');
-  btn.className = 'share-btn';
-  btn.textContent = 'Поделиться игрой';
-  btn.onclick = shareGameMessage;
-  document.body.appendChild(btn);
+  const container = document.createElement('div');
+  container.innerHTML = `
+    <h2>Поделиться игрой</h2>
+    <p>Пригласи друзей в нашу крутую игру!</p>
+    <button class="share-btn">Поделиться</button>
+  `;
+  document.body.appendChild(container);
+
+  document.querySelector('.share-btn').onclick = shareGameMessage;
 });
 
 
