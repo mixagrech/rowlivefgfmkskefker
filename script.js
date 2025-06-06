@@ -1929,7 +1929,7 @@ if (!tg) {
 
 tg.ready();
 
-// Функция для отправки сообщения через shareMessage
+// Функция для отправки сообщения
 function shareMessage() {
   // Проверяем поддержку метода
   if (!tg.shareMessage) {
@@ -1937,55 +1937,35 @@ function shareMessage() {
     return;
   }
 
-  // Параметры сообщения
+  // Параметры сообщения (аналогично твоему рабочему shareToStory)
   const message = {
-    text: 'Это тестовое сообщение из Mini App!',
-    parse_mode: 'HTML'
+    text: 'Присоединяйся к игре! 🚣‍♂️\n\nhttps://t.me/rowlivebot/row',
+    parse_mode: 'HTML',
+    // Можно добавить кнопку, если нужно
+    reply_markup: {
+      inline_keyboard: [[{
+        text: 'Играть сейчас',
+        url: 'https://t.me/rowlivebot/row'
+      }]]
+    }
   };
 
   // Пытаемся отправить
-  try {
-    tg.shareMessage({ message });
-  } catch (error) {
-    console.error('Ошибка при вызове shareMessage:', error);
-    alert('Произошла ошибка при попытке отправить сообщение');
-  }
+  tg.shareMessage({ message }, (success) => {
+    if (success) {
+      console.log('Сообщение успешно отправлено!');
+      alert('Сообщение отправлено! Спасибо!');
+    } else {
+      console.error('Пользователь отменил отправку');
+      alert('Отправка отменена');
+    }
+  });
 }
 
-// Обработчики событий
-tg.onEvent('shareMessageSent', function() {
-  console.log('Сообщение успешно отправлено!');
-  alert('Сообщение успешно отправлено!');
-});
-
-tg.onEvent('shareMessageFailed', function(data) {
-  console.error('Ошибка отправки сообщения:', data.error);
-  
-  let errorMessage = 'Не удалось отправить сообщение. ';
-  switch(data.error) {
-    case 'UNSUPPORTED':
-      errorMessage += 'Функция не поддерживается клиентом.';
-      break;
-    case 'MESSAGE_EXPIRED':
-      errorMessage += 'Сообщение больше не доступно.';
-      break;
-    case 'MESSAGE_SEND_FAILED':
-      errorMessage += 'Ошибка при отправке сообщения.';
-      break;
-    case 'USER_DECLINED':
-      errorMessage += 'Пользователь отменил отправку.';
-      break;
-    default:
-      errorMessage += 'Неизвестная ошибка.';
-  }
-  
-  alert(errorMessage);
-});
-
-// Создаем кнопку в интерфейсе
+// Создаем кнопку
 document.addEventListener('DOMContentLoaded', function() {
   const button = document.createElement('button');
-  button.textContent = 'Отправить сообщение';
+  button.textContent = 'Поделиться в чате';
   button.style.padding = '10px 20px';
   button.style.backgroundColor = '#0088cc';
   button.style.color = 'white';
