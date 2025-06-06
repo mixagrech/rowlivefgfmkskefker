@@ -1921,44 +1921,47 @@ document.addEventListener('DOMContentLoaded', () => {
     
 
 // Инициализация WebApp
+
+if (!tg) {
+  alert("Пожалуйста, откройте это мини-приложение в Telegram!");
+  throw new Error("Telegram WebApp не найден");
+}
+
 tg.ready();
 
-// Функция для подготовки и отправки сообщения
-function prepareAndShareMessage() {
-  // Подготавливаем сообщение
-  const inlineMessage = {
-    type: 'article',
-    id: '1',
-    title: 'Проверка отправки сообщения',
-    input_message_content: {
-      message_text: 'Это тестовое сообщение из Mini App!',
-      parse_mode: 'HTML'
-    }
+// Функция для отправки сообщения через shareMessage
+function shareMessage() {
+  // Проверяем поддержку метода
+  if (!tg.shareMessage) {
+    alert("Ваша версия Telegram не поддерживает shareMessage. Обновите приложение!");
+    return;
+  }
+
+  // Параметры сообщения
+  const message = {
+    text: 'Это тестовое сообщение из Mini App!',
+    parse_mode: 'HTML'
   };
 
-  // Сохраняем подготовленное сообщение
-  tg.sendData(JSON.stringify({
-    method: 'savePreparedInlineMessage',
-    user_id: tg.initDataUnsafe.user?.id,
-    result: inlineMessage,
-    allow_user_chats: true,
-    allow_group_chats: true,
-    allow_channel_chats: true
-  }));
+  // Пытаемся отправить
+  try {
+    tg.shareMessage({ message });
+  } catch (error) {
+    console.error('Ошибка при вызове shareMessage:', error);
+    alert('Произошла ошибка при попытке отправить сообщение');
+  }
 }
 
 // Обработчики событий
 tg.onEvent('shareMessageSent', function() {
   console.log('Сообщение успешно отправлено!');
-  // Действия при успешной отправке
   alert('Сообщение успешно отправлено!');
 });
 
 tg.onEvent('shareMessageFailed', function(data) {
   console.error('Ошибка отправки сообщения:', data.error);
-  // Действия при ошибке
-  let errorMessage = 'Не удалось отправить сообщение. ';
   
+  let errorMessage = 'Не удалось отправить сообщение. ';
   switch(data.error) {
     case 'UNSUPPORTED':
       errorMessage += 'Функция не поддерживается клиентом.';
@@ -1981,21 +1984,19 @@ tg.onEvent('shareMessageFailed', function(data) {
 
 // Создаем кнопку в интерфейсе
 document.addEventListener('DOMContentLoaded', function() {
-    const button = document.createElement('button');
-    button.textContent = 'Отправить сообщение';
-    button.style.padding = '10px 20px';
-    button.style.backgroundColor = '#0088cc';
-    button.style.color = 'white';
-    button.style.border = 'none';
-    button.style.borderRadius = '5px';
-    button.style.cursor = 'pointer';
-  
-    button.addEventListener('click', prepareAndShareMessage);
-  
-    document.body.appendChild(button);
+  const button = document.createElement('button');
+  button.textContent = 'Отправить сообщение';
+  button.style.padding = '10px 20px';
+  button.style.backgroundColor = '#0088cc';
+  button.style.color = 'white';
+  button.style.border = 'none';
+  button.style.borderRadius = '5px';
+  button.style.cursor = 'pointer';
+  button.style.margin = '10px';
+
+  button.addEventListener('click', shareMessage);
+  document.body.appendChild(button);
 });
-
-
 
 
 // ====== Story ====== // 
