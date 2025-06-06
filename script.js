@@ -1978,3 +1978,77 @@ ShareAgeStory.addEventListener('click', () => {
     }
   );
 });
+
+
+
+
+// ===== ФУНКЦИЯ ДЛЯ ПОЛНОГО СБРОСА ПРОГРЕССА ===== //
+function resetProgress() {
+    if (confirm('Вы уверены, что хотите сбросить весь прогресс? Это удалит все ваши монеты, сбросит дневную серию и награду за возраст.')) {
+        // Сбрасываем основное состояние игры
+        resetGameState();
+        
+        // Сбрасываем награду за возраст
+        ageRewardState = {
+            claimed: false,
+            amount: 0
+        };
+        localStorage.removeItem(AGE_REWARD_KEY); // Удаляем запись о награде за возраст
+        
+        updateUI();
+        
+        // Показываем экран с ежедневной наградой (как при первом входе)
+        showDailyReward();
+        
+        console.log('Весь прогресс сброшен!');
+        if (window.Telegram?.WebApp?.showAlert) {
+            Telegram.WebApp.showAlert('Весь прогресс успешно сброшен!');
+        }
+    }
+}
+
+// ===== ОБНОВЛЁННАЯ ФУНКЦИЯ RESET GAME STATE ===== //
+function resetGameState() {
+    gameState = {
+        rowscore: 0,
+        lastDailyClaim: null,
+        dailyStreak: 0
+    };
+    saveGameState();
+    
+    // Также сбрасываем награду за возраст
+    ageRewardState = {
+        claimed: false,
+        amount: 0
+    };
+    saveAgeRewardState();
+}
+
+// ===== СОЗДАЁМ КНОПКУ СБРОСА ===== //
+function createResetButton() {
+    const resetBtn = document.createElement('button');
+    resetBtn.innerHTML = '🔄 Сбросить ВСЁ';
+    resetBtn.style.position = 'fixed';
+    resetBtn.style.bottom = '20px';
+    resetBtn.style.right = '20px';
+    resetBtn.style.padding = '10px 15px';
+    resetBtn.style.backgroundColor = '#ff4444';
+    resetBtn.style.color = 'white';
+    resetBtn.style.border = 'none';
+    resetBtn.style.borderRadius = '20px'; // Закруглённые углы
+    resetBtn.style.cursor = 'pointer';
+    resetBtn.style.zIndex = '1000';
+    resetBtn.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+    resetBtn.style.fontWeight = 'bold';
+    
+    resetBtn.addEventListener('click', resetProgress);
+    
+    document.body.appendChild(resetBtn);
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    initGame();
+    initAgeReward(); // Инициализируем систему наград за возраст
+    createResetButton();
+});
