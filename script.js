@@ -1920,7 +1920,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
 
+document.addEventListener('DOMContentLoaded', () => {
+  const shareButton = document.querySelector('.TestMessageSent');
 
+  if (!shareButton || typeof Telegram === 'undefined' || !Telegram.WebApp) {
+    console.error('Элемент или Telegram WebApp не найден');
+    return;
+  }
+
+  shareButton.addEventListener('click', async () => {
+    try {
+      // 1. Подготавливаем сообщение (упрощённый вариант)
+      const prepResult = await Telegram.WebApp.sendData({
+        method: 'savePreparedInlineMessage',
+        params: {
+          result: {
+            type: 'article',
+            id: String(Date.now()), // Уникальный ID
+            title: 'Привет',
+            input_message_content: {
+              message_text: 'Привет',
+              parse_mode: 'HTML' // Опционально
+            }
+          }
+        }
+      });
+
+      if (!prepResult?.id) {
+        throw new Error('Не удалось подготовить сообщение');
+      }
+
+      // 2. Отправляем сообщение
+      await Telegram.WebApp.sendData({
+        method: 'shareMessage',
+        params: {
+          id: prepResult.id
+        }
+      });
+
+    } catch (error) {
+      console.error('Ошибка:', error);
+      Telegram.WebApp.showAlert(`Ошибка: ${error.message}`);
+    }
+  });
+});
 
 
 
