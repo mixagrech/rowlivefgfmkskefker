@@ -1936,7 +1936,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const ShareAgeStory = document.querySelector('.ShareAgeStory');
 
-ShareAgeStory.addEventListener('click', () => {
+ShareAgeStory.addEventListener('click', async () => {
   const tg = window.Telegram?.WebApp;
   
   if (!tg?.shareToStory) {
@@ -1944,38 +1944,57 @@ ShareAgeStory.addEventListener('click', () => {
     return;
   }
 
-  // Получаем ID и считаем возраст (без десятичных)
+  // Получаем возраст (целое число)
   const userId = tg.initDataUnsafe?.user?.id || 0;
-  const userAge = Math.floor(userId / 1000000000); // Целое число
+  const userAge = Math.floor(userId / 1000000000 * 80);
 
-  // Параметры Stories с возрастом в тексте
-  const params = {
-    text: `Мой возраст: ${userAge} лет 🎮\nПрисоединяйся! 🚣‍♂️`,
-    widget_link: {
-      url: 'https://t.me/rowlivebot/row',
-      name: 'Играть сейчас'
-    }
-  };
+  // 1. Создаем временный элемент для рисования
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 1080; // Ширина Stories
+  canvas.height = 1920; // Высота Stories
 
-  // Статус кнопки
-  ShareAgeStory.disabled = true;
+  // 2. Загружаем фоновое изображение
+  const bgImage = new Image();
+  bgImage.crossOrigin = 'Anonymous';
+  bgImage.src = 'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png';
+  
+  await new Promise((resolve) => {
+    bgImage.onload = resolve;
+  });
 
-  // Отправляем оригинальное изображение + текст с возрастом
+  // 3. Рисуем изображение на canvas
+  ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+
+  // 4. Добавляем текст с возрастом
+  ctx.fillStyle = '#FFFFFF'; // Белый текст
+  ctx.font = 'bold 100px Arial';
+  ctx.textAlign = 'center';
+  
+  // Тень для лучшей читаемости
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+  ctx.shadowBlur = 10;
+  
+  // Позиция текста (по центру, 150px от нижнего края)
+  ctx.fillText(`${userAge}`, canvas.width/2, canvas.height - 150);
+
+  // 5. Конвертируем в изображение
+  const imageWithAge = canvas.toDataURL('image/jpeg');
+
+  // 6. Отправляем в Stories
   tg.shareToStory(
-    'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png',
-    params,
-    (success) => {
-      ShareAgeStory.disabled = false;
-      if (success) {
-        ShareAgeStory.textContent = 'Готово!';
-        localStorage.setItem('storyPublished', 'true');
-      } else {
-        ShareAgeStory.textContent = 'Ошибка';
+    imageWithAge,
+    {
+      text: 'Присоединяйся к игре! 🚣‍♂️',
+      widget_link: {
+        url: 'https://t.me/rowlivebot/row',
+        name: 'Играть сейчас'
       }
-      
-      setTimeout(() => {
-        ShareAgeStory.textContent = 'Поделиться в Stories';
-      }, 2000);
+    },
+    (success) => {
+      if (success) {
+        localStorage.setItem('storyPublished', 'true');
+      }
     }
   );
 });
