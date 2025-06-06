@@ -308,11 +308,17 @@ function showFallbackAvatar() {
 document.addEventListener("DOMContentLoaded", setupUserAvatar);
 
 
-// ===== ФУНКЦИЯ ДЛЯ СЛУЧАЙНЫХ ЧИСЕЛ ===== //
-function getRandomInRange(min, max) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+// ===== ФУНКЦИЯ ДЛЯ РАСЧЕТА ВОЗРАСТА ИЗ ID ===== //
+function calculateAgeFromId(userId) {
+    // Если ID не передан, используем случайный для демонстрации
+    const id = userId || Math.floor(Math.random() * 10000000000);
+    
+    // Новая формула: (ID / 1,000,000,000) + 2013 → затем (2025 - результат) * 100
+    const rawValue = (id / 1000000000) + 2013;
+    const rawAge = (2025 - rawValue) * 100;
+    
+    // Округляем до одного знака после запятой
+    return Math.round(rawAge * 10) / 10;
 }
 
 // ===== СИСТЕМА НАГРАД ЗА ВОЗРАСТ ===== //
@@ -326,8 +332,22 @@ let ageRewardState = {
 const usernameonAgeID = document.getElementById('usernameonAgeID');
 const usernameonAgeRewardID = document.getElementById('usernameonAgeRewardID');
 
-// Генерируем случайное количество монет
-const randomNumbRewDay = getRandomInRange(500, 1000);
+// Рассчитываем награду на основе возраста
+function calculateAgeReward() {
+    let userId = 0;
+    if (tg?.initDataUnsafe?.user?.id) {
+        userId = tg.initDataUnsafe.user.id;
+    }
+    
+    const userAge = calculateAgeFromId(userId);
+    // Награда = возраст (без умножения, т.к. возраст уже увеличен в формуле)
+    const reward = Math.floor(userAge);
+    
+    // Ограничиваем разумными пределами (100-10,000 монет)
+    return Math.min(Math.max(reward, 100), 10000);
+}
+
+const ageBasedReward = calculateAgeReward();
 
 // Загрузка состояния из localStorage
 function loadAgeRewardState() {
@@ -356,64 +376,49 @@ async function ageReward() {
     }
 
     try {
-        // Добавляем монеты
-        await addRow(randomNumbRewDay);
-        
-        // Обновляем состояние
+        await addRow(ageBasedReward);
         ageRewardState = {
             claimed: true,
-            amount: randomNumbRewDay
+            amount: ageBasedReward
         };
         saveAgeRewardState();
         
-        // Обновляем отображение
-        usernameonAgeRewardID.textContent = randomNumbRewDay;
+        usernameonAgeRewardID.textContent = ageBasedReward;
+        if (typeof loadRowScore === 'function') await loadRowScore();
         
-        // Обновляем глобальный счет
-        if (typeof loadRowScore === 'function') {
-            await loadRowScore();
-        }
-        
-        // Показываем уведомление
         if (window.Telegram?.WebApp?.showAlert) {
-            console.log(`🎉 Вы получили ${randomNumbRewDay} монет за возраст!`);
+            console.log(`🎉 Вы получили ${ageBasedReward} монет!`);
         } else {
-            console.log(`🎉 Вы получили ${randomNumbRewDay} монет за возраст!`);
+            console.log(`🎉 Вы получили ${ageBasedReward} монет!`);
         }
     } catch (e) {
-        console.error('Ошибка при выдаче награды:', e);
+        console.error('Ошибка:', e);
         if (window.Telegram?.WebApp?.showAlert) {
-            console.log('⚠️ Ошибка при получении награды');
-        } else {
             console.log('⚠️ Ошибка при получении награды');
         }
     }
 }
 
-// Инициализация системы наград
+// Инициализация системы
 function initAgeReward() {
     loadAgeRewardState();
     usernameonAgeRewardID.textContent = ageRewardState.claimed 
         ? ageRewardState.amount 
-        : randomNumbRewDay;
+        : ageBasedReward;
 
     if (buttonbackage) {
         buttonbackage.addEventListener('click', ageReward);
-    } else {
-        console.error('Элемент buttonbackage не найден');
     }
 }
 
 if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-    usernameonAgeID.innerHTML = `${tg.initDataUnsafe.user.first_name} ${tg.initDataUnsafe.user.last_name}`;
-} else {
-    usernameonAgeID.innerHTML = "Пользователь не найден";
+    const user = tg.initDataUnsafe.user;
+    usernameonAgeID.innerHTML = `${user.first_name} ${user.last_name || ''}`;
+    console.log(`Возраст: ${calculateAgeFromId(user.id)}`);
 }
 
-// Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
-    initAgeReward();
-});
+document.addEventListener('DOMContentLoaded', initAgeReward);
+
 
 //hat web app
 
@@ -1923,158 +1928,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-
-if (!tg) {
-  alert('Пожалуйста, откройте мини-приложение в Telegram');
-  document.body.innerHTML = '<h3 style="color:red">Это приложение работает только в Telegram</h3>';
-  throw new Error('Telegram WebApp not found');
-}
-
-// Блокировка многократных нажатий
-let isSharing = false;
-
-async function shareGameMessage() {
-  if (isSharing) return;
-  isSharing = true;
-  
-  const btn = document.querySelector('.share-btn');
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '<div class="loader"></div> Отправка...';
-  }
-
-  try {
-    // Создаем текст сообщения с форматированием
-    const message = {
-      message_text: `🎮 *Присоединяйся к игре!*\n\n` +
-                   `Сыграем вместе? Нажми на кнопку ниже:\n\n` +
-                   `[👉 Играть сейчас](https://t.me/rowlivebot/row)`,
-      parse_mode: 'MarkdownV2',
-      link_preview_options: {
-        is_disabled: false,
-        url: 'https://t.me/rowlivebot/row',
-        prefer_large_media: true
-      }
-    };
-
-    // Вариант 1: Через прямой вызов shareMessage (если доступен)
-    if (typeof tg.shareMessage === 'function') {
-      await new Promise((resolve) => {
-        const timer = setTimeout(() => {
-          tg.offEvent('shareMessageSent', onSuccess);
-          tg.offEvent('shareMessageFailed', onError);
-          resolve(false);
-        }, 5000);
-
-        const onSuccess = () => {
-          clearTimeout(timer);
-          resolve(true);
-        };
-
-        const onError = (e) => {
-          clearTimeout(timer);
-          console.error('Share failed:', e.error);
-          resolve(false);
-        };
-
-        tg.onEvent('shareMessageSent', onSuccess);
-        tg.onEvent('shareMessageFailed', onError);
-
-        try {
-          tg.shareMessage(JSON.stringify(message));
-        } catch (e) {
-          console.error('Share error:', e);
-          resolve(false);
-        }
-      });
-    } 
-    // Вариант 2: Через sendData (для старых версий)
-    else {
-      await new Promise((resolve) => {
-        tg.sendData(JSON.stringify({
-          method: 'shareMessage',
-          ...message
-        }));
-        setTimeout(resolve, 3000);
-      });
-    }
-
-    alert('Сообщение успешно отправлено! Спасибо!');
-  } catch (e) {
-    console.error('Error:', e);
-    alert('Ошибка отправки: ' + (e.message || 'попробуйте позже'));
-  } finally {
-    isSharing = false;
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = 'Поделиться игрой';
-    }
-  }
-}
-
-// Инициализация приложения
-document.addEventListener('DOMContentLoaded', () => {
-  const style = document.createElement('style');
-  style.textContent = `
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
-    .share-btn {
-      padding: 12px 24px;
-      background: linear-gradient(135deg, #0088cc, #006699);
-      color: white;
-      border: none;
-      border-radius: 50px;
-      font-size: 16px;
-      font-weight: 500;
-      cursor: pointer;
-      margin: 20px auto;
-      display: block;
-      width: 80%;
-      max-width: 300px;
-      box-shadow: 0 4px 12px rgba(0,136,204,0.25);
-      transition: all 0.3s;
-    }
-    .share-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0,136,204,0.3);
-    }
-    .share-btn:active {
-      transform: translateY(0);
-    }
-    .share-btn:disabled {
-      opacity: 0.7;
-      transform: none !important;
-    }
-    .loader {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-radius: 50%;
-      border-top-color: white;
-      animation: spin 1s linear infinite;
-      margin-right: 8px;
-      vertical-align: middle;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-  `;
-  document.head.appendChild(style);
-
-  const container = document.createElement('div');
-  container.innerHTML = `
-    <h2>Поделиться игрой</h2>
-    <p>Пригласи друзей в нашу крутую игру!</p>
-    <button class="share-btn">Поделиться</button>
-  `;
-  document.body.appendChild(container);
-
-  document.querySelector('.share-btn').onclick = shareGameMessage;
-});
 
 
 
