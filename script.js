@@ -1962,7 +1962,7 @@ ShareAgeStory.addEventListener('click', () => {
 
   // Отправляем оригинальное изображение + текст с возрастом
   tg.shareToStory(
-    'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png',
+    'https://mixagrech.github.io/rowlivefgfmkskefker/telegramHistory.png',
     params,
     (success) => {
       ShareAgeStory.disabled = false;
@@ -1979,5 +1979,3 @@ ShareAgeStory.addEventListener('click', () => {
     }
   );
 });
-
-
