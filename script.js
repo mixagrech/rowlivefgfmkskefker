@@ -1936,7 +1936,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const ShareAgeStory = document.querySelector('.ShareAgeStory');
 
-// Обработчик клика
 ShareAgeStory.addEventListener('click', () => {
   const tg = window.Telegram?.WebApp;
   
@@ -1945,40 +1944,39 @@ ShareAgeStory.addEventListener('click', () => {
     return;
   }
 
-  // Параметры Stories
+  // Получаем ID и считаем возраст (без десятичных)
+  const userId = tg.initDataUnsafe?.user?.id || 0;
+  const userAge = Math.floor(userId / 1000000000); // Целое число
+
+  // Параметры Stories с возрастом в тексте
   const params = {
-    text: 'Присоединяйся к игре! 🚣‍♂️',
+    text: `Мой возраст: ${userAge} лет 🎮\nПрисоединяйся! 🚣‍♂️`,
     widget_link: {
       url: 'https://t.me/rowlivebot/row',
       name: 'Играть сейчас'
     }
   };
 
-  // Показываем статус загрузки
+  // Статус кнопки
   ShareAgeStory.disabled = true;
 
-  // Пытаемся отправить
+  // Отправляем оригинальное изображение + текст с возрастом
   tg.shareToStory(
     'https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png',
     params,
     (success) => {
       ShareAgeStory.disabled = false;
       if (success) {
-        ShareAgeStory.textContent = 'Опубликовано!';
-
+        ShareAgeStory.textContent = 'Готово!';
         localStorage.setItem('storyPublished', 'true');
-        alert("Спасибо!");
       } else {
-        ShareAgeStory.textContent = 'Отменено';
+        ShareAgeStory.textContent = 'Ошибка';
       }
       
       setTimeout(() => {
-        ShareAgeStory.textContent = 'Опубликовать в Stories';
+        ShareAgeStory.textContent = 'Поделиться в Stories';
       }, 2000);
     }
   );
 });
-
-
-
 
