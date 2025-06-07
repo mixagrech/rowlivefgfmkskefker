@@ -988,6 +988,13 @@ body{
     margin-top: 5px;
     z-index: 4;
 }
+
+
+
+
+
+
+
 .SkinSelectionPanel {
     position: absolute;
     width: 100%;
@@ -998,6 +1005,150 @@ body{
     overflow-y: hidden;
     white-space: nowrap;
 }
+
+.ScinSelectContent {
+    display: inline-block;
+    width: 70%;
+}
+
+.BackPanelSkin1 {
+    position: absolute;
+    width: 36.8%;
+    height: 190px;
+    background: linear-gradient(205.61deg, rgba(25, 25, 25, 0.75) 0%, rgba(73, 73, 73, 1) 100%);
+    border-radius: 10px;
+    left: 6.4%;
+    top: 20%;
+    z-index: 3;
+    display: flex;
+    justify-content: center;
+}
+
+.PanelNameSkin1 {
+    position: absolute;
+    width: 78%;
+    height: 11.3%;
+    top: 3.3%;
+    background: rgba(30, 30, 30, 0.5);
+    border: 1px solid #565656;
+    border-radius: 100px;
+    z-index: 4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.PanelNameSkin1 p {
+    color: #FFFFFF;
+    font-size: 0.8rem;
+    font-weight: 400;
+}
+
+.SkinImgStandart1 {
+    position: absolute;
+    left: 0px;
+    width: 93%;
+    height: 64%;
+    bottom: 10%;
+    z-index: 5;
+}
+
+
+.BtnClaimSkin1, .BtnClaimSkin2 {
+    position: absolute;
+    width: 36.8%;
+    height: 30px;
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none;
+    z-index: 4;
+    transition: transform 0.1s ease, background-image 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.BtnClaimSkin1 {
+    left: 6.4%;
+    top: 260px;
+    background-image: linear-gradient(90deg, #494949 0.01%, #151515 171.13%);
+}
+
+.BtnClaimSkin2 {
+    left: 48.5%;
+    top: 260px;
+    background-image: linear-gradient(90deg, #0088CC 0%, #272727 100%);
+}
+
+
+.BtnClaimSkin1.selected, .BtnClaimSkin2.selected {
+    background-image: linear-gradient(to right, #A40000, #272727) !important;
+}
+
+
+.BtnClaimSkin1 p, .BtnClaimSkin2 p {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #FFFFFF;
+    margin: 0;
+    pointer-events: none;
+}
+
+.BtnClaimSkin1:active, .BtnClaimSkin2:active {
+    transform: scale(0.95);
+}
+
+/* Анимации для мобильных устройств */
+@media (hover: none) {
+    .BtnClaimSkin1, .BtnClaimSkin2 {
+        transition: transform 0.1s ease, background-image 0.3s ease;
+    }
+    
+    .BtnClaimSkin1:active, .BtnClaimSkin2:active {
+        transform: scale(0.95);
+    }
+}
+
+.BtnClaimSkin1, .BtnClaimSkin2 {
+    position: absolute;
+    width: 36.8%;
+    height: 30px;
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none;
+    z-index: 4;
+    transition: transform 0.1s ease, background-image 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.BtnClaimSkin1 {
+    left: 6.4%;
+    top: 260px;
+}
+
+.BtnClaimSkin2 {
+    left: 48.5%;
+    top: 260px;
+}
+
+.BtnClaimSkin1 p, .BtnClaimSkin2 p {
+    text-align: center;
+    color: #FFFFFF;
+    margin: 0;
+    pointer-events: none;
+}
+
+
+
+
+
+
 .TextUpdateOnSelection {
     position: absolute;
     font-size: 1rem;
@@ -1066,87 +1217,8 @@ body{
     text-align: center;
     z-index: 2;
 }
-.BackPanelSkin1 {
-    position: absolute;
-    width: 36.8%;
-    height: 190px;
-    background: linear-gradient(205.61deg, rgba(25, 25, 25, 0.75) 0%, rgba(73, 73, 73, 1) 100%);
-    border-radius: 10px;
-    left: 6.4%;
-    top: 20%;
-    z-index: 3;
-}
-
-.PanelNameSkin1 {
-    position: absolute;
-    width: 28.6%;
-    height: 22px;
-    left: 10.4%;
-    top: 23%;
-    background: rgba(30, 30, 30, 0.5);
-    border: 1px solid #565656;
-    border-radius: 100px;
-    z-index: 4;
-    text-align: center;
-}
-.PanelNameSkin1 p {
-    color: #FFFFFF;
-    font-size: 0.8rem;
-    font-weight: 400;
-    margin-top: 2%;
-}
-.SkinImgStandart1 {
-    position: absolute;
-    width: 34%;
-    height: 34%;
-    left: 6.4%;
-    top: 40%;
-    z-index: 5;
-}
 
 
-.BtnClaimSkin1, .BtnClaimSkin2 {
-    position: absolute;
-    width: 36.8%;
-    height: 30px;
-    border-radius: 10px;
-    cursor: pointer;
-    user-select: none;
-    z-index: 4;
-    transition: transform 0.1s ease, background-image 0.3s ease;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-
-.BtnClaimSkin1 {
-    left: 6.4%;
-    top: 260px;
-    background-image: linear-gradient(90deg, #494949 0.01%, #151515 171.13%);
-}
-
-.BtnClaimSkin2 {
-    left: 48.5%;
-    top: 260px;
-    background-image: linear-gradient(90deg, #0088CC 0%, #272727 100%);
-}
-
-
-.BtnClaimSkin1.selected, .BtnClaimSkin2.selected {
-    background-image: linear-gradient(to right, #A40000, #272727) !important;
-}
-
-
-.BtnClaimSkin1 p, .BtnClaimSkin2 p {
-    text-align: center;
-    font-size: 0.8rem;
-    color: #FFFFFF;
-    margin: 0;
-    pointer-events: none;
-}
 
 .youeScinSelectedStandart1, .youeScinSelectedStandart2 {
     position: absolute;
@@ -1176,52 +1248,7 @@ body{
     visibility: visible;
 }
 
-/* Анимации нажатия для десктопов */
-.BtnClaimSkin1:active, .BtnClaimSkin2:active {
-    transform: scale(0.95);
-}
 
-/* Анимации для мобильных устройств */
-@media (hover: none) {
-    .BtnClaimSkin1, .BtnClaimSkin2 {
-        transition: transform 0.1s ease, background-image 0.3s ease;
-    }
-    
-    .BtnClaimSkin1:active, .BtnClaimSkin2:active {
-        transform: scale(0.95);
-    }
-}
-
-.BtnClaimSkin1, .BtnClaimSkin2 {
-    position: absolute;
-    width: 36.8%;
-    height: 30px;
-    border-radius: 10px;
-    cursor: pointer;
-    user-select: none;
-    z-index: 4;
-    transition: transform 0.1s ease, background-image 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.BtnClaimSkin1 {
-    left: 6.4%;
-    top: 260px;
-}
-
-.BtnClaimSkin2 {
-    left: 48.5%;
-    top: 260px;
-}
-
-.BtnClaimSkin1 p, .BtnClaimSkin2 p {
-    text-align: center;
-    color: #FFFFFF;
-    margin: 0;
-    pointer-events: none;
-}
 
 .youeScinSelectedStandart2 {
     position: absolute;
@@ -1258,10 +1285,6 @@ body{
     top: 97%;
 }
 
-.ScinSelectContent {
-    display: inline-block;
-    width: 70%;
-}
 .BackBlockProfileSkin {
     position: absolute;
     width: 70%;
@@ -1303,33 +1326,40 @@ body{
     left: 48.5%;
     top: 20%;
     z-index: 3;
+    display: flex;
+    justify-content: center;
 }
+
+
 .PanelNameSkin2 {
     position: absolute;
-    width: 28.6%;
-    height: 22px;
-    left: 52.66%;
-    top: 23%;
+    width: 78%;
+    height: 11.3%;
+    top: 3.3%;
     background: rgba(30, 30, 30, 0.5);
     border: 1px solid #0087CF;
     border-radius: 100px;
     z-index: 4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     text-align: center;
 }
 .PanelNameSkin2 p {
     color: #FFFFFF;
     font-size: 0.8rem;
     font-weight: 400;
-    margin-top: 2%;
 }
+
 .SkinImgStandart2 {
     position: absolute;
-    width: 40%;
-    height: 40%;
-    left: 47%;
-    top: 38%;
+    width: 96%;
+    height: 67%;
+    left: 0px;
+    bottom: 10%;
     z-index: 5;
 }
+
 
 
 
