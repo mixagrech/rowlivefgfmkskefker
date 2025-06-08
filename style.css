@@ -1008,8 +1008,10 @@ body{
 
 .ScinSelectContent {
     display: inline-block;
-    width: 70%;
+    width: 68%;
 }
+
+
 
 .BackPanelSkin1 {
     position: absolute;
@@ -1026,7 +1028,7 @@ body{
 
 .PanelNameSkin1 {
     position: absolute;
-    width: 78%;
+    width: 73%;
     height: 11.3%;
     top: 3.3%;
     background: rgba(30, 30, 30, 0.5);
@@ -1072,17 +1074,8 @@ body{
 }
 
 
-.BtnClaimSkin1 {
-    left: 6.4%;
-    top: 260px;
-    background-image: linear-gradient(90deg, #494949 0.01%, #151515 171.13%);
-}
 
-.BtnClaimSkin2 {
-    left: 48.5%;
-    top: 260px;
-    background-image: linear-gradient(90deg, #0088CC 0%, #272727 100%);
-}
+
 
 
 .BtnClaimSkin1.selected, .BtnClaimSkin2.selected {
@@ -1102,7 +1095,7 @@ body{
     transform: scale(0.95);
 }
 
-/* Анимации для мобильных устройств */
+
 @media (hover: none) {
     .BtnClaimSkin1, .BtnClaimSkin2 {
         transition: transform 0.1s ease, background-image 0.3s ease;
@@ -1129,18 +1122,17 @@ body{
 
 .BtnClaimSkin1 {
     left: 6.4%;
-    top: 260px;
+    bottom: 5%;
 }
 
 .BtnClaimSkin2 {
     left: 48.5%;
-    top: 260px;
+    bottom: 5%;
 }
 
 .BtnClaimSkin1 p, .BtnClaimSkin2 p {
     text-align: center;
     color: #FFFFFF;
-    margin: 0;
     pointer-events: none;
 }
 
@@ -1220,57 +1212,12 @@ body{
 
 
 
-.youeScinSelectedStandart1, .youeScinSelectedStandart2 {
-    position: absolute;
-    width: 63.5%;
-    height: 33%;
-    left: 15%;
-    top: 82%;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-.youeScinSelectedStandart1 {
-    position: absolute;
-    width: 61.5%;
-    height: 31%;
-    left: 15%;
-    top: 82%;
-    z-index: 6;
-    display: block;
-    opacity: 1;
-    visibility: visible;
-}
-
-.youeScinSelectedStandart2 {
-    z-index: 5;
-    display: block;
-    opacity: 1;
-    visibility: visible;
-}
-
-
-
-.youeScinSelectedStandart2 {
-    position: absolute;
-    width: 63.5%;
-    height: 33%;
-    left: 15%;
-    top: 82%;
-    z-index: 5;
-}
-
-.youeScinSelectedStandart2 {
-    display: none;
-}
-
 .TextThenUnselectedSkin {
     position: absolute;
     left: 15%;
     top: 82%;
     z-index: 4;
 }
-
-
 
 .SkinCentredDivYou {
     display: flex;
@@ -1333,7 +1280,7 @@ body{
 
 .PanelNameSkin2 {
     position: absolute;
-    width: 78%;
+    width: 73%;
     height: 11.3%;
     top: 3.3%;
     background: rgba(30, 30, 30, 0.5);
