@@ -1,11 +1,6 @@
 {
-  "name": "Kayak Rush NFT #1",
-  "description": "This is a unique kayak racing NFT from the collection!",
-  "image": "https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png",
-  "attributes": [
-    {
-      "trait_type": "Rarity",
-      "value": "Common"
-    }
-  ]
+  "name": "Test RLnft",
+  "image": "https://amethyst-real-bird-585.mypinata.cloud/ipfs/bafybeiayi5ebkhhf5on4uiwkcmtdmwy7zoxp5eknsodplvi6xlerhf7qxy",
+  "description": "This NFT is given for free in the ROW-LIVE game\nhttps://t.me/ROWlive",
+  "marketplace": "getgems.io"
 }
