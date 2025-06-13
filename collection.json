@@ -1,12 +1,22 @@
 {
-  "name": "ROW-LIVE test",
-  "description": "This NFT is given for free in the ROW-LIVE game\nhttps://t.me/ROWlive",
-  "image": "https://mixagrech.github.io/rowlivefgfmkskefker/Rowlogo.png",
-  "cover_image": "https://s.getgems.io/nft/c/680b80c7ca39e95bb5779642/cover/1380868.png",
-  "social_links": [
-    "https://x.com/RLive15948?s=09",
-    "https://t.me/ROWlive"
-  ],
-  "external_url": "https://getgems.io/collection/EQAG1zMLkCFOCl8lJSCiPS7nXKoookxzN3-IuPshaG5QeNqd",
-  "marketplace": "getgems.io"
+    "name": "TestNftRLcollection",
+    "description": "IDK",
+    "image": "https://amethyst-real-bird-585.mypinata.cloud/ipfs/bafybeiedgof67e4um5ggfyq67pbsqr23kxut4csx6gefqagl62bireirqy",
+    "cover_imafe": "https://amethyst-real-bird-585.mypinata.cloud/ipfs/bafybeibmpbmgfmvp6kopc53zblaavikawv7o5vvb2xpkuoxqntmsbeyhdu",
+    "social_links": ["https://t.me/+a1wAZ93cNH02OGUy"],
+    "external_url": "https://t.me/+a1wAZ93cNH02OGUy",
+    "marketplase": "getgems",
+    "type": "Basic Collection",
+    "size": 10000,
+    "content_type": "image/png",
+    "atributes": [
+        {
+            "trait_type": "Category",
+            "value": "Art"
+        },
+        {
+            "trait_type": "Blockchain",
+            "value": "TON"
+        }
+    ]
 }
