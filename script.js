@@ -1550,7 +1550,7 @@ AllLotsNFTMArket.addEventListener('click', () => {
 document.addEventListener('DOMContentLoaded', () => {
     // Скрываем игровое поле изначально
     document.getElementById('GameOnTask').style.display = 'none';
-    startCountdown
+    
     // Основные элементы игры
     let waterImage1, waterImage2;
     let leftRemainingElement, collectedCountElement, bestResultElement;
@@ -1560,7 +1560,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let gameObjectsLayer;
     let currentPosition = 1; // Центральная колонка по умолчанию
     
-    // Параметры колонок (как в референсе)
+    // Параметры колонок
     const COLUMNS = [
         { x: 20, path: "M100 50C100 22.3858 77.6142 0 50 0C22.3858 0 0 22.3858 0 50V340C0 367.614 22.3858 390 50 390C77.6142 390 100 367.614 100 340V50Z" },
         { x: 145, path: "M226 50C226 22.3858 203.614 0 176 0C148.386 0 126 22.3858 126 50V340C126 367.614 148.386 390 176 390C203.614 390 226 367.614 226 340V50Z" },
@@ -1571,24 +1571,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const GAME_LAYER_LEFT = 0.18 * 352; // ~63px
     const GAME_LAYER_WIDTH = 0.64 * 352; // ~225px
     const GAME_LAYER_RIGHT = GAME_LAYER_LEFT + GAME_LAYER_WIDTH;
-
+    
     // Настройки игры
     const difficultyLevels = [
+        { speed: 4, spawnRate: 1700 },
         { speed: 5, spawnRate: 1500 },
+        { speed: 6, spawnRate: 1350 },
         { speed: 7, spawnRate: 1200 },
-        { speed: 9, spawnRate: 900 },
-        { speed: 11, spawnRate: 700 },
-        { speed: 13, spawnRate: 500 }
+        { speed: 8, spawnRate: 1050 } 
     ];
 
     // Размеры объектов
-    const OBSTACLE_WIDTH = 30;
-    const OBSTACLE_HEIGHT = 30;
-    const COIN_WIDTH = 20;
-    const COIN_HEIGHT = 20;
+    const OBSTACLE_WIDTH = 40;
+    const OBSTACLE_HEIGHT = 40;
+    const COIN_WIDTH = 25;
+    const COIN_HEIGHT = 25;
     const PLAYER_WIDTH = 60;
     const PLAYER_HEIGHT = 155;
-    const PLAYER_Y = 140; // Верхняя граница игрока
+    const PLAYER_Y = 160; // Верхняя граница игрока (140 раньше)
     const PLAYER_BOTTOM = PLAYER_Y + PLAYER_HEIGHT;
 
     // Лимиты игры
@@ -1664,25 +1664,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const yOffset = -height;
 
         let xPos;
-        if (lane === 0) { // Левая колонка (рандом от 0.272 до 0.292)
-            const randomMultiplier = 0.272 + Math.random() * (0.302 - 0.262);
+        if (lane === 0) { // Левая колонка (рандом от 0.302 до 0.222)
+            const randomMultiplier = 0.272 + Math.random() * (0.242 - 0.222);
             xPos = column.x + (GAME_LAYER_WIDTH * randomMultiplier); 
-        } else if (lane === 1) { // Центральная колонка (рандом от 1.6 до 1.8)
+        } else if (lane === 1) { // Центральная колонка (рандом от 1.9 до 1.5)
             const randomMultiplier = 1.6 + Math.random() * (1.9 - 1.5);
             xPos = column.x + (PLAYER_WIDTH - width) / randomMultiplier;
-        } else { // Правая колонка (рандом от 0.262 до 0.282)
-            const randomMultiplier = 0.262 + Math.random() * (0.302 - 0.262);
+        } else { // Правая колонка (рандом от 0.222 до 0.200)
+            const randomMultiplier = 0.262 + Math.random() * (0.222 - 0.200);
             xPos = column.x + PLAYER_WIDTH - width - (GAME_LAYER_WIDTH * randomMultiplier);
         }
 
-        // 2. Применяем ЖЕСТКУЮ коррекцию сдвига
-        const FINAL_CORRECTION = -7; // Пиксельная коррекция
+        const FINAL_CORRECTION = -7;
         xPos += FINAL_CORRECTION;
 
-        // 3. Преобразуем в координаты gameObjectsLayer
         const adjustedXPos = xPos - GAME_LAYER_LEFT;
 
-        // Жесткая проверка границ
+        // Проверка границ
         if (adjustedXPos < 0 || adjustedXPos + width > GAME_LAYER_WIDTH) {
             console.warn(`Объект выходит за границы: ${adjustedXPos}`);
             return;
@@ -1691,16 +1689,26 @@ document.addEventListener('DOMContentLoaded', () => {
         // Создание элемента
         const element = document.createElement('div');
         element.className = spawnType;
-        element.style.left = `${adjustedXPos}px`;;
+        element.style.left = `${adjustedXPos}px`;
         element.style.top = `${yOffset}px`;
         element.style.width = `${width}px`;
         element.style.height = `${height}px`;
         element.style.zIndex = '10';
+        element.style.backgroundSize = 'cover';
+        element.style.backgroundPosition = 'center';
         
         if (spawnType === 'obstacle') {
-            const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12'];
-            element.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-            element.style.borderRadius = '10px';
+            // Массив возможных картинок для препятствий
+            const obstacleImages = [
+                'PicturesMiniGames/BottlesObstacles.png',
+                'PicturesMiniGames/LogObstacle.png',
+                'PicturesMiniGames/ManObstacles.png',
+                'PicturesMiniGames/ObstacleBanks.png'
+            ];
+            // Выбираем случайную картинку
+            const randomImage = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
+            element.style.backgroundImage = `url(${randomImage})`;
+            
             obstacles.push({
                 element: element,
                 lane: lane,
@@ -1711,8 +1719,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 bottom: yOffset + height
             });
         } else {
-            element.style.backgroundColor = 'gold';
-            element.style.borderRadius = '50%';
+            // Устанавливаем картинку для монетки
+            element.style.backgroundImage = 'url(PicturesMiniGames/CoinMiniGames1.png)';
             coins.push({
                 element: element,
                 lane: lane,
@@ -1730,7 +1738,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Движение объектов
     function moveObjects() {
         if (isGameOver || !isGameStarted) return;
-        
+
         distance += 0.83;
         if (distance >= MAX_DISTANCE) {
             distance = MAX_DISTANCE;
@@ -1776,7 +1784,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
+    
 
     function checkCollision(object) {
         if (object.lane !== currentPosition) return false;
@@ -1799,7 +1807,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Остальные функции без изменений
     function handlePlayClick() {
         if (isProcessingTransaction) return;
         
@@ -1827,7 +1834,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (remainingAttempts === 0 && !canPlayAgain()) {
             playBtnText.textContent = 'Buy';
         } else if (remainingAttempts > 0) {
-            playBtnText.textContent = `Again ${remainingAttempts}`;
+            playBtnText.textContent = `Again`;
         } else {
             playBtnText.textContent = 'Play';
         }
