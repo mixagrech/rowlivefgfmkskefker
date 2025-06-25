@@ -1643,14 +1643,37 @@ document.addEventListener('DOMContentLoaded', () => {
         columnClipMiniGame = document.querySelector('#columnClip path');
         
         playBtn.addEventListener('click', handlePlayClick);
-        leftBtnMiniGame.addEventListener('click', () => isGameStarted && moveToPosition(currentPosition - 1));
-        rightBtnMiniGame.addEventListener('click', () => isGameStarted && moveToPosition(currentPosition + 1));
+        leftBtnMiniGame.addEventListener('click', () => {
+            if (isGameStarted && !isMoving) {
+                moveToPosition(currentPosition - 1);
+            }
+        });
+
+        rightBtnMiniGame.addEventListener('click', () => {
+            if (isGameStarted && !isMoving) {
+                moveToPosition(currentPosition + 1);
+            }
+        });
+
+        leftBtnMiniGame.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (isGameStarted && !isMoving) {
+                moveToPosition(currentPosition - 1);
+            }
+        }, {passive: false});
+
+        rightBtnMiniGame.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (isGameStarted && !isMoving) {
+                moveToPosition(currentPosition + 1);
+            }
+        }, {passive: false});
         document.addEventListener('keydown', handleKeyDown);
         
         updatePlayButton();
         updateDistanceInfo();
     }
-
+    
     // Создание игровых объектов
     function spawnObjects() {
         if (isGameOver || !isGameStarted || !gameObjectsLayer) return;
@@ -1671,7 +1694,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const randomMultiplier = 1.6 + Math.random() * (1.9 - 1.5);
             xPos = column.x + (PLAYER_WIDTH - width) / randomMultiplier;
         } else { // Правая колонка (рандом от 0.222 до 0.200)
-            const randomMultiplier = 0.262 + Math.random() * (0.222 - 0.200);
+            const randomMultiplier = 0.262 + Math.random() * (0.250 - 0.200);
             xPos = column.x + PLAYER_WIDTH - width - (GAME_LAYER_WIDTH * randomMultiplier);
         }
 
@@ -1791,22 +1814,33 @@ document.addEventListener('DOMContentLoaded', () => {
         return object.top <= PLAYER_BOTTOM && object.bottom >= PLAYER_Y;
     }
 
+    let isMoving = false;
 
     function moveToPosition(newPosition) {
-        if (!isGameStarted || !imageRowerMiniGame || !columnClipMiniGame) return;
+        if (!isGameStarted || !imageRowerMiniGame || !columnClipMiniGame || isMoving) return;
         
-        if (newPosition >= 0 && newPosition < COLUMNS.length) {
-            currentPosition = newPosition;
-            const column = COLUMNS[newPosition];
-            
-            // Устанавливаем позицию картинки игрока
-            imageRowerMiniGame.setAttribute('x', column.x);
-            
-            // Обновляем clipPath для маски
-            columnClipMiniGame.setAttribute('d', column.path);
-        }
+        // Ограничиваем новую позицию допустимыми значениями
+        newPosition = Math.max(0, Math.min(newPosition, COLUMNS.length - 1));
+        
+        // Если позиция не изменилась - выходим
+        if (newPosition === currentPosition) return;
+        
+        isMoving = true;
+        currentPosition = newPosition;
+        const column = COLUMNS[newPosition];
+        
+        // Устанавливаем позицию картинки игрока
+        imageRowerMiniGame.setAttribute('x', column.x);
+        
+        // Обновляем clipPath для маски
+        columnClipMiniGame.setAttribute('d', column.path);
+        
+        // Снимаем блокировку через небольшой промежуток времени
+        setTimeout(() => {
+            isMoving = false;
+        }, 100);
     }
-
+    
     function handlePlayClick() {
         if (isProcessingTransaction) return;
         
@@ -1818,9 +1852,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleKeyDown(e) {
-        if (!isGameStarted) return;
-        if (e.key === 'ArrowLeft') moveToPosition(currentPosition - 1);
-        if (e.key === 'ArrowRight') moveToPosition(currentPosition + 1);
+        if (!isGameStarted || isMoving) return;
+        
+        if (e.key === 'ArrowLeft') {
+            moveToPosition(currentPosition - 1);
+        } else if (e.key === 'ArrowRight') {
+            moveToPosition(currentPosition + 1);
+        }
     }
 
     function canPlayAgain() {
@@ -1847,8 +1885,7 @@ document.addEventListener('DOMContentLoaded', () => {
         collectedCountElement.textContent = score;
         bestResultElement.textContent = Math.round(bestDistance);
         
-        // Жесткие константы (12px отступ с каждой стороны)
-        const START_OFFSET = 13; // 12px слева
+        const START_OFFSET = 13; // 13px слева
         const TRACK_WIDTH = 500; // Общая ширина трека
         const AVAILABLE_WIDTH = TRACK_WIDTH - (2 * START_OFFSET); // 500 - 26 = 474px
         
@@ -1908,7 +1945,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 messages: [
                     {
                         address: 'UQDDEEbNMPfVwpL2q1zi5oAbChXADLuZp4gCOdFoHDmHo4Nn',
-                        amount: "0", // 0.05 TON в нанотонах 50000000
+                        amount: "50000000", // 0.05 TON в нанотонах 50000000
                         message: "Покупка дополнительной попытки"
                     }
                 ]
@@ -2182,3 +2219,5 @@ ShareAgeStory.addEventListener('click', () => {
     }
   );
 });
+
+
