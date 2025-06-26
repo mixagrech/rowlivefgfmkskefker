@@ -93,6 +93,26 @@ body{
     height: auto;
     overflow: auto;
 }
+
+
+/* Убирает синий highlight при тапе на кнопки в мобильных браузерах */
+button, input[type="button"], input[type="submit"], .btn, [class*="Btn"] {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    outline: none !important;
+}
+
+/* Для всех кликабельных элементов */
+a, button, div, span, [onclick] {
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+
+
 .header-container{
     width: 100%;
     height: 60px;
@@ -991,10 +1011,6 @@ body{
 
 
 
-
-
-
-
 .SkinSelectionPanel {
     position: absolute;
     width: 100%;
@@ -1005,139 +1021,6 @@ body{
     overflow-y: hidden;
     white-space: nowrap;
 }
-
-.ScinSelectContent {
-    display: inline-block;
-    width: 68%;
-}
-
-
-
-.BackPanelSkin1 {
-    position: absolute;
-    width: 36.8%;
-    height: 190px;
-    background: linear-gradient(205.61deg, rgba(25, 25, 25, 0.75) 0%, rgba(73, 73, 73, 1) 100%);
-    border-radius: 10px;
-    left: 6.4%;
-    top: 20%;
-    z-index: 3;
-    display: flex;
-    justify-content: center;
-}
-
-.PanelNameSkin1 {
-    position: absolute;
-    width: 73%;
-    height: 11.3%;
-    top: 3.3%;
-    background: rgba(30, 30, 30, 0.5);
-    border: 1px solid #565656;
-    border-radius: 100px;
-    z-index: 4;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-}
-
-.PanelNameSkin1 p {
-    color: #FFFFFF;
-    font-size: 0.8rem;
-    font-weight: 400;
-}
-
-.SkinImgStandart1 {
-    position: absolute;
-    left: 0px;
-    width: 93%;
-    height: 64%;
-    bottom: 10%;
-    z-index: 5;
-}
-
-
-.BtnClaimSkin1, .BtnClaimSkin2 {
-    position: absolute;
-    width: 36.8%;
-    height: 30px;
-    border-radius: 10px;
-    cursor: pointer;
-    user-select: none;
-    z-index: 4;
-    transition: transform 0.1s ease, background-image 0.3s ease;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-
-
-
-
-
-.BtnClaimSkin1.selected, .BtnClaimSkin2.selected {
-    background-image: linear-gradient(to right, #A40000, #272727) !important;
-}
-
-
-.BtnClaimSkin1 p, .BtnClaimSkin2 p {
-    text-align: center;
-    font-size: 0.8rem;
-    color: #FFFFFF;
-    margin: 0;
-    pointer-events: none;
-}
-
-.BtnClaimSkin1:active, .BtnClaimSkin2:active {
-    transform: scale(0.95);
-}
-
-
-@media (hover: none) {
-    .BtnClaimSkin1, .BtnClaimSkin2 {
-        transition: transform 0.1s ease, background-image 0.3s ease;
-    }
-    
-    .BtnClaimSkin1:active, .BtnClaimSkin2:active {
-        transform: scale(0.95);
-    }
-}
-
-.BtnClaimSkin1, .BtnClaimSkin2 {
-    position: absolute;
-    width: 36.8%;
-    height: 30px;
-    border-radius: 10px;
-    cursor: pointer;
-    user-select: none;
-    z-index: 4;
-    transition: transform 0.1s ease, background-image 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.BtnClaimSkin1 {
-    left: 6.4%;
-    bottom: 5%;
-}
-
-.BtnClaimSkin2 {
-    left: 48.5%;
-    bottom: 5%;
-}
-
-.BtnClaimSkin1 p, .BtnClaimSkin2 p {
-    text-align: center;
-    color: #FFFFFF;
-    pointer-events: none;
-}
-
-
-
 
 
 
@@ -1231,85 +1114,6 @@ body{
     z-index: 10;
     top: 97%;
 }
-
-.BackBlockProfileSkin {
-    position: absolute;
-    width: 70%;
-    height: 35%;
-    background: linear-gradient(180deg, rgba(73, 73, 73, 1) 0%, rgba(39, 39, 39, 0.5) 100%);
-    z-index: 5;
-    border-radius: 7px;
-    top: 81%;
-    text-align: center;
-    left: 15%;
-}
-.SkinLabelName1 {
-    position: absolute;
-    width: 23.6%;
-    height: 4%;
-    background-color: rgba(50, 50, 50, 0.7);
-    border-bottom-left-radius: 7px;
-    border-top-right-radius: 7px;
-    right: 15%;
-    top: 81%;
-    z-index: 6;
-    color: #FFFFFF;
-    text-align: center;
-    font-size: 0.8rem;
-    font-weight: 400;
-    vertical-align: middle;
-}
-.SkinLabelName1 p {
-    padding-top: 5.5%;
-}
-
-
-.BackPanelSkin2 {
-    position: absolute;
-    width: 36.8%;
-    height: 190px;
-    background: linear-gradient(206.02deg, #272727 0%, #0087CF 167.73%);
-    border-radius: 10px;
-    left: 48.5%;
-    top: 20%;
-    z-index: 3;
-    display: flex;
-    justify-content: center;
-}
-
-
-.PanelNameSkin2 {
-    position: absolute;
-    width: 73%;
-    height: 11.3%;
-    top: 3.3%;
-    background: rgba(30, 30, 30, 0.5);
-    border: 1px solid #0087CF;
-    border-radius: 100px;
-    z-index: 4;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-}
-.PanelNameSkin2 p {
-    color: #FFFFFF;
-    font-size: 0.8rem;
-    font-weight: 400;
-}
-
-.SkinImgStandart2 {
-    position: absolute;
-    width: 96%;
-    height: 67%;
-    left: 0px;
-    bottom: 10%;
-    z-index: 5;
-}
-
-
-
-
 
 
 .HeadTextYourRank {
@@ -1446,6 +1250,55 @@ body{
     margin-top: 33.6%;
     margin-left: 18%;
 }
+
+
+
+.BackBlockProfileSkin {
+    position: absolute;
+    width: 70%;
+    height: 35%;
+    background: linear-gradient(180deg, rgba(73, 73, 73, 1) 0%, rgba(39, 39, 39, 0.5) 100%);
+    z-index: 5;
+    border-radius: 7px;
+    top: 81%;
+    text-align: center;
+    left: 15%;
+}
+
+.SkinLabelName1 {
+    position: absolute;
+    width: 23.6%;
+    height: 4%;
+    background-color: rgba(50, 50, 50, 0.7);
+    border-bottom-left-radius: 7px;
+    border-top-right-radius: 7px;
+    right: 15%;
+    top: 81%;
+    z-index: 6;
+    color: #FFFFFF;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 400;
+    vertical-align: middle;
+}
+.SkinLabelName1 p {
+    padding-top: 5.5%;
+}
+
+
+
+
+.IndentationSkins {
+    position: absolute;
+    left: 105%;
+    width: 100px;
+    height: 100px;
+
+}
+
+
+
+
 
 .BroName {
     position: absolute;
@@ -1940,20 +1793,20 @@ SkinImgStandart2
 
 .GameBuoysWhite {
     position: absolute;
-    top: 120px;
+    top: 18.5%;
     left: 37.05%;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 2.8vh;  /* 18px */
     align-items: center;
 }
 .GameBuoysYellow {
     position: absolute;
-    top: 120px;
+    top: 18.5%;  /* or 120px */
     right: 37.05%;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 2.8vh;  /* 18px */
     align-items: center;
 }
 
@@ -2469,4 +2322,3 @@ SkinImgStandart2
     z-index: 1000;
     pointer-events: none;
 }
-
