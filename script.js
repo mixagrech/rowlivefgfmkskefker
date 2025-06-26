@@ -1034,7 +1034,7 @@ tonConnectUI.uiOptions = {
 
 let connectedWallet = null;
 let isProcessingTransaction = false;
-let skinCounter = 2;
+let skinCounter = 0; // Начинаем с 0, так как все скины будут добавляться динамически
 let selectedSkin = 1;
 
 // DOM utilities
@@ -1057,14 +1057,16 @@ function loadSkinImages() {
         const skinContainer = getElement('.BackBlockProfileSkin');
         if (!skinContainer) return;
 
-        skinContainer.querySelectorAll('[class^="youeScinSelectedStandart"]').forEach(skin => {
+        // Скрываем все скины
+        skinContainer.querySelectorAll('[class^="dynamicSkin"]').forEach(skin => {
             skin.style.display = 'none';
         });
 
-        let skinImg = skinContainer.querySelector(`.youeScinSelectedStandart${selectedSkin}`);
+        // Показываем выбранный скин
+        let skinImg = skinContainer.querySelector(`.dynamicSkin${selectedSkin}`);
         
         if (!skinImg) {
-            skinImg = createElement('img', `youeScinSelectedStandart${selectedSkin}`, {
+            skinImg = createElement('img', `dynamicSkin${selectedSkin}`, {
                 position: 'absolute',
                 width: '100%',
                 height: '100%',
@@ -1080,8 +1082,8 @@ function loadSkinImages() {
         skinImg.style.display = 'block';
         
         skinImg.onerror = () => {
-            console.error(`Error loading Skin${selectedSkin}`);
-            skinImg.src = 'Skins/StandartSkin1.svg?' + Date.now();
+            console.error(`Error loading skin ${selectedSkin}`);
+            skinImg.src = 'Skins/DefaultSkin.svg?' + Date.now();
         };
 
         const skinNameElement = skinContainer.querySelector('.SkinLabelName1 p');
@@ -1096,35 +1098,26 @@ function loadSkinImages() {
 }
 
 function getSkinPath(skinNumber) {
-    switch(skinNumber) {
-        case 1: return 'Skins/StandartSkin1.svg';
-        case 2: return 'Skins/GoodManSkin1.svg';
-        default: 
-            const skinElement = document.querySelector(`.SkinImgStandart${skinNumber}`);
-            return skinElement ? skinElement.src : `Skins/Skin${skinNumber}.svg`;
-    }
+    const skinData = JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`));
+    return skinData?.imagePath || `Skins/Skin${skinNumber}.svg`;
 }
 
 function getSkinName(skinNumber) {
-    switch(skinNumber) {
-        case 1: return 'Standard';
-        case 2: return 'GoodMan';
-        default: 
-            const nameElement = document.querySelector(`.PanelNameSkin${skinNumber} p`);
-            return nameElement ? nameElement.textContent : `Skin ${skinNumber}`;
-    }
+    const skinData = JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`));
+    return skinData?.name || `Skin ${skinNumber}`;
 }
 
 function updateSkinDisplay() {
     const skinContainer = document.querySelector('.BackBlockProfileSkin');
     if (!skinContainer) return;
     
-    const allSkins = skinContainer.querySelectorAll('[class^="youeScinSelectedStandart"]');
-    allSkins.forEach(skin => {
+    // Скрываем все динамические скины
+    skinContainer.querySelectorAll('[class^="dynamicSkin"]').forEach(skin => {
         skin.style.display = 'none';
     });
     
-    const selectedSkinElement = skinContainer.querySelector(`.youeScinSelectedStandart${selectedSkin}`);
+    // Показываем выбранный скин
+    const selectedSkinElement = skinContainer.querySelector(`.dynamicSkin${selectedSkin}`);
     if (selectedSkinElement) {
         selectedSkinElement.style.display = 'block';
         
@@ -1137,33 +1130,30 @@ function updateSkinDisplay() {
 }
 
 function updateSkinButtons() {
-    const buttons = document.querySelectorAll('[class^="BtnClaimSkin"]');
+    const buttons = document.querySelectorAll('[class^="dynamicSkinBtn"]');
     buttons.forEach(btn => {
-        const btnNum = btn.className.match(/\d+/)?.[0];
-        if (!btnNum) return;
+        const btnNum = parseInt(btn.className.match(/\d+/)?.[0]);
+        if (isNaN(btnNum)) return;
 
-        const isPurchased = localStorage.getItem(`skin_${btnNum}_purchased`) === 'true' || btnNum === '1';
-        const isSelected = parseInt(btnNum) === selectedSkin;
-        const price = btn.getAttribute('data-price');
+        const skinData = JSON.parse(localStorage.getItem(`skin_${btnNum}_data`)) || {};
+        const isPurchased = localStorage.getItem(`skin_${btnNum}_purchased`) === 'true';
+        const isSelected = btnNum === selectedSkin;
         
         const textEl = btn.querySelector('p') || createElement('p');
         
-        if (!connectedWallet && price) {
-            textEl.innerHTML = '<span style="font-size: 0.7rem;">Connect <b style="font-size: 0.8rem; font-weight: 500;">TON</b> wallet</span>';
-            btn.style.background = 'linear-gradient(90deg, #0088CC 0%, #272727 100%)';
-            btn.style.pointerEvents = 'none';
-        } else if (isSelected) {
+        if (isSelected) {
             textEl.textContent = 'Selected';
             btn.style.background = 'linear-gradient(to right, #A40000, #272727)';
-            btn.style.pointerEvents = 'auto';
-        } else if (!isPurchased && price) {
-            textEl.innerHTML = `<span>${price} <b>TON</b></span>`;
+        } else if (!isPurchased && (skinData.priceTON || skinData.priceROW)) {
+            if (skinData.priceROW) {
+                textEl.innerHTML = `<span>${skinData.priceROW} <b>ROW</b></span>`;
+            } else {
+                textEl.innerHTML = `<span>${skinData.priceTON} <b>TON</b></span>`;
+            }
             btn.style.background = 'linear-gradient(90deg, #0088CC 0%, #272727 100%)';
-            btn.style.pointerEvents = 'auto';
         } else {
-            textEl.textContent = 'Unselected';
+            textEl.textContent = 'Select';
             btn.style.background = 'linear-gradient(90deg, #494949 0.01%, #151515 171.13%)';
-            btn.style.pointerEvents = 'auto';
         }
         
         btn.innerHTML = '';
@@ -1172,88 +1162,73 @@ function updateSkinButtons() {
 }
 
 // Payment functions
-async function sendPayment(amount, skinNumber) {
-    if (!connectedWallet || isProcessingTransaction) return;
+async function purchaseSkin(skinNumber) {
+    const skinData = JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`)) || {};
     
-    isProcessingTransaction = true;
-    updateSkinButtons();
-
-    try {
-        const amountInNanoTON = Math.floor(amount * 1e9).toString();
-
-        const transaction = {
-            validUntil: Math.floor(Date.now() / 1000) + 300,
-            messages: [
-                {
-                    address: 'UQDDEEbNMPfVwpL2q1zi5oAbChXADLuZp4gCOdFoHDmHo4Nn',
-                    amount: amountInNanoTON,
-                    message: "Покупка скинов"
-                }
-            ]
-        };
-
-        console.log("Отправка транзакции:", transaction);
+    if (skinData.priceROW) {
+        // Покупка за ROW
+        if (gameState.rowscore >= skinData.priceROW) {
+            gameState.rowscore -= skinData.priceROW;
+            localStorage.setItem(`skin_${skinNumber}_purchased`, 'true');
+            selectSkin(skinNumber);
+            tg.showAlert(`✅ Skin purchased for ${skinData.priceROW} ROW!`);
+            saveGameState();
+            updateUI();
+        } else {
+            tg.showAlert(`Not enough ROW. You need ${skinData.priceROW - gameState.rowscore} more.`);
+        }
+    } else if (skinData.priceTON) {
+        // Покупка за TON
+        if (!connectedWallet) {
+            tg.showAlert('Please connect your TON wallet first');
+            return;
+        }
         
-        const result = await tonConnectUI.sendTransaction(transaction);
+        if (isProcessingTransaction) return;
         
-        if (result?.boc) {
-            await new Promise(resolve => setTimeout(resolve, 15000));
+        isProcessingTransaction = true;
+        updateSkinButtons();
+
+        try {
+            const amountInNanoTON = Math.floor(skinData.priceTON * 1e9).toString();
+
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 300,
+                messages: [
+                    {
+                        address: 'UQDDEEbNMPfVwpL2q1zi5oAbChXADLuZp4gCOdFoHDmHo4Nn',
+                        amount: amountInNanoTON,
+                        message: `Purchase skin ${skinData.name}`
+                    }
+                ]
+            };
+
+            const result = await tonConnectUI.sendTransaction(transaction);
             
-            try {
-                const verifyUrl = `https://tonapi.io/v2/blockchain/transactions/${result.boc}`;
-                const response = await fetch(verifyUrl);
-                
-                if (response.ok) {
-                    localStorage.setItem(`skin_${skinNumber}_purchased`, 'true');
-                    selectSkin(skinNumber);
-                    tg.showAlert("✅ Платеж успешен! Скин разблокирован.");
-                } else {
-                    throw new Error("Транзакция не подтверждена в блокчейне");
-                }
-            } catch (verifyError) {
-                console.warn("Ошибка верификации:", verifyError);
+            if (result?.boc) {
                 localStorage.setItem(`skin_${skinNumber}_purchased`, 'true');
                 selectSkin(skinNumber);
-                tg.showAlert("✅ Платеж отправлен! Проверьте историю транзакций.");
+                tg.showAlert("✅ Payment successful! Skin unlocked.");
             }
+        } catch (error) {
+            console.error("Transaction error:", error);
+            tg.showAlert("❌ Payment failed. Please try again.");
+        } finally {
+            isProcessingTransaction = false;
+            updateSkinButtons();
         }
-    } catch (error) {
-        console.error("Ошибка транзакции:", error);
-        console.log(`❌ Ошибка: ${error.message || "Не удалось отправить транзакцию"}`);
-    } finally {
-        isProcessingTransaction = false;
-        updateSkinButtons();
     }
 }
 
 function selectSkin(skinNumber) {
-    const price = document.querySelector(`.BtnClaimSkin${skinNumber}`)?.getAttribute('data-price');
-    
-    if (!connectedWallet && price !== null) {
-        tg.showAlert('Please connect your wallet first');
-        return;
-    }
-    
-    if (price !== null && localStorage.getItem(`skin_${skinNumber}_purchased`) !== 'true') {
-        tg.showAlert('Please purchase this skin first');
-        return;
-    }
-    
-    selectedSkin = parseInt(skinNumber);
+    selectedSkin = skinNumber;
     
     // Обновляем фон в соответствии с выбранным скином
     const backBlock = getElement('.BackBlockProfileSkin');
     if (backBlock) {
-        // Для скина 2 всегда применяем конкретный градиент
-        if (skinNumber === 2) {
-            backBlock.style.background = 'linear-gradient(206.02deg, #272727 0%, #0087CF 167.73%)';
-        } 
-        // Для остальных скинов берем градиент из сохраненных данных
-        else {
-            const skinData = JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`));
-            backBlock.style.background = skinData?.gradient || 
-                'linear-gradient(205.61deg, rgba(25, 25, 25, 0.75) 0%, rgba(73, 73, 73, 1) 100%)';
-        }
+        const skinData = JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`)) || {};
+        backBlock.style.background = skinData.gradient || 
+            'linear-gradient(205.61deg, rgba(25, 25, 25, 0.75) 0%, rgba(73, 73, 73, 1) 100%)';
     }
      
     updateSkinDisplay();
@@ -1263,7 +1238,7 @@ function selectSkin(skinNumber) {
 }
 
 // Skin management
-function addSkin(name, imagePath, price = null, gradient = 'linear-gradient(205deg, #1E0033 0%, #4B0082 100%)', borderColor = '#9400D3') {
+function addSkin(name, imagePath, options = {}) {
     const panel = getElement('.SkinSelectionPanel');
     if (!panel) return;
 
@@ -1274,37 +1249,41 @@ function addSkin(name, imagePath, price = null, gradient = 'linear-gradient(205d
     const skinData = {
         name,
         imagePath,
-        price,
-        gradient,
-        borderColor
+        priceTON: options.priceTON || null,
+        priceROW: options.priceROW || null,
+        gradient: options.gradient || 'linear-gradient(205deg, #1E0033 0%, #4B0082 100%)',
+        borderColor: options.borderColor || '#9400D3'
     };
     localStorage.setItem(`skin_${skinNumber}_data`, JSON.stringify(skinData));
 
-    const skinContent = createElement('div', 'ScinSelectContent', {
+    // Создаем контейнер для скина
+    const skinContent = createElement('div', `dynamicSkinContent${skinNumber}`, {
         position: 'absolute',
         width: '36.8%',
         height: '250px',
-        left: `${90.7 + ((skinNumber - 3) * 42.5)}%`,
+        left: `${6.4 + ((skinNumber - 1) * 42.5)}%`, // Начинаем с 6.4% и добавляем 42.5% для каждого следующего
         top: '0'
     });
 
+    // Добавляем HTML структуру скина
     skinContent.innerHTML = `
-        <div class="BackPanelSkin${skinNumber}">
-            <div class="PanelNameSkin${skinNumber}"><p>${name}</p></div>
-            <img src="${imagePath}" class="SkinImgStandart${skinNumber}">
+        <div class="dynamicSkinPanel${skinNumber}">
+            <div class="dynamicSkinName${skinNumber}"><p>${name}</p></div>
+            <img src="${imagePath}" class="dynamicSkinImg${skinNumber}">
         </div>
-        <div class="BtnClaimSkin${skinNumber}" ${price ? `data-price="${price}"` : ''}>
-            <p>${price ? `${price} <b>TON</b>` : 'Unselected'}</p>
+        <div class="dynamicSkinBtn${skinNumber}">
+            <p>${options.priceROW ? `${options.priceROW} ROW` : (options.priceTON ? `${options.priceTON} TON` : 'Free')}</p>
         </div>
     `;
 
+    // Добавляем стили для скина
     const style = createElement('style');
     style.textContent = `
-        .BackPanelSkin${skinNumber} {
+        .dynamicSkinPanel${skinNumber} {
             position: absolute;
             width: 100%;
             height: 190px;
-            background: ${gradient};
+            background: ${skinData.gradient};
             border-radius: 10px;
             left: 0;
             top: 24.5%;
@@ -1312,25 +1291,25 @@ function addSkin(name, imagePath, price = null, gradient = 'linear-gradient(205d
             display: flex;
             justify-content: center;
         }
-        .PanelNameSkin${skinNumber} {
+        .dynamicSkinName${skinNumber} {
             position: absolute;
             width: 73%;
             height: 21px;
             top: 6px;
             background: rgba(30, 30, 30, 0.5);
-            border: 1px solid ${borderColor};
+            border: 1px solid ${skinData.borderColor};
             border-radius: 100px;
             z-index: 4;
             display: flex;
             justify-content: center;
             align-items: center;
         }
-        .PanelNameSkin${skinNumber} p {
+        .dynamicSkinName${skinNumber} p {
             color: #FFF;
             font-size: 0.8rem;
             margin: 0;
         }
-        .SkinImgStandart${skinNumber} {
+        .dynamicSkinImg${skinNumber} {
             position: absolute;
             left: 0;
             width: 93%;
@@ -1339,7 +1318,7 @@ function addSkin(name, imagePath, price = null, gradient = 'linear-gradient(205d
             z-index: 5;
             object-fit: contain;
         }
-        .BtnClaimSkin${skinNumber} {
+        .dynamicSkinBtn${skinNumber} {
             position: absolute;
             width: 100%;
             height: 30px;
@@ -1354,28 +1333,26 @@ function addSkin(name, imagePath, price = null, gradient = 'linear-gradient(205d
             justify-content: center;
             transition: all 0.2s ease;
         }
-        .BtnClaimSkin${skinNumber} p {
+        .dynamicSkinBtn${skinNumber} p {
             color: #FFF;
             font-size: 0.8rem;
             margin: 0;
             text-align: center;
         }
-        .BtnClaimSkin${skinNumber}:active {
+        .dynamicSkinBtn${skinNumber}:active {
             transform: scale(0.95);
         }
     `;
     document.head.appendChild(style);
 
-    const btn = skinContent.querySelector(`.BtnClaimSkin${skinNumber}`);
+    // Добавляем обработчик клика на кнопку
+    const btn = skinContent.querySelector(`.dynamicSkinBtn${skinNumber}`);
     if (btn) {
         btn.addEventListener('click', () => {
-            if (!connectedWallet) {
-                tg.showAlert('Please connect your wallet first');
-                return;
-            }
+            const isPurchased = localStorage.getItem(`skin_${skinNumber}_purchased`) === 'true';
             
-            if (price && localStorage.getItem(`skin_${skinNumber}_purchased`) !== 'true') {
-                sendPayment(parseFloat(price), skinNumber);
+            if (!isPurchased && (skinData.priceTON || skinData.priceROW)) {
+                purchaseSkin(skinNumber);
             } else {
                 selectSkin(skinNumber);
             }
@@ -1384,140 +1361,109 @@ function addSkin(name, imagePath, price = null, gradient = 'linear-gradient(205d
     
     panel.appendChild(skinContent);
     updateSkinButtons();
+    
+    // Добавляем скин в список выбора
+    const skinImg = createElement('img', `dynamicSkin${skinNumber}`, {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        objectFit: 'contain',
+        zIndex: '5',
+        display: 'none'
+    });
+    skinImg.src = imagePath;
+    
+    const skinContainer = getElement('.BackBlockProfileSkin');
+    if (skinContainer) {
+        skinContainer.appendChild(skinImg);
+    }
 }
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
-
-    // Initialize default skins data
-    if (!localStorage.getItem('skin_1_data')) {
-        localStorage.setItem('skin_1_data', JSON.stringify({
-            name: 'Standard',
-            gradient: 'linear-gradient(205.61deg, rgba(25, 25, 25, 0.75) 0%, rgba(73, 73, 73, 1) 100%)'
-        }));
-    }
-    
-    if (!localStorage.getItem('skin_2_data')) {
-        localStorage.setItem('skin_2_data', JSON.stringify({
-            name: 'GoodMan',
-            gradient: 'linear-gradient(206.02deg, #272727 0%, #0087CF 167.73%)'
-        }));
+    // Инициализация игрового состояния
+    if (!window.gameState) {
+        window.gameState = {
+            rowscore: 0,
+            // другие игровые переменные
+        };
     }
 
-    // Initialize default skins inside the container
-    const skinContainer = document.querySelector('.BackBlockProfileSkin');
-    
-    if (skinContainer) {
-        if (!skinContainer.querySelector('.youeScinSelectedStandart1')) {
-            const img1 = createElement('img', 'youeScinSelectedStandart1', {
-                position: 'absolute',
-                width: '90%',
-                height: '90%',
-                top: '5%',
-                objectFit: 'contain',
-                zIndex: '5',
-                display: 'block'
-            });
-            img1.src = 'Skins/StandartSkin1.svg';
-            skinContainer.appendChild(img1);
+    // Функция сохранения состояния игры
+    window.saveGameState = function() {
+        localStorage.setItem('gameState', JSON.stringify(gameState));
+    };
+
+    // Функция обновления интерфейса
+    window.updateUI = function() {
+        // Обновляем отображение ROW и других элементов UI
+        const rowScoreElement = document.querySelector('.rowScoreDisplay');
+        if (rowScoreElement) {
+            rowScoreElement.textContent = gameState.rowscore;
         }
+    };
 
-        if (!skinContainer.querySelector('.youeScinSelectedStandart2')) {
-            const img2 = createElement('img', 'youeScinSelectedStandart2', {
-                position: 'absolute',
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-                zIndex: '5',
-                display: 'none',
-                left: '-1.5px'
-            });
-            img2.src = 'Skins/GoodManSkin1.svg';
-            skinContainer.appendChild(img2);
+    // Загрузка сохраненного состояния
+    const savedState = localStorage.getItem('gameState');
+    if (savedState) {
+        try {
+            Object.assign(gameState, JSON.parse(savedState));
+        } catch (e) {
+            console.error('Error loading game state:', e);
         }
     }
 
-    // Initialize skin buttons
-    function initSkinButton(btn, skinNumber, price = null) {
-        if (!btn) return;
-        
-        if (price !== null) {
-            btn.setAttribute('data-price', price);
-        }
-        
-        btn.addEventListener('click', () => {
-            if (!connectedWallet && price !== null) {
-                tg.showAlert('Please connect your TON wallet first');
-                return;
-            }
-            
-            const isPurchased = localStorage.getItem(`skin_${skinNumber}_purchased`) === 'true';
-            
-            if (price !== null && !isPurchased) {
-                sendPayment(price, skinNumber);
-            } else {
-                selectSkin(skinNumber);
-            }
-        });
-    }
 
-    initSkinButton(getElement('.BtnClaimSkin1'), 1);
-    initSkinButton(getElement('.BtnClaimSkin2'), 2, 0.45);
-    
-    // Restore last selected skin with its background
+    // Восстанавливаем последний выбранный скин
     selectedSkin = parseInt(localStorage.getItem('lastSelectedSkin')) || 1;
-    const backBlock = getElement('.BackBlockProfileSkin');
-    if (backBlock) {
-        // Для скина 2 всегда применяем конкретный градиент
-        if (selectedSkin === 2) {
-            backBlock.style.background = 'linear-gradient(206.02deg, #272727 0%, #0087CF 167.73%)';
-        } 
-        // Для остальных скинов берем градиент из сохраненных данных
-        else {
-            const skinData = JSON.parse(localStorage.getItem(`skin_${selectedSkin}_data`));
-            backBlock.style.background = skinData?.gradient || 
-                'linear-gradient(205.61deg, rgba(25, 25, 25, 0.75) 0%, rgba(73, 73, 73, 1) 100%)';
-        }
-    }
+    selectSkin(selectedSkin);
     
-    loadSkinImages();
-    updateSkinButtons();
-    
+    // Инициализация кошелька
     tonConnectUI.onStatusChange((wallet) => {
         connectedWallet = wallet;
         updateSkinButtons();
-        loadSkinImages();
     });
     
     tonConnectUI.connectionRestored.then(() => {
         connectedWallet = tonConnectUI.wallet;
         updateSkinButtons();
     });
+
     
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-            setTimeout(() => {
-                loadSkinImages();
-                updateSkinButtons();
-            }, 300);
+
+    addSkin(
+        "Standard", 
+        "Skins/StandartSkin1.svg", 
+        {
+            gradient: 'linear-gradient(205.61deg, rgba(25, 25, 25, 0.75) 0%, rgba(73, 73, 73, 1) 100%)',
+            borderColor: '#565656'
         }
-    });
-    
-    // Add champ skins
+    );
+
+
+    // Скин за TON
+    addSkin(
+        "GoodMan", 
+        "Skins/GoodManSkin1.svg", 
+        {
+            priceTON: 0.45,
+            gradient: 'linear-gradient(206.02deg, #272727 0%, #0087CF 167.73%)',
+            borderColor: '#0087CF'
+        }
+    );
+
+    // Скин за ROW
     addSkin(
         "Champ", 
         "Skins/ChampSkin1.svg", 
-        0.01, 
-        'linear-gradient(205deg,rgb(44, 51, 0) 0%,rgb(130, 104, 0) 100%)', 
-        '#FFB200'
+        {
+            priceROW: 1488,
+            gradient: 'linear-gradient(205deg, rgb(44, 51, 0) 0%, rgb(130, 104, 0) 100%)',
+            borderColor: '#FFB200'
+        }
     );
 
 });
-
-// Helper function
-async function checkSkinPurchases() {
-    console.log('Checking skin purchases status...');
-}
 
 
 // Marketplase MY Lots paje
@@ -1567,9 +1513,9 @@ document.addEventListener('DOMContentLoaded', () => {
         { x: 270, path: "M352 50C352 22.3858 329.614 0 302 0C274.386 0 252 22.3858 252 50V340C252 367.614 274.386 390 302 390C329.614 390 352 367.614 352 340V50Z" }
     ];
 
-    // Границы gameObjectsLayer (18% от левого края, ширина 64%)
-    const GAME_LAYER_LEFT = 0.18 * 352; // ~63px
-    const GAME_LAYER_WIDTH = 0.64 * 352; // ~225px
+    // Границы gameObjectsLayer
+    const GAME_LAYER_LEFT = 0.18 * 352;
+    const GAME_LAYER_WIDTH = 0.64 * 352;
     const GAME_LAYER_RIGHT = GAME_LAYER_LEFT + GAME_LAYER_WIDTH;
     
     // Настройки игры
@@ -1588,7 +1534,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const COIN_HEIGHT = 25;
     const PLAYER_WIDTH = 60;
     const PLAYER_HEIGHT = 155;
-    const PLAYER_Y = 160; // Верхняя граница игрока (140 раньше)
+    const PLAYER_Y = 160;
     const PLAYER_BOTTOM = PLAYER_Y + PLAYER_HEIGHT;
 
     // Лимиты игры
@@ -1608,6 +1554,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let isGameStarted = false;
     let lastPlayTime = localStorage.getItem('lastPlayTime');
     let difficultyTimer;
+    let isMoving = false;
+    let isInputBlocked = false;
+    let remainingAttempts = 0;
+    let isProcessingTransaction = false;
 
     // Инициализация элементов игры
     function initGameElements() {
@@ -1643,37 +1593,79 @@ document.addEventListener('DOMContentLoaded', () => {
         columnClipMiniGame = document.querySelector('#columnClip path');
         
         playBtn.addEventListener('click', handlePlayClick);
-        leftBtnMiniGame.addEventListener('click', () => {
-            if (isGameStarted && !isMoving) {
-                moveToPosition(currentPosition - 1);
-            }
-        });
-
-        rightBtnMiniGame.addEventListener('click', () => {
-            if (isGameStarted && !isMoving) {
-                moveToPosition(currentPosition + 1);
-            }
-        });
-
-        leftBtnMiniGame.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if (isGameStarted && !isMoving) {
-                moveToPosition(currentPosition - 1);
-            }
-        }, {passive: false});
-
-        rightBtnMiniGame.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if (isGameStarted && !isMoving) {
-                moveToPosition(currentPosition + 1);
-            }
-        }, {passive: false});
+        setupInputHandlers();
         document.addEventListener('keydown', handleKeyDown);
         
+        if (!imageRowerMiniGame || !columnClipMiniGame) {
+            console.error("Элементы игрока или маски не найдены!");
+            return;
+        }
+
+        // Сброс позиции при инициализации
+        currentPosition = 1;
+        imageRowerMiniGame.setAttribute('x', COLUMNS[1].x);
+        columnClipMiniGame.setAttribute('d', COLUMNS[1].path);
+
         updatePlayButton();
         updateDistanceInfo();
     }
+
+    function setupInputHandlers() {
+        // Удаляем старые обработчики
+        leftBtnMiniGame.removeEventListener('click', handleLeftClick);
+        rightBtnMiniGame.removeEventListener('click', handleRightClick);
+        leftBtnMiniGame.removeEventListener('touchstart', handleLeftTouch);
+        rightBtnMiniGame.removeEventListener('touchstart', handleRightTouch);
+
+        // Новые обработчики
+        function handleLeftClick() {
+            if (!isInputBlocked && isGameStarted) moveToPosition(currentPosition - 1);
+        }
+        
+        function handleRightClick() {
+            if (!isInputBlocked && isGameStarted) moveToPosition(currentPosition + 1);
+        }
+        
+        function handleLeftTouch(e) {
+            e.preventDefault();
+            if (!isInputBlocked && isGameStarted) moveToPosition(currentPosition - 1);
+        }
+        
+        function handleRightTouch(e) {
+            e.preventDefault();
+            if (!isInputBlocked && isGameStarted) moveToPosition(currentPosition + 1);
+        }
+
+        // Добавляем новые обработчики
+        leftBtnMiniGame.addEventListener('click', handleLeftClick);
+        rightBtnMiniGame.addEventListener('click', handleRightClick);
+        leftBtnMiniGame.addEventListener('touchstart', handleLeftTouch, {passive: false});
+        rightBtnMiniGame.addEventListener('touchstart', handleRightTouch, {passive: false});
+    }
     
+    function moveToPosition(newPosition) {
+        if (!isGameStarted || !imageRowerMiniGame || !columnClipMiniGame || isMoving || isInputBlocked) {
+            return;
+        }
+
+        newPosition = Math.max(0, Math.min(newPosition, COLUMNS.length - 1));
+        if (newPosition === currentPosition) return;
+
+        isMoving = true;
+        isInputBlocked = true;
+        currentPosition = newPosition;
+        const column = COLUMNS[newPosition];
+
+        // Обновляем позицию игрока
+        imageRowerMiniGame.setAttribute('x', column.x);
+        columnClipMiniGame.setAttribute('d', column.path);
+
+        setTimeout(() => {
+            isMoving = false;
+            isInputBlocked = false;
+        }, 150);
+    }
+
     // Создание игровых объектов
     function spawnObjects() {
         if (isGameOver || !isGameStarted || !gameObjectsLayer) return;
@@ -1687,14 +1679,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const yOffset = -height;
 
         let xPos;
-        if (lane === 0) { // Левая колонка (рандом от 0.302 до 0.222)
+        if (lane === 0) { // Левая колонка
             const randomMultiplier = 0.272 + Math.random() * (0.242 - 0.222);
             xPos = column.x + (GAME_LAYER_WIDTH * randomMultiplier); 
-        } else if (lane === 1) { // Центральная колонка (рандом от 1.9 до 1.5)
+        } else if (lane === 1) { // Центральная колонка
             const randomMultiplier = 1.6 + Math.random() * (1.9 - 1.5);
             xPos = column.x + (PLAYER_WIDTH - width) / randomMultiplier;
-        } else { // Правая колонка (рандом от 0.222 до 0.200)
-            const randomMultiplier = 0.262 + Math.random() * (0.250 - 0.200);
+        } else { // Правая колонка
+            const randomMultiplier = 0.262 + Math.random() * (0.012);
             xPos = column.x + PLAYER_WIDTH - width - (GAME_LAYER_WIDTH * randomMultiplier);
         }
 
@@ -1721,14 +1713,12 @@ document.addEventListener('DOMContentLoaded', () => {
         element.style.backgroundPosition = 'center';
         
         if (spawnType === 'obstacle') {
-            // Массив возможных картинок для препятствий
             const obstacleImages = [
                 'PicturesMiniGames/BottlesObstacles.png',
                 'PicturesMiniGames/LogObstacle.png',
                 'PicturesMiniGames/ManObstacles.png',
                 'PicturesMiniGames/ObstacleBanks.png'
             ];
-            // Выбираем случайную картинку
             const randomImage = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
             element.style.backgroundImage = `url(${randomImage})`;
             
@@ -1742,7 +1732,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 bottom: yOffset + height
             });
         } else {
-            // Устанавливаем картинку для монетки
             element.style.backgroundImage = 'url(PicturesMiniGames/CoinMiniGames1.png)';
             coins.push({
                 element: element,
@@ -1801,44 +1790,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 coin.element.remove();
                 coins.splice(i, 1);
                 score += 10;
-                addRow(10)
-                
                 collectedCountElement.textContent = score;
             }
         }
     }
     
-
     function checkCollision(object) {
         if (object.lane !== currentPosition) return false;
         return object.top <= PLAYER_BOTTOM && object.bottom >= PLAYER_Y;
-    }
-
-    let isMoving = false;
-
-    function moveToPosition(newPosition) {
-        if (!isGameStarted || !imageRowerMiniGame || !columnClipMiniGame || isMoving) return;
-        
-        // Ограничиваем новую позицию допустимыми значениями
-        newPosition = Math.max(0, Math.min(newPosition, COLUMNS.length - 1));
-        
-        // Если позиция не изменилась - выходим
-        if (newPosition === currentPosition) return;
-        
-        isMoving = true;
-        currentPosition = newPosition;
-        const column = COLUMNS[newPosition];
-        
-        // Устанавливаем позицию картинки игрока
-        imageRowerMiniGame.setAttribute('x', column.x);
-        
-        // Обновляем clipPath для маски
-        columnClipMiniGame.setAttribute('d', column.path);
-        
-        // Снимаем блокировку через небольшой промежуток времени
-        setTimeout(() => {
-            isMoving = false;
-        }, 100);
     }
     
     function handlePlayClick() {
@@ -1852,7 +1811,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleKeyDown(e) {
-        if (!isGameStarted || isMoving) return;
+        if (!isGameStarted || isMoving || isInputBlocked) return;
         
         if (e.key === 'ArrowLeft') {
             moveToPosition(currentPosition - 1);
@@ -1885,29 +1844,25 @@ document.addEventListener('DOMContentLoaded', () => {
         collectedCountElement.textContent = score;
         bestResultElement.textContent = Math.round(bestDistance);
         
-        const START_OFFSET = 13; // 13px слева
-        const TRACK_WIDTH = 500; // Общая ширина трека
-        const AVAILABLE_WIDTH = TRACK_WIDTH - (2 * START_OFFSET); // 500 - 26 = 474px
+        const START_OFFSET = 13;
+        const TRACK_WIDTH = 500;
+        const AVAILABLE_WIDTH = TRACK_WIDTH - (2 * START_OFFSET);
         
-        // Текущая позиция (от 12px до 488px)
         const currentProgress = Math.min(distance / MAX_DISTANCE, 1);
         const currentPos = START_OFFSET + (AVAILABLE_WIDTH * currentProgress);
         
         if (currentPin) {
             currentPin.style.left = `${currentPos}px`;
-            console.log("Current pin position:", currentPos); // Для дебага
         }
         
-        // Лучшая позиция (аналогично)
         const bestProgress = Math.min(bestDistance / MAX_DISTANCE, 1);
         const bestPos = START_OFFSET + (AVAILABLE_WIDTH * bestProgress);
         
         if (bestPin) {
             bestPin.style.left = `${bestPos}px`;
-            console.log("Best pin position:", bestPos); // Для дебага
         }
     }
-
+    
     function animateWater() {
         waterPosition += 4;
         
@@ -1923,9 +1878,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    let remainingAttempts = 0;
-    let isProcessingTransaction = false;
-
     async function buyAdditionalAttempts() {
         if (!connectedWallet) {
             if (typeof tg !== 'undefined' && tg.showAlert) {
@@ -1945,7 +1897,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 messages: [
                     {
                         address: 'UQDDEEbNMPfVwpL2q1zi5oAbChXADLuZp4gCOdFoHDmHo4Nn',
-                        amount: "50000000", // 0.05 TON в нанотонах 50000000
+                        amount: "50000000",
                         message: "Покупка дополнительной попытки"
                     }
                 ]
@@ -1953,7 +1905,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const result = await tonConnectUI.sendTransaction(transaction);
             if (result?.boc) {
-                // При успешной покупке добавляем 1 попытку
                 remainingAttempts += 1;
                 updatePlayButton();
             }
@@ -1979,7 +1930,6 @@ document.addEventListener('DOMContentLoaded', () => {
         lastPlayTime = Date.now();
         localStorage.setItem('lastPlayTime', lastPlayTime);
         
-        // Уменьшаем количество оставшихся попыток только если они были
         if (remainingAttempts > 0) {
             remainingAttempts--;
         }
@@ -1989,7 +1939,7 @@ document.addEventListener('DOMContentLoaded', () => {
             resetGameUI();
         }, 500);
     }
-
+    
     function resetGameUI() {
         document.querySelector('.MovementButtonsMiniGame').style.display = 'none';
         document.querySelector('.BottomProgressPanelCentred').style.bottom = '14.2%';
@@ -2005,33 +1955,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         obstacles = [];
         coins = [];
+        
+        // Сброс позиции игрока в центр
+        currentPosition = 1;
+        imageRowerMiniGame.setAttribute('x', COLUMNS[1].x);
+        columnClipMiniGame.setAttribute('d', COLUMNS[1].path);
     }
 
     document.querySelector('.GagantOvalGameLeft').style.display = 'none';
     document.querySelector('.GagantOvalGameRight').style.display = 'none';
 
     function startCountdown() {
+        // Принудительный сброс позиции
+        currentPosition = 1;
+        imageRowerMiniGame.setAttribute('x', COLUMNS[1].x);
+        columnClipMiniGame.setAttribute('d', COLUMNS[1].path);
+
         if (!playBtn || !countdownElement) return;
         
-        // Показать игровые элементы
         document.querySelector('.MovementButtonsMiniGame').style.display = 'block';
         document.querySelector('.BottomProgressPanelCentred').style.bottom = '35px';
         document.querySelector('.PlayBtnMiniGame').style.display = 'none';
         document.querySelector('.BackBtnOnMiniGameCentred').style.display = 'none';
         
-        // Опускаем ResultLineGame вниз
         document.querySelector('.TheResultLineGameCentred').style.bottom = '17%';
         document.querySelector('.ResultLineGame p').style.bottom = '17.5%';
         document.querySelector('.NoBestPinInLine').style.bottom = '17.5%';
         document.querySelector('.BestPinInLine').style.bottom = '17.5%';
         
-        // Настройка счетчика
         playBtn.style.display = 'none';
         countdownElement.style.display = 'block';
         countdownElement.textContent = '3';
         Object.assign(countdownElement.style, {
             position: 'absolute',
-            bottom: '30%', // Изменил позицию счетчика
+            bottom: '30%',
             left: '50%',
             transform: 'translateX(-50%)',
             fontSize: '72px',
@@ -2040,11 +1997,9 @@ document.addEventListener('DOMContentLoaded', () => {
             textShadow: '0 0 10px rgba(0,0,0,0.8)'
         });
         
-        // Получаем элементы овалов
         const ovalLeft = document.querySelector('.GagantOvalGameLeft');
         const ovalRight = document.querySelector('.GagantOvalGameRight');
         
-        // Настройка овалов
         ovalLeft.style.display = 'block';
         ovalRight.style.display = 'block';
         ovalLeft.style.opacity = '0';
@@ -2052,7 +2007,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ovalLeft.style.transition = 'opacity 0.3s, filter 0.3s';
         ovalRight.style.transition = 'opacity 0.3s, filter 0.3s';
         
-        // Первое моргание (при появлении)
         setTimeout(() => {
             ovalLeft.style.opacity = '1';
             ovalRight.style.opacity = '1';
@@ -2075,7 +2029,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (count > 0) {
                 countdownElement.textContent = count;
                 
-                // Второе моргание (перед "GO!")
                 if (count === 1) {
                     setTimeout(() => {
                         ovalLeft.style.filter = 'blur(15px)';
@@ -2085,7 +2038,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             ovalLeft.style.filter = 'blur(3px)';
                             ovalRight.style.filter = 'blur(3px)';
                             
-                            // Плавное исчезновение
                             setTimeout(() => {
                                 ovalLeft.style.opacity = '0';
                                 ovalRight.style.opacity = '0';
@@ -2101,7 +2053,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     startGame();
                     clearInterval(countdownInterval);
                     
-                    // Полное скрытие
                     setTimeout(() => {
                         ovalLeft.style.display = 'none';
                         ovalRight.style.display = 'none';
@@ -2110,19 +2061,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 1000);
     }
+    
     function startGame() {
         isGameStarted = true;
         isGameOver = false;
         score = 0;
         distance = 0;
         currentDifficulty = 0;
+        
+        // Гарантированный сброс позиции
         currentPosition = 1;
-        moveToPosition(currentPosition);
+        imageRowerMiniGame.setAttribute('x', COLUMNS[1].x);
+        columnClipMiniGame.setAttribute('d', COLUMNS[1].path);
         
         updateDistanceInfo();
         gameInterval = setInterval(spawnObjects, difficultyLevels[0].spawnRate);
         
-        // Увеличиваем сложность каждую минуту
         difficultyTimer = setInterval(() => {
             if (currentDifficulty < difficultyLevels.length - 1) {
                 currentDifficulty++;
@@ -2219,5 +2173,4 @@ ShareAgeStory.addEventListener('click', () => {
     }
   );
 });
-
 
