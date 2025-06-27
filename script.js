@@ -1457,9 +1457,19 @@ document.addEventListener('DOMContentLoaded', () => {
         "Champ", 
         "Skins/ChampSkin1.svg", 
         {
-            priceROW: 1488,
+            priceROW: 1000,
             gradient: 'linear-gradient(205deg, rgb(44, 51, 0) 0%, rgb(130, 104, 0) 100%)',
             borderColor: '#FFB200'
+        }
+    );
+
+    addSkin(
+        "buyforROW", 
+        "Skins/ChampSkin1.svg", 
+        {
+            priceROW: 5000,
+            gradient: 'linear-gradient(205deg, rgb(0, 51, 4) 0%, rgb(0, 130, 7) 100%)',
+            borderColor: '#009D22'
         }
     );
 
@@ -2173,3 +2183,5 @@ ShareAgeStory.addEventListener('click', () => {
     }
   );
 });
+
+
