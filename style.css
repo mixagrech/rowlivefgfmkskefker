@@ -1290,7 +1290,7 @@ a, button, div, span, [onclick] {
 
 .IndentationSkins {
     position: absolute;
-    left: 105%;
+    left: 150%;
     width: 100px;
     height: 100px;
 
@@ -1321,7 +1321,7 @@ a, button, div, span, [onclick] {
     right: 15px;
     font-size: 0.7rem;
 }
-SkinImgStandart2
+
 .RewordForFriend b {
     font-size: 1rem;
     font-weight: 500;
