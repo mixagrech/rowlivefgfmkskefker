@@ -26,12 +26,6 @@ buttonbackage.addEventListener('click', () => {
     document.getElementById("user-avatar").style.display = "none"; // Скрываем аватар
 })
 
-var rowscore = 0;
-
-var score = document.getElementById('rowscore');
-
-
-
 // ===== СИСТЕМА НАГРАД С СОХРАНЕНИЕМ ===== //
 
 const DAILY_REWARDS = [400, 520, 640, 760, 880, 1100];
@@ -106,17 +100,21 @@ function shouldShowDailyReward() {
     
     const lastClaim = new Date(gameState.lastDailyClaim);
     const now = new Date();
-    const hoursPassed = (now - lastClaim) / (1000 * 60 * 60);
     
-    // Если прошло больше 48 часов - полный сброс
+    // Проверяем, прошло ли больше 48 часов (сброс streak)
+    const hoursPassed = (now - lastClaim) / (1000 * 60 * 60);
     if (hoursPassed >= RESET_HOURS) {
         gameState.dailyStreak = 0;
         saveGameState();
         return true;
     }
     
-    // Если прошло больше 24 часов - награда доступна
-    return hoursPassed >= REWARD_COOLDOWN_HOURS;
+    // Проверяем, новый ли это день (сравниваем даты, а не время)
+    const lastClaimDate = new Date(lastClaim.getFullYear(), lastClaim.getMonth(), lastClaim.getDate());
+    const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // Если это новый день - награда доступна
+    return currentDate > lastClaimDate;
 }
 
 // Получение текущей награды
@@ -133,9 +131,22 @@ function addRow(amount) {
 
 // Обновление интерфейса
 function updateUI() {
+    // Обновляем основной элемент отображения ROW-монет
     if (rowscoreElement) {
         rowscoreElement.textContent = gameState.rowscore;
     }
+    
+    // Обновляем элемент rowscore (если он отличается от rowscoreElement)
+    const rowscoreDisplay = document.getElementById('rowscore');
+    if (rowscoreDisplay) {
+        rowscoreDisplay.textContent = gameState.rowscore;
+    }
+    
+    // Обновляем все элементы с классом rowScoreDisplay
+    const rowScoreDisplays = document.querySelectorAll('.rowScoreDisplay');
+    rowScoreDisplays.forEach(element => {
+        element.textContent = gameState.rowscore;
+    });
 }
 
 // Показать экран награды
@@ -166,7 +177,7 @@ function claimDailyReward() {
     const now = new Date();
     const lastClaim = gameState.lastDailyClaim ? new Date(gameState.lastDailyClaim) : null;
     
-    // Проверяем, не пропустил ли игрок более 48 часов
+    // Проверяем, не пропустил ли игрок более 48 часов (сброс streak)
     if (lastClaim) {
         const hoursPassed = (now - lastClaim) / (1000 * 60 * 60);
         if (hoursPassed >= RESET_HOURS) {
@@ -384,7 +395,6 @@ async function ageReward() {
         saveAgeRewardState();
         
         usernameonAgeRewardID.textContent = ageBasedReward;
-        if (typeof loadRowScore === 'function') await loadRowScore();
         
         if (window.Telegram?.WebApp?.showAlert) {
             console.log(`🎉 Вы получили ${ageBasedReward} монет!`);
@@ -909,17 +919,20 @@ function isFriendsPageVisible() {
 function updateFriendsCounter(count) {
     const counter = document.getElementById('TotalNumberFriendsSpanID');
     if (counter) {
-        // Достаём предыдущее значение из data-атрибута (или 0, если его нет)
-        const lastCount = parseInt(counter.dataset.lastCount) || 0;
+        // Получаем количество уже выданных наград из localStorage
+        const lastRewardedCount = parseInt(localStorage.getItem('lastRewardedFriendsCount')) || 0;
         
         // Обновляем счетчик
         counter.textContent = `${count}/15 friends`;
-        counter.dataset.lastCount = count; // Сохраняем текущее значение
         
-        if (count > lastCount) {
-            const newFriends = count - lastCount;
+        // Выдаем награду только за новых друзей
+        if (count > lastRewardedCount) {
+            const newFriends = count - lastRewardedCount;
             const reward = newFriends * 120;
             addRow(reward);
+            
+            // Сохраняем новое количество выданных наград
+            localStorage.setItem('lastRewardedFriendsCount', count);
         }
     }
 }
@@ -1165,22 +1178,49 @@ function updateSkinButtons() {
 async function purchaseSkin(skinNumber) {
     const skinData = JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`)) || {};
     
+    console.log('=== ПОКУПКА СКИНА ===');
+    console.log('Номер скина:', skinNumber);
+    console.log('Данные скина:', skinData);
+    console.log('Текущий баланс:', gameState.rowscore);
+    
     if (skinData.priceROW) {
         // Покупка за ROW
+        console.log('Попытка покупки за ROW:', skinData.priceROW);
+        
         if (gameState.rowscore >= skinData.priceROW) {
+            console.log('Достаточно монет, списываем...');
             gameState.rowscore -= skinData.priceROW;
             localStorage.setItem(`skin_${skinNumber}_purchased`, 'true');
             selectSkin(skinNumber);
-            tg.showAlert(`✅ Skin purchased for ${skinData.priceROW} ROW!`);
+            
+            console.log('Новый баланс:', gameState.rowscore);
             saveGameState();
             updateUI();
+            
+            // Показываем уведомление
+            if (typeof tg !== 'undefined' && tg.showAlert) {
+                tg.showAlert(`✅ Skin purchased for ${skinData.priceROW} ROW!`);
+            } else {
+                alert(`✅ Skin purchased for ${skinData.priceROW} ROW!`);
+            }
         } else {
-            tg.showAlert(`Not enough ROW. You need ${skinData.priceROW - gameState.rowscore} more.`);
+            console.log('Недостаточно монет!');
+            const needed = skinData.priceROW - gameState.rowscore;
+            
+            if (typeof tg !== 'undefined' && tg.showAlert) {
+                tg.showAlert(`Not enough ROW. You need ${needed} more.`);
+            } else {
+                alert(`Not enough ROW. You need ${needed} more.`);
+            }
         }
     } else if (skinData.priceTON) {
         // Покупка за TON
         if (!connectedWallet) {
-            tg.showAlert('Please connect your TON wallet first');
+            if (typeof tg !== 'undefined' && tg.showAlert) {
+                tg.showAlert('Please connect your TON wallet first');
+            } else {
+                alert('Please connect your TON wallet first');
+            }
             return;
         }
         
@@ -1208,11 +1248,19 @@ async function purchaseSkin(skinNumber) {
             if (result?.boc) {
                 localStorage.setItem(`skin_${skinNumber}_purchased`, 'true');
                 selectSkin(skinNumber);
-                tg.showAlert("✅ Payment successful! Skin unlocked.");
+                if (typeof tg !== 'undefined' && tg.showAlert) {
+                    tg.showAlert("✅ Payment successful! Skin unlocked.");
+                } else {
+                    alert("✅ Payment successful! Skin unlocked.");
+                }
             }
         } catch (error) {
             console.error("Transaction error:", error);
-            tg.showAlert("❌ Payment failed. Please try again.");
+            if (typeof tg !== 'undefined' && tg.showAlert) {
+                tg.showAlert("❌ Payment failed. Please try again.");
+            } else {
+                alert("❌ Payment failed. Please try again.");
+            }
         } finally {
             isProcessingTransaction = false;
             updateSkinButtons();
@@ -1381,39 +1429,6 @@ function addSkin(name, imagePath, options = {}) {
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    // Инициализация игрового состояния
-    if (!window.gameState) {
-        window.gameState = {
-            rowscore: 0,
-            // другие игровые переменные
-        };
-    }
-
-    // Функция сохранения состояния игры
-    window.saveGameState = function() {
-        localStorage.setItem('gameState', JSON.stringify(gameState));
-    };
-
-    // Функция обновления интерфейса
-    window.updateUI = function() {
-        // Обновляем отображение ROW и других элементов UI
-        const rowScoreElement = document.querySelector('.rowScoreDisplay');
-        if (rowScoreElement) {
-            rowScoreElement.textContent = gameState.rowscore;
-        }
-    };
-
-    // Загрузка сохраненного состояния
-    const savedState = localStorage.getItem('gameState');
-    if (savedState) {
-        try {
-            Object.assign(gameState, JSON.parse(savedState));
-        } catch (e) {
-            console.error('Error loading game state:', e);
-        }
-    }
-
-
     // Восстанавливаем последний выбранный скин
     selectedSkin = parseInt(localStorage.getItem('lastSelectedSkin')) || 1;
     selectSkin(selectedSkin);
@@ -1800,6 +1815,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 coin.element.remove();
                 coins.splice(i, 1);
                 score += 10;
+                // Добавляем ROW-монеты за сбор монеты в игре
+                addRow(10);
                 collectedCountElement.textContent = score;
             }
         }
@@ -1932,9 +1949,20 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(gameInterval);
         clearInterval(difficultyTimer);
         
+        // Добавляем ROW-монеты за пройденное расстояние
+        const distanceReward = Math.floor(distance / 100) * 5; // 5 ROW за каждые 100 единиц расстояния
+        if (distanceReward > 0) {
+            addRow(distanceReward);
+        }
+        
         if (distance > bestDistance) {
             bestDistance = distance;
             localStorage.setItem('bestDistance', bestDistance);
+            // Бонус за новый рекорд
+            const recordBonus = Math.floor(distance / 100) * 10; // 10 ROW за каждые 100 единиц нового рекорда
+            if (recordBonus > 0) {
+                addRow(recordBonus);
+            }
         }
         
         lastPlayTime = Date.now();
@@ -2137,51 +2165,108 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ====== Story ====== // 
 
+// Функция для генерации картинки с возрастом
+async function generateStoryImageWithAge(userAge) {
+    return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Размеры для Telegram Stories (9:16)
+        canvas.width = 1080;
+        canvas.height = 1920;
+        
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        
+        img.onload = () => {
+            // Рисуем базовую картинку
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // Настройки текста
+            ctx.fillStyle = '#FFFFFF';
+            ctx.textAlign = 'right'; // Выравнивание по правому краю
+            ctx.font = 'bold 120px Arial';
+            
+            // Позиция текста (162px от правой стороны, 573px от верха)
+            const x = canvas.width - 162; // 162px от правого края
+            const y = 573; // 573px от верхней границы
+            
+            // Рисуем только белый текст без обводки
+            ctx.fillText(`${userAge} лет`, x, y);
+            
+            // Конвертируем в blob
+            canvas.toBlob((blob) => {
+                resolve(blob);
+            }, 'image/png');
+        };
+        
+        img.onerror = reject;
+        img.src = 'https://mixagrech.github.io/rowlivefgfmkskefker/telegramHistory2.png';
+    });
+}
 
 const ShareAgeStory = document.querySelector('.ShareAgeStory');
 
-ShareAgeStory.addEventListener('click', () => {
-  const tg = window.Telegram?.WebApp;
-  
-  if (!tg?.shareToStory) {
-    tg.showAlert('Функция доступна только в Telegram 7.8+');
-    return;
-  }
-
-  // Получаем ID и считаем возраст (без десятичных)
-  const userId = tg.initDataUnsafe?.user?.id || 0;
-  const userAge = Math.floor(userId / 1000000000); // Целое число
-
-  // Параметры Stories с возрастом в тексте
-  const params = {
-    text: `Моему аккаунту Telegram: ${userAge} лет 🎮\nПрисоединяйся! 🚣‍♂️`,
-    widget_link: {
-      url: 'https://t.me/rowlivebot/row',
-      name: 'Играть сейчас'
+ShareAgeStory.addEventListener('click', async () => {
+    const tg = window.Telegram?.WebApp;
+    
+    if (!tg?.shareToStory) {
+        tg.showAlert('Функция доступна только в Telegram 7.8+');
+        return;
     }
-  };
 
-  // Статус кнопки
-  ShareAgeStory.disabled = true;
+    // Получаем ID и считаем возраст
+    const userId = tg.initDataUnsafe?.user?.id || 0;
+    const userAge = Math.floor(userId / 1000000000);
 
-  // Отправляем оригинальное изображение + текст с возрастом
-  tg.shareToStory(
-    'https://mixagrech.github.io/rowlivefgfmkskefker/telegramHistory.png',
-    params,
-    (success) => {
-      ShareAgeStory.disabled = false;
-      if (success) {
-        ShareAgeStory.textContent = 'Готово!';
-        localStorage.setItem('storyPublished', 'true');
-      } else {
+    // Статус кнопки
+    ShareAgeStory.disabled = true;
+    ShareAgeStory.textContent = 'Генерируем...';
+
+    try {
+        // Генерируем картинку с возрастом
+        const storyImageBlob = await generateStoryImageWithAge(userAge);
+        
+        // Создаем URL для blob
+        const imageUrl = URL.createObjectURL(storyImageBlob);
+
+        // Параметры Stories
+        const params = {
+            text: `Моему аккаунту Telegram: ${userAge} лет 🎮\nПрисоединяйся! 🚣‍♂️`,
+            widget_link: {
+                url: 'https://t.me/rowlivebot/row',
+                name: 'Играть сейчас'
+            }
+        };
+
+        // Отправляем сгенерированную картинку
+        tg.shareToStory(
+            imageUrl,
+            params,
+            (success) => {
+                ShareAgeStory.disabled = false;
+                if (success) {
+                    ShareAgeStory.textContent = 'Готово!';
+                    localStorage.setItem('storyPublished', 'true');
+                } else {
+                    ShareAgeStory.textContent = 'Ошибка';
+                }
+                
+                // Очищаем URL
+                URL.revokeObjectURL(imageUrl);
+                
+                setTimeout(() => {
+                    ShareAgeStory.textContent = 'Поделиться в Stories';
+                }, 2000);
+            }
+        );
+    } catch (error) {
+        console.error('Ошибка генерации картинки:', error);
+        ShareAgeStory.disabled = false;
         ShareAgeStory.textContent = 'Ошибка';
-      }
-      
-      setTimeout(() => {
-        ShareAgeStory.textContent = 'Поделиться в Stories';
-      }, 2000);
+        
+        setTimeout(() => {
+            ShareAgeStory.textContent = 'Поделиться в Stories';
+        }, 2000);
     }
-  );
 });
-
-
