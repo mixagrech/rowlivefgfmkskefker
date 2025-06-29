@@ -2345,8 +2345,8 @@ function resetShareAgeStoryButton() {
     ShareAgeStory.disabled = false;
 }
 
-// ====== Генерация кастомной картинки с текстом ====== //
-async function generateCustomImageWithText(text) {
+// ====== Генерация картинки с возрастом для истории ====== //
+async function generateStoryImageWithAge(userAge) {
     return new Promise((resolve, reject) => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -2361,7 +2361,7 @@ async function generateCustomImageWithText(text) {
             ctx.font = 'bold 120px Arial';
             const x = canvas.width - 162;
             const y = 573;
-            ctx.fillText(text, x, y);
+            ctx.fillText(`${userAge} лет`, x, y);
             canvas.toBlob((blob) => {
                 resolve(blob);
             }, 'image/png');
@@ -2375,94 +2375,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const ShareAgeStory = document.querySelector('.ShareAgeStory');
     if (!ShareAgeStory) return;
     ShareAgeStory.addEventListener('click', async () => {
-        let userAge = 25;
         const tg = window.Telegram?.WebApp;
-        if (tg && tg.initDataUnsafe?.user?.id) {
+        if (!tg || typeof tg.shareToStory !== 'function') return;
+        let userAge = 25;
+        if (tg.initDataUnsafe?.user?.id) {
             userAge = Math.floor(tg.initDataUnsafe.user.id / 1000000000);
         }
-        const myText = `${userAge} лет`;
-
         ShareAgeStory.disabled = true;
         ShareAgeStory.textContent = 'Генерируем...';
-
         try {
-            const blob = await generateCustomImageWithText(myText);
-            if (!blob) {
-                ShareAgeStory.textContent = 'Ошибка';
-                setTimeout(resetShareAgeStoryButton, 1000);
-                return;
-            }
-            const imageUrl = URL.createObjectURL(blob);
-            console.log('Сгенерированная картинка с текстом:', myText, imageUrl);
-
-            if (tg) {
-                if (typeof tg.shareToStory === 'function') {
-                    // Поддерживается shareToStory
-                    const params = {
-                        text: `Моему аккаунту Telegram: ${myText} 🎮\nПрисоединяйся! 🚣‍♂️`,
-                        widget_link: {
-                            url: 'https://t.me/rowlivebot/row',
-                            name: 'Играть сейчас'
-                        }
-                    };
-                    tg.shareToStory(
-                        imageUrl,
-                        params,
-                        (success) => {
-                            URL.revokeObjectURL(imageUrl);
-                            ShareAgeStory.disabled = false;
-                            if (success) {
-                                ShareAgeStory.textContent = 'Готово!';
-                            } else {
-                                ShareAgeStory.textContent = 'Ошибка';
-                            }
-                            setTimeout(resetShareAgeStoryButton, 1000);
-                        }
-                    );
-                } else {
-                    // Нет поддержки shareToStory — fallback
-                    alert('Ваша версия Telegram не поддерживает публикацию истории. Просто сохраните картинку вручную!');
-                    window.open(imageUrl, '_blank');
+            const imageUrl = 'https://mixagrech.github.io/rowlivefgfmkskefker/telegramHistory2.png';
+            const params = {
+                text: `Моему аккаунту Telegram: ${userAge} лет 🎮\nПрисоединяйся! 🚣‍♂️`,
+                widget_link: {
+                    url: 'https://t.me/rowlivebot/row',
+                    name: 'Играть сейчас'
+                }
+            };
+            tg.shareToStory(
+                imageUrl,
+                params,
+                (success) => {
                     ShareAgeStory.disabled = false;
-                    ShareAgeStory.textContent = 'Ссылка открыта';
+                    if (success) {
+                        ShareAgeStory.textContent = 'Готово!';
+                    } else {
+                        ShareAgeStory.textContent = 'Ошибка';
+                    }
                     setTimeout(resetShareAgeStoryButton, 1000);
                 }
-            } else {
-                // Обычный браузер
-                window.open(imageUrl, '_blank');
-                ShareAgeStory.disabled = false;
-                ShareAgeStory.textContent = 'Ссылка открыта';
-                setTimeout(resetShareAgeStoryButton, 1000);
-            }
+            );
         } catch (e) {
-            console.error('Ошибка генерации картинки:', e);
             ShareAgeStory.textContent = 'Ошибка';
             setTimeout(resetShareAgeStoryButton, 1000);
         }
     });
 });
-
-// Функция для восстановления исходного вида кнопки
-function resetShareAgeStoryButton() {
-    const ShareAgeStory = document.querySelector('.ShareAgeStory');
-    if (!ShareAgeStory) return;
-    ShareAgeStory.innerHTML = `<div class="ShareAgeStoryContent">
-        <svg class="ShareAgeStoryIcon" width="37" height="37" viewBox="0 0 37 37" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="18.5" cy="18.5" r="11" stroke="white" stroke-width="3"/>
-            <mask id="path-2-inside-1_1171_12" fill="white">
-                <path d="M35.5692 18.5C36.3594 18.5 37.0058 17.8584 36.9447 17.0705C36.6465 13.2215 35.1497 9.54871 32.6466 6.57842C30.1435 3.60813 26.7774 1.51055 23.0347 0.564352C22.2686 0.370669 21.5267 0.898939 21.3927 1.67773V1.67773C21.2588 2.45653 21.7841 3.18996 22.5474 3.39447C25.6254 4.21912 28.3903 5.96844 30.4583 8.4225C32.5264 10.8765 33.7819 13.8979 34.073 17.0711C34.1451 17.858 34.7789 18.5 35.5692 18.5V18.5Z"/>
-            </mask>
-            <path d="M35.5692 18.5C36.3594 18.5 37.0058 17.8584 36.9447 17.0705C36.6465 13.2215 35.1497 9.54871 32.6466 6.57842C30.1435 3.60813 26.7774 1.51055 23.0347 0.564352C22.2686 0.370669 21.5267 0.898939 21.3927 1.67773V1.67773C21.2588 2.45653 21.7841 3.18996 22.5474 3.39447C25.6254 4.21912 28.3903 5.96844 30.4583 8.4225C32.5264 10.8765 33.7819 13.8979 34.073 17.0711C34.1451 17.858 34.7789 18.5 35.5692 18.5V18.5Z" stroke="white" stroke-width="6" mask="url(#path-2-inside-1_1171_12)"/>
-            <mask id="path-3-inside-2_1171_12" fill="white">
-                <path d="M8.79126 4.46087C8.34179 3.81093 7.44641 3.64427 6.83312 4.1426C3.83705 6.57712 1.66756 9.89727 0.64828 13.6455C-0.370994 17.3937 -0.181657 21.3553 1.16893 24.9719C1.44539 25.7122 2.30187 26.0219 3.01859 25.6891V25.6891C3.73531 25.3562 4.03977 24.507 3.77382 23.7629C2.70138 20.7623 2.56753 17.4932 3.40966 14.3964C4.25178 11.2996 6.02272 8.54853 8.46705 6.50423C9.07322 5.99726 9.24073 5.11082 8.79126 4.46087V4.46087Z"/>
-            </mask>
-            <path d="M8.79126 4.46087C8.34179 3.81093 7.44641 3.64427 6.83312 4.1426C3.83705 6.57712 1.66756 9.89727 0.64828 13.6455C-0.370994 17.3937 -0.181657 21.3553 1.16893 24.9719C1.44539 25.7122 2.30187 26.0219 3.01859 25.6891V25.6891C3.73531 25.3562 4.03977 24.507 3.77382 23.7629C2.70138 20.7623 2.56753 17.4932 3.40966 14.3964C4.25178 11.2996 6.02272 8.54853 8.46705 6.50423C9.07322 5.99726 9.24073 5.11082 8.79126 4.46087V4.46087Z" stroke="white" stroke-width="6" mask="url(#path-3-inside-2_1171_12)"/>
-            <mask id="path-4-inside-3_1171_12" fill="white">
-                <path d="M10.6572 33.6607C10.2941 34.3626 10.567 35.2315 11.2948 35.5393C14.8505 37.0429 18.8004 37.401 22.5887 36.5425C26.377 35.684 29.7866 33.6581 32.3467 30.7686C32.8708 30.1771 32.7425 29.2755 32.1123 28.7987V28.7987C31.4821 28.3219 30.5893 28.4515 30.0569 29.0354C27.9103 31.3904 25.0861 33.0424 21.9562 33.7516C18.8263 34.4609 15.566 34.1878 12.6138 32.9883C11.8817 32.6909 11.0203 32.9588 10.6572 33.6607V33.6607Z"/>
-            </mask>
-            <path d="M10.6572 33.6607C10.2941 34.3626 10.567 35.2315 11.2948 35.5393C14.8505 37.0429 18.8004 37.401 22.5887 36.5425C26.377 35.684 29.7866 33.6581 32.3467 30.7686C32.8708 30.1771 32.7425 29.2755 32.1123 28.7987V28.7987C31.4821 28.3219 30.5893 28.4515 30.0569 29.0354C27.9103 31.3904 25.0861 33.0424 21.9562 33.7516C18.8263 34.4609 15.566 34.1878 12.6138 32.9883C11.8817 32.6909 11.0203 32.9588 10.6572 33.6607V33.6607Z" stroke="white" stroke-width="6" mask="url(#path-4-inside-3_1171_12)"/>
-        </svg>
-        <span>Share to Story</span>
-    </div>`;
-    ShareAgeStory.disabled = false;
-}
