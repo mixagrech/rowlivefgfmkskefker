@@ -2238,20 +2238,23 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 await navigator.clipboard.writeText(shareText);
                 ShareAgeStory.textContent = 'Скопировано!';
-                // Вместо setTimeout(..., 2000)
-                resetShareAgeStoryButton();
+                setTimeout(resetShareAgeStoryButton, 1000);
             } catch (err) {
                 // Fallback для старых браузеров
-                const textArea = document.createElement('textarea');
-                textArea.value = shareText;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                
-                ShareAgeStory.textContent = 'Скопировано!';
-                // Вместо setTimeout(..., 2000)
-                resetShareAgeStoryButton();
+                try {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = shareText;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    ShareAgeStory.textContent = 'Скопировано!';
+                    setTimeout(resetShareAgeStoryButton, 1000);
+                } catch (err2) {
+                    console.error('Ошибка копирования текста:', err, err2);
+                    ShareAgeStory.textContent = 'Ошибка';
+                    setTimeout(resetShareAgeStoryButton, 1000);
+                }
             }
             return;
         }
@@ -2273,9 +2276,15 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Генерируем картинку с возрастом
             const storyImageBlob = await generateStoryImageWithAge(userAge);
-            
+            if (!storyImageBlob) {
+                console.error('generateStoryImageWithAge вернул null или undefined!');
+                ShareAgeStory.textContent = 'Ошибка';
+                setTimeout(resetShareAgeStoryButton, 1000);
+                return;
+            }
             // Создаем URL для blob
             const imageUrl = URL.createObjectURL(storyImageBlob);
+            console.log('Сгенерированная картинка для истории (imageUrl):', imageUrl);
 
             // Параметры Stories
             const params = {
@@ -2292,33 +2301,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 params,
                 (success) => {
                     ShareAgeStory.disabled = false;
+                    URL.revokeObjectURL(imageUrl);
                     if (success) {
                         ShareAgeStory.textContent = 'Готово!';
                         localStorage.setItem('storyPublished', 'true');
+                        setTimeout(resetShareAgeStoryButton, 1000);
                     } else {
                         ShareAgeStory.textContent = 'Ошибка';
+                        setTimeout(resetShareAgeStoryButton, 1000);
                     }
-                    
-                    // Очищаем URL
-                    URL.revokeObjectURL(imageUrl);
-                    
-                    // Вместо setTimeout(..., 2000)
-                    resetShareAgeStoryButton();
                 }
             );
         } catch (error) {
-            console.error('Ошибка генерации картинки:', error);
-            ShareAgeStory.disabled = false;
+            console.error('Ошибка генерации картинки или shareToStory:', error);
             ShareAgeStory.textContent = 'Ошибка';
-            
-            // Вместо setTimeout(..., 2000)
-            resetShareAgeStoryButton();
+            setTimeout(resetShareAgeStoryButton, 1000);
         }
     });
 });
 
 // Функция для восстановления исходного вида кнопки
 function resetShareAgeStoryButton() {
+    const ShareAgeStory = document.querySelector('.ShareAgeStory');
+    if (!ShareAgeStory) return;
     ShareAgeStory.innerHTML = `<div class="ShareAgeStoryContent">
         <svg class="ShareAgeStoryIcon" width="37" height="37" viewBox="0 0 37 37" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="18.5" cy="18.5" r="11" stroke="white" stroke-width="3"/>
@@ -2339,3 +2344,83 @@ function resetShareAgeStoryButton() {
     </div>`;
     ShareAgeStory.disabled = false;
 }
+
+// ====== Генерация кастомной картинки с текстом ====== //
+async function generateCustomImageWithText(text) {
+    return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 1080;
+        canvas.height = 1920;
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.textAlign = 'right';
+            ctx.font = 'bold 120px Arial';
+            const x = canvas.width - 162;
+            const y = 573;
+            ctx.fillText(text, x, y);
+            canvas.toBlob((blob) => {
+                resolve(blob);
+            }, 'image/png');
+        };
+        img.onerror = reject;
+        img.src = 'https://mixagrech.github.io/rowlivefgfmkskefker/telegramHistory2.png';
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const ShareAgeStory = document.querySelector('.ShareAgeStory');
+    if (!ShareAgeStory) return;
+    ShareAgeStory.addEventListener('click', async () => {
+        // Получаем возраст из Telegram, если есть, иначе задаём вручную
+        let userAge = 25; // Значение по умолчанию
+        const tg = window.Telegram?.WebApp;
+        if (tg && tg.initDataUnsafe?.user?.id) {
+            userAge = Math.floor(tg.initDataUnsafe.user.id / 1000000000);
+        }
+        const myText = `${userAge} лет`;
+
+        try {
+            const blob = await generateCustomImageWithText(myText);
+            if (!blob) {
+                console.error('Не удалось сгенерировать картинку!');
+                return;
+            }
+            const imageUrl = URL.createObjectURL(blob);
+            console.log('Сгенерированная картинка с текстом:', myText, imageUrl);
+
+            // Если есть Telegram WebApp и shareToStory — отправляем историю
+            if (tg && typeof tg.shareToStory === 'function') {
+                const params = {
+                    text: `Моему аккаунту Telegram: ${myText} 🎮\nПрисоединяйся! 🚣‍♂️`,
+                    widget_link: {
+                        url: 'https://t.me/rowlivebot/row',
+                        name: 'Играть сейчас'
+                    }
+                };
+                tg.shareToStory(
+                    imageUrl,
+                    params,
+                    (success) => {
+                        URL.revokeObjectURL(imageUrl);
+                        if (success) {
+                            console.log('История успешно отправлена!');
+                        } else {
+                            console.log('Ошибка отправки истории!');
+                            // fallback: открыть картинку
+                            window.open(imageUrl, '_blank');
+                        }
+                    }
+                );
+            } else {
+                // В обычном браузере просто открываем картинку
+                window.open(imageUrl, '_blank');
+            }
+        } catch (e) {
+            console.error('Ошибка генерации картинки:', e);
+        }
+    });
+});
