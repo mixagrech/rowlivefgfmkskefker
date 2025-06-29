@@ -1949,11 +1949,8 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(gameInterval);
         clearInterval(difficultyTimer);
         
-        // Добавляем ROW-монеты за пройденное расстояние
-        const distanceReward = Math.floor(distance / 100) * 5; // 5 ROW за каждые 100 единиц расстояния
-        if (distanceReward > 0) {
-            addRow(distanceReward);
-        }
+        // Убираем начисление ROW-монет за пройденное расстояние
+        // Монеты начисляются только за собранные монеты во время игры
         
         if (distance > bestDistance) {
             bestDistance = distance;
@@ -2205,68 +2202,92 @@ async function generateStoryImageWithAge(userAge) {
     });
 }
 
-const ShareAgeStory = document.querySelector('.ShareAgeStory');
-
-ShareAgeStory.addEventListener('click', async () => {
-    const tg = window.Telegram?.WebApp;
+// Ждем загрузки DOM перед добавлением обработчика
+document.addEventListener('DOMContentLoaded', () => {
+    const ShareAgeStory = document.querySelector('.ShareAgeStory');
     
-    if (!tg?.shareToStory) {
-        tg.showAlert('Функция доступна только в Telegram 7.8+');
+    if (!ShareAgeStory) {
+        console.warn('Элемент ShareAgeStory не найден');
         return;
     }
 
-    // Получаем ID и считаем возраст
-    const userId = tg.initDataUnsafe?.user?.id || 0;
-    const userAge = Math.floor(userId / 1000000000);
-
-    // Статус кнопки
-    ShareAgeStory.disabled = true;
-    ShareAgeStory.textContent = 'Генерируем...';
-
-    try {
-        // Генерируем картинку с возрастом
-        const storyImageBlob = await generateStoryImageWithAge(userAge);
+    ShareAgeStory.addEventListener('click', async () => {
+        // Проверяем доступность Telegram WebApp
+        const tg = window.Telegram?.WebApp;
         
-        // Создаем URL для blob
-        const imageUrl = URL.createObjectURL(storyImageBlob);
-
-        // Параметры Stories
-        const params = {
-            text: `Моему аккаунту Telegram: ${userAge} лет 🎮\nПрисоединяйся! 🚣‍♂️`,
-            widget_link: {
-                url: 'https://t.me/rowlivebot/row',
-                name: 'Играть сейчас'
+        if (!tg) {
+            console.error('Telegram WebApp не доступен');
+            if (typeof tg?.showAlert === 'function') {
+                tg.showAlert('Функция доступна только в Telegram');
+            } else {
+                alert('Функция доступна только в Telegram');
             }
-        };
+            return;
+        }
+        
+        if (!tg.shareToStory) {
+            console.error('Функция shareToStory не поддерживается');
+            if (typeof tg.showAlert === 'function') {
+                tg.showAlert('Функция доступна только в Telegram 7.8+');
+            } else {
+                alert('Функция доступна только в Telegram 7.8+');
+            }
+            return;
+        }
 
-        // Отправляем сгенерированную картинку
-        tg.shareToStory(
-            imageUrl,
-            params,
-            (success) => {
-                ShareAgeStory.disabled = false;
-                if (success) {
-                    ShareAgeStory.textContent = 'Готово!';
-                    localStorage.setItem('storyPublished', 'true');
-                } else {
-                    ShareAgeStory.textContent = 'Ошибка';
+        // Получаем ID и считаем возраст
+        const userId = tg.initDataUnsafe?.user?.id || 0;
+        const userAge = Math.floor(userId / 1000000000);
+
+        // Статус кнопки
+        ShareAgeStory.disabled = true;
+        ShareAgeStory.textContent = 'Генерируем...';
+
+        try {
+            // Генерируем картинку с возрастом
+            const storyImageBlob = await generateStoryImageWithAge(userAge);
+            
+            // Создаем URL для blob
+            const imageUrl = URL.createObjectURL(storyImageBlob);
+
+            // Параметры Stories
+            const params = {
+                text: `Моему аккаунту Telegram: ${userAge} лет 🎮\nПрисоединяйся! 🚣‍♂️`,
+                widget_link: {
+                    url: 'https://t.me/rowlivebot/row',
+                    name: 'Играть сейчас'
                 }
-                
-                // Очищаем URL
-                URL.revokeObjectURL(imageUrl);
-                
-                setTimeout(() => {
-                    ShareAgeStory.textContent = 'Поделиться в Stories';
-                }, 2000);
-            }
-        );
-    } catch (error) {
-        console.error('Ошибка генерации картинки:', error);
-        ShareAgeStory.disabled = false;
-        ShareAgeStory.textContent = 'Ошибка';
-        
-        setTimeout(() => {
-            ShareAgeStory.textContent = 'Поделиться в Stories';
-        }, 2000);
-    }
+            };
+
+            // Отправляем сгенерированную картинку
+            tg.shareToStory(
+                imageUrl,
+                params,
+                (success) => {
+                    ShareAgeStory.disabled = false;
+                    if (success) {
+                        ShareAgeStory.textContent = 'Готово!';
+                        localStorage.setItem('storyPublished', 'true');
+                    } else {
+                        ShareAgeStory.textContent = 'Ошибка';
+                    }
+                    
+                    // Очищаем URL
+                    URL.revokeObjectURL(imageUrl);
+                    
+                    setTimeout(() => {
+                        ShareAgeStory.textContent = 'Поделиться в Stories';
+                    }, 2000);
+                }
+            );
+        } catch (error) {
+            console.error('Ошибка генерации картинки:', error);
+            ShareAgeStory.disabled = false;
+            ShareAgeStory.textContent = 'Ошибка';
+            
+            setTimeout(() => {
+                ShareAgeStory.textContent = 'Поделиться в Stories';
+            }, 2000);
+        }
+    });
 });
