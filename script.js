@@ -1708,10 +1708,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const randomMultiplier = 0.272 + Math.random() * (0.242 - 0.222);
             xPos = column.x + (GAME_LAYER_WIDTH * randomMultiplier); 
         } else if (lane === 1) { // Центральная колонка
-            const randomMultiplier = 1.6 + Math.random() * (1.9 - 1.6);
+            const randomMultiplier = 1.6 + Math.random() * (1.9 - 1.4);
             xPos = column.x + (PLAYER_WIDTH - width) / randomMultiplier;
         } else { // Правая колонка
-            const randomMultiplier = 0.262 + Math.random() * (0.005);
+            const randomMultiplier = 0.262 + Math.random() * (0.025);
             xPos = column.x + PLAYER_WIDTH - width - (GAME_LAYER_WIDTH * randomMultiplier);
         }
 
