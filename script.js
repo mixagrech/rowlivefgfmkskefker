@@ -2178,7 +2178,6 @@ document.addEventListener('DOMContentLoaded', () => {
             userAge = Math.floor(tg.initDataUnsafe.user.id / 1000000000);
         }
         ShareAgeStory.disabled = true;
-        ShareAgeStory.textContent = 'Генерируем...';
         try {
             const imageUrl = 'https://mixagrech.github.io/rowlivefgfmkskefker/telegramHistory2.png';
             const params = {
@@ -2191,19 +2190,12 @@ document.addEventListener('DOMContentLoaded', () => {
             tg.shareToStory(
                 imageUrl,
                 params,
-                (success) => {
+                () => {
                     ShareAgeStory.disabled = false;
-                    if (success) {
-                        ShareAgeStory.textContent = 'Готово!';
-                    } else {
-                        ShareAgeStory.textContent = 'Ошибка';
-                    }
-                    setTimeout(resetShareAgeStoryButton, 1000);
                 }
             );
         } catch (e) {
-            ShareAgeStory.textContent = 'Ошибка';
-            setTimeout(resetShareAgeStoryButton, 1000);
+            ShareAgeStory.disabled = false;
         }
     });
 });
