@@ -1530,12 +1530,94 @@ AllLotsNFTMArket.addEventListener('click', () => {
 
 if (NftMarketMainBtn) {
     NftMarketMainBtn.addEventListener('click', () => {
+        document.getElementById('main').style.display = 'none';
+        document.getElementById('MarketplaseNFT').style.display = 'block';
+        // Всегда показываем AllLotsMenu
+        document.querySelector('.AllLotsMenu').style.display = 'block';
+        document.querySelector('.MyLotsMenu').style.display = 'none';
         const lotsNumb = document.querySelector('.AllLotsNumb');
         if (lotsNumb) {
             lotsNumb.textContent = 'Total: 1 lot';
         }
-        showAllLotsPanel(); // при открытии маркетплейса показывать только основную панель
+        showAllLotsPanel();
+        // Выделяем AllLotsNFTMArket
+        const allLotsBtn = document.querySelector('.AllLotsNFTMArket');
+        const myLotsBtn = document.querySelector('.MyLotsNFTMArket');
+        if (allLotsBtn) allLotsBtn.style.color = '#FFFFFF';
+        if (myLotsBtn) myLotsBtn.style.color = '#515151';
     });
+}
+
+// --- выделение кнопок при переключении ---
+const allLotsBtn = document.querySelector('.AllLotsNFTMArket');
+const myLotsBtn = document.querySelector('.MyLotsNFTMArket');
+if (allLotsBtn && myLotsBtn) {
+    allLotsBtn.addEventListener('click', () => {
+        allLotsBtn.style.color = '#FFFFFF';
+        myLotsBtn.style.color = '#515151';
+        document.querySelector('.AllLotsMenu').style.display = 'block';
+        document.querySelector('.MyLotsMenu').style.display = 'none';
+        showAllLotsPanel();
+    });
+    myLotsBtn.addEventListener('click', () => {
+        allLotsBtn.style.color = '#515151';
+        myLotsBtn.style.color = '#FFFFFF';
+        document.querySelector('.AllLotsMenu').style.display = 'none';
+        document.querySelector('.MyLotsMenu').style.display = 'block';
+        renderMyLotsMenu(null, sortByStars);
+        showMyLotsPanel();
+    });
+}
+
+// --- СОРТИРОВКА ПО ЗВЁЗДАМ В MyLotsMenu ---
+let sortByStars = null; // null | 'desc' | 'asc'
+let lastSearchQuery = '';
+function countStars(starsStr) {
+    if (!starsStr) return 0;
+    return (starsStr.match(/★/g) || []).length;
+}
+
+// Оставляем только один рабочий обработчик сортировки:
+const myLotsSortBtn = document.querySelector('.MyLotsMenu .ButtonPriseUp');
+if (myLotsSortBtn) {
+    myLotsSortBtn.addEventListener('click', () => {
+        if (sortByStars === null || sortByStars === 'asc') {
+            sortByStars = 'desc';
+        } else {
+            sortByStars = 'asc';
+        }
+        renderMyLotsMenu(null, sortByStars);
+    });
+}
+
+// --- Исправить сортировку в renderMyLotsMenu ---
+function renderMyLotsMenu(filteredSkins = null, sort = null) {
+    ensureStandardSkin();
+    const menu = document.querySelector('.MyLotsMenu');
+    if (!menu) return;
+    menu.innerHTML = '';
+    let boughtSkins = [];
+    for (let i = 1; i <= skinCounter; i++) {
+        if (localStorage.getItem(`skin_${i}_purchased`) === 'true') {
+            const data = JSON.parse(localStorage.getItem(`skin_${i}_data`));
+            if (data) boughtSkins.push({ ...data, skinNumber: i });
+        }
+    }
+    // Standard всегда первый
+    let standardSkin = boughtSkins.find(s => s.name === 'Standard');
+    let otherSkins = boughtSkins.filter(s => s.name !== 'Standard');
+    if (filteredSkins !== null) {
+        boughtSkins = filteredSkins;
+        standardSkin = boughtSkins.find(s => s.name === 'Standard');
+        otherSkins = boughtSkins.filter(s => s.name !== 'Standard');
+    }
+    if (sort === 'desc') {
+        otherSkins.sort((a, b) => countStars(b.stars) - countStars(a.stars));
+    } else if (sort === 'asc') {
+        otherSkins.sort((a, b) => countStars(a.stars) - countStars(b.stars));
+    }
+    boughtSkins = standardSkin ? [standardSkin, ...otherSkins] : otherSkins;
+    // ... остальной код renderMyLotsMenu ...
 }
 
 function showAllLotsPanel() {
@@ -2247,17 +2329,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // === ДОБАВИТЬ/ЗАМЕНИТЬ после функции selectSkin ===
 
-// Рендер купленных скинов в MyLotsMenu
-let sortByStars = null; // null | 'desc' | 'asc'
-let lastSearchQuery = '';
-
-// Функция для подсчёта количества ★ (каждая ★ = 1, ☆ = 0)
-function countStars(starsStr) {
-    if (!starsStr) return 0;
-    return (starsStr.match(/★/g) || []).length;
+// --- ГАРАНТИЯ НАЛИЧИЯ СТАНДАРТНОГО СКИНА ---
+function ensureStandardSkin() {
+    // Проверяем, есть ли стандартный скин в localStorage, если нет — добавляем
+    let found = false;
+    for (let i = 1; i <= skinCounter; i++) {
+        const data = JSON.parse(localStorage.getItem(`skin_${i}_data`) || 'null');
+        if (data && data.name === 'Standard') {
+            found = true;
+            // Гарантируем, что он куплен
+            localStorage.setItem(`skin_${i}_purchased`, 'true');
+            break;
+        }
+    }
+    if (!found) {
+        // Добавляем стандартный скин первым
+        skinCounter = 0; // сбрасываем, чтобы Standard был первым
+        addSkin(
+            "Standard", 
+            "Skins/StandartSkin1.svg", 
+            {
+                gradient: 'linear-gradient(205.61deg, rgba(25, 25, 25, 0.75) 0%, rgba(73, 73, 73, 1) 100%)',
+                borderColor: '#565656',
+                stars: "☆☆☆☆☆"
+            }
+        );
+        // Гарантируем, что он куплен
+        localStorage.setItem(`skin_1_purchased`, 'true');
+    }
 }
 
+// --- МОДИФИЦИРОВАТЬ renderMyLotsMenu, чтобы Standard всегда был первым ---
 function renderMyLotsMenu(filteredSkins = null, sort = null) {
+    ensureStandardSkin(); // Всегда вызываем перед рендером
     const menu = document.querySelector('.MyLotsMenu');
     if (!menu) return;
     menu.innerHTML = '';
@@ -2268,6 +2372,12 @@ function renderMyLotsMenu(filteredSkins = null, sort = null) {
             if (data) boughtSkins.push({ ...data, skinNumber: i });
         }
     }
+    // Гарантируем, что Standard всегда первый
+    boughtSkins.sort((a, b) => {
+        if (a.name === 'Standard') return -1;
+        if (b.name === 'Standard') return 1;
+        return 0;
+    });
     if (filteredSkins !== null) {
         boughtSkins = filteredSkins;
     }
@@ -2429,7 +2539,6 @@ if (allLotsSortBtn) {
     });
 }
 // === КНОПКА СОРТИРОВКИ ДЛЯ MY LOTS ===
-const myLotsSortBtn = document.querySelector('.MyLotsMenu .ButtonPriseUp');
 if (myLotsSortBtn) {
     myLotsSortBtn.addEventListener('click', () => {
         if (sortByStars === null || sortByStars === 'asc') {
