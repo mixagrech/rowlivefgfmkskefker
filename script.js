@@ -1085,9 +1085,11 @@ function loadSkinImages() {
                 height: '100%',
                 objectFit: 'contain',
                 zIndex: '5',
-                left: '-2.5px'
+                left: '0px'
             });
             skinContainer.appendChild(skinImg);
+        } else {
+            skinImg.style.left = '0px';
         }
         
         const skinPath = getSkinPath(selectedSkin);
@@ -1203,6 +1205,7 @@ async function purchaseSkin(skinNumber) {
             } else {
                 alert(`✅ Skin purchased for ${skinData.priceROW} ROW!`);
             }
+            renderMyLotsMenu(); // <--- добавлено
         } else {
             console.log('Недостаточно монет!');
             const needed = skinData.priceROW - gameState.rowscore;
@@ -1253,6 +1256,7 @@ async function purchaseSkin(skinNumber) {
                 } else {
                     alert("✅ Payment successful! Skin unlocked.");
                 }
+                renderMyLotsMenu(); // <--- добавлено
             }
         } catch (error) {
             console.error("Transaction error:", error);
@@ -1300,7 +1304,8 @@ function addSkin(name, imagePath, options = {}) {
         priceTON: options.priceTON || null,
         priceROW: options.priceROW || null,
         gradient: options.gradient || 'linear-gradient(205deg, #1E0033 0%, #4B0082 100%)',
-        borderColor: options.borderColor || '#9400D3'
+        borderColor: options.borderColor || '#9400D3',
+        stars: options.stars || '☆☆☆☆☆'
     };
     localStorage.setItem(`skin_${skinNumber}_data`, JSON.stringify(skinData));
 
@@ -1392,7 +1397,7 @@ function addSkin(name, imagePath, options = {}) {
         }
     `;
     document.head.appendChild(style);
-
+    
     // Добавляем обработчик клика на кнопку
     const btn = skinContent.querySelector(`.dynamicSkinBtn${skinNumber}`);
     if (btn) {
@@ -1451,10 +1456,10 @@ document.addEventListener('DOMContentLoaded', () => {
         "Skins/StandartSkin1.svg", 
         {
             gradient: 'linear-gradient(205.61deg, rgba(25, 25, 25, 0.75) 0%, rgba(73, 73, 73, 1) 100%)',
-            borderColor: '#565656'
+            borderColor: '#565656',
+            stars: "☆☆☆☆☆"
         }
     );
-
 
     // Скин за TON
     addSkin(
@@ -1463,7 +1468,8 @@ document.addEventListener('DOMContentLoaded', () => {
         {
             priceTON: 0.45,
             gradient: 'linear-gradient(206.02deg, #272727 0%, #0087CF 167.73%)',
-            borderColor: '#0087CF'
+            borderColor: '#0087CF',
+            stars: "★☆☆☆☆"
         }
     );
 
@@ -1474,7 +1480,8 @@ document.addEventListener('DOMContentLoaded', () => {
         {
             priceROW: 1000,
             gradient: 'linear-gradient(205deg, rgb(44, 51, 0) 0%, rgb(130, 104, 0) 100%)',
-            borderColor: '#FFB200'
+            borderColor: '#FFB200',
+            stars: "★★★★★"
         }
     );
 
@@ -1484,10 +1491,12 @@ document.addEventListener('DOMContentLoaded', () => {
         {
             priceROW: 5000,
             gradient: 'linear-gradient(205deg, rgb(0, 51, 4) 0%, rgb(0, 130, 7) 100%)',
-            borderColor: '#009D22'
+            borderColor: '#009D22',
+            stars: "★★★☆☆"
         }
     );
-
+    
+    renderMyLotsMenu();
 });
 
 
@@ -1502,6 +1511,8 @@ MyLotsNFTMArket.addEventListener('click', () => {
     AllLotsNFTMArket.style.color = '#515151';
     document.querySelector('.AllLotsMenu').style.display = 'none';
     document.querySelector('.MyLotsMenu').style.display = 'block';
+    renderMyLotsMenu(); // чтобы обновить количество лотов
+    showMyLotsPanel(); // показать только панель для моих лотов
 });
 
 AllLotsNFTMArket.addEventListener('click', () => {
@@ -1509,7 +1520,36 @@ AllLotsNFTMArket.addEventListener('click', () => {
     AllLotsNFTMArket.style.color = '#FFFFFF';
     document.querySelector('.AllLotsMenu').style.display = 'block';
     document.querySelector('.MyLotsMenu').style.display = 'none';
+    // Обновляем количество лотов для AllLotsMenu
+    const lotsNumb = document.querySelector('.AllLotsNumb');
+    if (lotsNumb) {
+        lotsNumb.textContent = 'Total: 1 lot';
+    }
+    showAllLotsPanel(); // показать только основную панель
 });
+
+if (NftMarketMainBtn) {
+    NftMarketMainBtn.addEventListener('click', () => {
+        const lotsNumb = document.querySelector('.AllLotsNumb');
+        if (lotsNumb) {
+            lotsNumb.textContent = 'Total: 1 lot';
+        }
+        showAllLotsPanel(); // при открытии маркетплейса показывать только основную панель
+    });
+}
+
+function showAllLotsPanel() {
+    const panel1 = document.querySelector('.BackPanrlAllMarket');
+    const panel2 = document.querySelector('.BackPanrlAllMarket2');
+    if (panel1) panel1.style.display = '';
+    if (panel2) panel2.style.display = 'none';
+}
+function showMyLotsPanel() {
+    const panel1 = document.querySelector('.BackPanrlAllMarket');
+    const panel2 = document.querySelector('.BackPanrlAllMarket2');
+    if (panel1) panel1.style.display = 'none';
+    if (panel2) panel2.style.display = '';
+}
 
 
 //Mini game
@@ -1866,25 +1906,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateDistanceInfo() {
         if (!leftRemainingElement || !collectedCountElement || !bestResultElement) return;
-        
+
         leftRemainingElement.textContent = Math.round(MAX_DISTANCE - distance);
         collectedCountElement.textContent = score;
         bestResultElement.textContent = Math.round(bestDistance);
-        
-        const START_OFFSET = 13;
-        const TRACK_WIDTH = 500;
-        const AVAILABLE_WIDTH = TRACK_WIDTH - (2 * START_OFFSET);
-        
+
+        // Параметры области движения
+        const track = document.querySelector('.ResultLineGame');
+        const TRACK_WIDTH = track ? track.offsetWidth : 500;
+        const AREA_PERCENT = 0.92; // 89% было 92% стало
+        const AREA_WIDTH = TRACK_WIDTH * AREA_PERCENT;
+        const START_OFFSET = (TRACK_WIDTH - AREA_WIDTH) / 2; // 4% от ширины
+
+        // Текущий прогресс
         const currentProgress = Math.min(distance / MAX_DISTANCE, 1);
-        const currentPos = START_OFFSET + (AVAILABLE_WIDTH * currentProgress);
-        
+        const currentPos = START_OFFSET + (AREA_WIDTH * currentProgress);
+
         if (currentPin) {
             currentPin.style.left = `${currentPos}px`;
         }
-        
+
+        // Для лучшего результата
         const bestProgress = Math.min(bestDistance / MAX_DISTANCE, 1);
-        const bestPos = START_OFFSET + (AVAILABLE_WIDTH * bestProgress);
-        
+        const bestPos = START_OFFSET + (AREA_WIDTH * bestProgress);
+
         if (bestPin) {
             bestPin.style.left = `${bestPos}px`;
         }
@@ -2199,3 +2244,204 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// === ДОБАВИТЬ/ЗАМЕНИТЬ после функции selectSkin ===
+
+// Рендер купленных скинов в MyLotsMenu
+let sortByStars = null; // null | 'desc' | 'asc'
+let lastSearchQuery = '';
+
+// Функция для подсчёта количества ★ (каждая ★ = 1, ☆ = 0)
+function countStars(starsStr) {
+    if (!starsStr) return 0;
+    return (starsStr.match(/★/g) || []).length;
+}
+
+function renderMyLotsMenu(filteredSkins = null, sort = null) {
+    const menu = document.querySelector('.MyLotsMenu');
+    if (!menu) return;
+    menu.innerHTML = '';
+    let boughtSkins = [];
+    for (let i = 1; i <= skinCounter; i++) {
+        if (localStorage.getItem(`skin_${i}_purchased`) === 'true') {
+            const data = JSON.parse(localStorage.getItem(`skin_${i}_data`));
+            if (data) boughtSkins.push({ ...data, skinNumber: i });
+        }
+    }
+    if (filteredSkins !== null) {
+        boughtSkins = filteredSkins;
+    }
+    // Сортировка по количеству ★ (если не задано явно — не сортировать вообще)
+    if (sort === 'desc') {
+        boughtSkins.sort((a, b) => countStars(b.stars) - countStars(a.stars));
+    } else if (sort === 'asc') {
+        boughtSkins.sort((a, b) => countStars(a.stars) - countStars(b.stars));
+    }
+    // Параметры позиционирования
+    const topBase = 58; // стартовый top в %
+    const topStep = 36; // шаг вниз между рядами в %
+
+    // nonSearchSkin сообщение
+    const backPanel2 = document.querySelector('.BackPanrlAllMarket2');
+    let nonSearchMsg = backPanel2 ? backPanel2.querySelector('.nonSearchSkin') : null;
+    if (!nonSearchMsg && backPanel2) {
+        nonSearchMsg = document.createElement('p');
+        nonSearchMsg.className = 'nonSearchSkin';
+        nonSearchMsg.textContent = 'Skin not found';
+        backPanel2.appendChild(nonSearchMsg);
+    }
+    if (nonSearchMsg) nonSearchMsg.style.display = 'none';
+
+    if (boughtSkins.length === 0) {
+        if (nonSearchMsg) nonSearchMsg.style.display = 'block';
+    } else {
+        if (nonSearchMsg) nonSearchMsg.style.display = 'none';
+        boughtSkins.forEach((skin, idx) => {
+            let style;
+            if (boughtSkins.length === 1) {
+                // Если только один скин (поиск) — всегда слева
+                const top = topBase;
+                style = `position:absolute;left:20px;top:${top}%;width:40%;height:31%;z-index:2;`;
+            } else {
+                const isRight = idx % 2 === 0;
+                const row = Math.floor(idx / 2);
+                const top = topBase + row * topStep;
+                style = `position:absolute;${isRight ? 'right:20px;' : 'left:20px;'}top:${top}%;width:40%;height:31%;z-index:2;`;
+            }
+            // Структура формы
+            const form = document.createElement('div');
+            form.className = 'MyLotsOnMarketplase';
+            form.style = style;
+            form.innerHTML = `
+                <div class="TheSkinOnMarketMyLots" style="background: ${skin.gradient};">
+                    <img src="${skin.imagePath}" alt="${skin.name}" class="StandardSkinOnMyLots">
+                </div>
+                <p class="SkinNameShopMy">${skin.name}</p>
+                <p class="RarityOfTheSkinMyLots">${skin.stars || '☆☆☆☆☆'}</p>
+                <div class="BoostPercentageSkinMArkMyLots">
+                    <p class="BoostPercentForm2">+0%</p>
+                </div>
+                <div class="PriceBtnMyLotsMarket">
+                    <p class="PriceMyLotsMarket"><b>Withdraw</b></p>
+                </div>
+            `;
+            // Анимация нажатия на кнопку
+            const btn = form.querySelector('.PriceBtnMyLotsMarket');
+            if (btn) {
+                btn.addEventListener('mousedown', () => {
+                    btn.style.transform = 'scale(0.9)';
+                    setTimeout(() => {
+                        btn.style.transform = 'scale(1)';
+                    }, 100);
+                });
+            }
+            menu.appendChild(form);
+        });
+    }
+    // Обновляем количество лотов
+    const lotsNumb = document.querySelector('.AllLotsNumb');
+    if (lotsNumb) {
+        lotsNumb.textContent = `Total: ${boughtSkins.length} lot`;
+    }
+}
+
+function searchMyLotsSkins() {
+    const input = document.querySelector('.SearchPanelonNFTMarket');
+    if (!input) return;
+    const query = input.value.trim().toLowerCase();
+    lastSearchQuery = query;
+    if (query === '') {
+        renderMyLotsMenu(null, sortByStars);
+        return;
+    }
+    // Собираем все купленные скины
+    let boughtSkins = [];
+    for (let i = 1; i <= skinCounter; i++) {
+        if (localStorage.getItem(`skin_${i}_purchased`) === 'true') {
+            const data = JSON.parse(localStorage.getItem(`skin_${i}_data`));
+            if (data) boughtSkins.push({ ...data, skinNumber: i });
+        }
+    }
+    // Поиск по названию
+    const found = boughtSkins.filter(skin => skin.name.toLowerCase().includes(query));
+    if (found.length > 0) {
+        renderMyLotsMenu(found, sortByStars);
+    } else {
+        renderMyLotsMenu([], sortByStars); // Покажет nonSearchSkin
+    }
+}
+
+// Обработчики поиска и сортировки (объявить переменные только один раз!)
+const searchInput = document.querySelector('.SearchPanelonNFTMarket');
+const searchBtn = document.querySelector('.SearchOnMarketplase');
+const backBtnNFTMarket = document.querySelector('.BackBTNNFTMarket');
+
+if (searchInput) {
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            searchMyLotsSkins();
+        }
+    });
+}
+if (searchBtn) {
+    searchBtn.addEventListener('click', () => {
+        searchMyLotsSkins();
+    });
+}
+if (buttonPriseUp) {
+    buttonPriseUp.addEventListener('click', () => {
+        if (sortByStars === null || sortByStars === 'asc') {
+            sortByStars = 'desc';
+        } else {
+            sortByStars = 'asc';
+        }
+        // Если есть активный поиск — сортировать найденные
+        if (lastSearchQuery && lastSearchQuery !== '') {
+            searchMyLotsSkins();
+        } else {
+            renderMyLotsMenu(null, sortByStars);
+        }
+    });
+}
+if (backBtnNFTMarket) {
+    backBtnNFTMarket.addEventListener('click', () => {
+        sortByStars = null;
+        // Если есть активный поиск — сбросить поиск и показать все скины
+        const input = document.querySelector('.SearchPanelonNFTMarket');
+        if (input) input.value = '';
+        lastSearchQuery = '';
+        renderMyLotsMenu();
+    });
+}
+
+// === КНОПКА СОРТИРОВКИ ДЛЯ ALL LOTS ===
+const allLotsSortBtn = document.querySelector('.AllLotsMenu .ButtonPriseUp');
+if (allLotsSortBtn) {
+    allLotsSortBtn.addEventListener('click', () => {
+        // Здесь сортировка не нужна, просто меняем иконку
+        isPriceMarketUp = !isPriceMarketUp;
+        allLotsSortBtn.innerHTML = '$' + (isPriceMarketUp ? upPriceSVG : downPriceSVG);
+        // Количество лотов всегда 1
+        const lotsNumb = document.querySelector('.AllLotsNumb');
+        if (lotsNumb) {
+            lotsNumb.textContent = 'Total: 1 lot';
+        }
+    });
+}
+// === КНОПКА СОРТИРОВКИ ДЛЯ MY LOTS ===
+const myLotsSortBtn = document.querySelector('.MyLotsMenu .ButtonPriseUp');
+if (myLotsSortBtn) {
+    myLotsSortBtn.addEventListener('click', () => {
+        if (sortByStars === null || sortByStars === 'asc') {
+            sortByStars = 'desc';
+        } else {
+            sortByStars = 'asc';
+        }
+        // Если есть активный поиск — сортировать найденные
+        if (lastSearchQuery && lastSearchQuery !== '') {
+            searchMyLotsSkins();
+        } else {
+            renderMyLotsMenu(null, sortByStars);
+        }
+    });
+}
