@@ -2458,13 +2458,14 @@ function renderMyLotsMenu(filteredSkins = null, sort = null) {
 function searchMyLotsSkins() {
     const input = document.querySelector('.SearchPanelonNFTMarket');
     if (!input) return;
-    const query = input.value.trim().toLowerCase();
+    // Очищаем строку поиска от потенциально опасных символов
+    const query = input.value.replace(/[^a-zA-Z0-9а-яА-ЯёЁ\\s\\-]/g, '').trim().toLowerCase();
     lastSearchQuery = query;
     if (query === '') {
         renderMyLotsMenu(null, sortByStars);
         return;
     }
-    // Собираем все купленные скины
+    // Дальше только поиск по названию, никаких команд!
     let boughtSkins = [];
     for (let i = 1; i <= skinCounter; i++) {
         if (localStorage.getItem(`skin_${i}_purchased`) === 'true') {
@@ -2472,12 +2473,11 @@ function searchMyLotsSkins() {
             if (data) boughtSkins.push({ ...data, skinNumber: i });
         }
     }
-    // Поиск по названию
     const found = boughtSkins.filter(skin => skin.name.toLowerCase().includes(query));
     if (found.length > 0) {
         renderMyLotsMenu(found, sortByStars);
     } else {
-        renderMyLotsMenu([], sortByStars); // Покажет nonSearchSkin
+        renderMyLotsMenu([], sortByStars);
     }
 }
 
