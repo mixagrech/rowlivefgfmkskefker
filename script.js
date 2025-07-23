@@ -1027,9 +1027,11 @@ let AttentionTextOnClick = document.querySelector('.AttentionTextOnClick').style
 
 AttentionButtonNFTMark.addEventListener('click', () => {
     document.querySelector('.AttentionTextOnClick').style.display = 'block';
+    document.body.style.overflow = 'hidden'; // Запретить прокрутку
 });
 document.querySelector('.PanelOnBackAttention').addEventListener('click', () => {
     document.querySelector('.AttentionTextOnClick').style.display = 'none';
+    document.body.style.overflow = ''; // Разрешить прокрутку
 });
 
 //Buying a skin for TON and equeped 
@@ -1149,9 +1151,8 @@ function updateSkinButtons() {
     buttons.forEach(btn => {
         const btnNum = parseInt(btn.className.match(/\d+/)?.[0]);
         if (isNaN(btnNum)) return;
-
         const skinData = JSON.parse(localStorage.getItem(`skin_${btnNum}_data`)) || {};
-        const isPurchased = localStorage.getItem(`skin_${btnNum}_purchased`) === 'true';
+        const isPurchased = localStorage.getItem(`skin_${btnNum}_purchased`) === getSkinHash(skinData);
         const isSelected = btnNum === selectedSkin;
         
         const textEl = btn.querySelector('p') || createElement('p');
@@ -1179,6 +1180,7 @@ function updateSkinButtons() {
 // Payment functions
 async function purchaseSkin(skinNumber) {
     const skinData = JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`)) || {};
+    const skinHash = getSkinHash(skinData);
     
     console.log('=== ПОКУПКА СКИНА ===');
     console.log('Номер скина:', skinNumber);
@@ -1192,7 +1194,7 @@ async function purchaseSkin(skinNumber) {
         if (gameState.rowscore >= skinData.priceROW) {
             console.log('Достаточно монет, списываем...');
             gameState.rowscore -= skinData.priceROW;
-            localStorage.setItem(`skin_${skinNumber}_purchased`, 'true');
+            localStorage.setItem(`skin_${skinNumber}_purchased`, skinHash);
             selectSkin(skinNumber);
             
             console.log('Новый баланс:', gameState.rowscore);
@@ -1249,7 +1251,7 @@ async function purchaseSkin(skinNumber) {
             const result = await tonConnectUI.sendTransaction(transaction);
             
             if (result?.boc) {
-                localStorage.setItem(`skin_${skinNumber}_purchased`, 'true');
+                localStorage.setItem(`skin_${skinNumber}_purchased`, skinHash);
                 selectSkin(skinNumber);
                 if (typeof tg !== 'undefined' && tg.showAlert) {
                     tg.showAlert("✅ Payment successful! Skin unlocked.");
@@ -1305,7 +1307,8 @@ function addSkin(name, imagePath, options = {}) {
         priceROW: options.priceROW || null,
         gradient: options.gradient || 'linear-gradient(205deg, #1E0033 0%, #4B0082 100%)',
         borderColor: options.borderColor || '#9400D3',
-        stars: options.stars || '☆☆☆☆☆'
+        stars: options.stars || '☆☆☆☆☆',
+        relevance: options.relevance || 'Actively' // по умолчанию актуальный
     };
     localStorage.setItem(`skin_${skinNumber}_data`, JSON.stringify(skinData));
 
@@ -1402,8 +1405,8 @@ function addSkin(name, imagePath, options = {}) {
     const btn = skinContent.querySelector(`.dynamicSkinBtn${skinNumber}`);
     if (btn) {
         btn.addEventListener('click', () => {
-            const isPurchased = localStorage.getItem(`skin_${skinNumber}_purchased`) === 'true';
-            
+            const skinData = JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`)) || {};
+            const isPurchased = localStorage.getItem(`skin_${skinNumber}_purchased`) === getSkinHash(skinData);
             if (!isPurchased && (skinData.priceTON || skinData.priceROW)) {
                 purchaseSkin(skinNumber);
             } else {
@@ -1495,6 +1498,18 @@ document.addEventListener('DOMContentLoaded', () => {
             stars: "★★★☆☆"
         }
     );
+
+    addSkin(
+        "Omg", 
+        "Skins/ChampSkin1.svg", 
+        {
+            priceROW: 50,
+            gradient: 'linear-gradient(205deg, rgba(26, 51, 0, 1) 0%, rgba(130, 33, 0, 1) 100%)',
+            borderColor: '#9d0000ff',
+            stars: "★★★☆☆"
+        }
+    );
+
     
     renderMyLotsMenu();
 });
@@ -1597,10 +1612,24 @@ function renderMyLotsMenu(filteredSkins = null, sort = null) {
     if (!menu) return;
     menu.innerHTML = '';
     let boughtSkins = [];
-    for (let i = 1; i <= skinCounter; i++) {
-        if (localStorage.getItem(`skin_${i}_purchased`) === 'true') {
-            const data = JSON.parse(localStorage.getItem(`skin_${i}_data`));
-            if (data) boughtSkins.push({ ...data, skinNumber: i });
+    // Собираем все купленные скины (даже если их нет в магазине)
+    for (let key in localStorage) {
+        if (key.startsWith('skin_') && key.endsWith('_data')) {
+            const skinNumber = parseInt(key.split('_')[1]);
+            const data = JSON.parse(localStorage.getItem(key));
+            if (data && localStorage.getItem(`skin_${skinNumber}_purchased`) === getSkinHash(data)) {
+                boughtSkins.push({ ...data, skinNumber });
+            }
+        }
+    }
+    // Гарантируем, что стандартный скин всегда есть
+    const standardKey = Object.keys(localStorage).find(key => key.startsWith('skin_') && key.endsWith('_data') && (JSON.parse(localStorage.getItem(key))?.name === 'Standard'));
+    if (standardKey) {
+        const skinNumber = parseInt(standardKey.split('_')[1]);
+        const data = JSON.parse(localStorage.getItem(standardKey));
+        const alreadyIn = boughtSkins.some(s => s.skinNumber === skinNumber);
+        if (!alreadyIn) {
+            boughtSkins.unshift({ ...data, skinNumber });
         }
     }
     // Standard всегда первый
@@ -2017,16 +2046,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function animateWater() {
+    let lastFlipTime = 0;
+    let isFlipped = false;
+
+    function animateWater(timestamp) {
+        // Анимация воды
         waterPosition += 4;
-        
         if (waterPosition >= 599) {
             waterPosition = 0;
         }
-        
         waterImage1.setAttribute('y', waterPosition);
         waterImage2.setAttribute('y', waterPosition - 599);
-        
+
+        // Переворот персонажа каждые 300 мс
+        if (!lastFlipTime || timestamp - lastFlipTime >= 300) {
+            const centerImage = document.getElementById('centerImageOnCenterColomnFiled');
+            
+            if (isFlipped) {
+                centerImage.style.transform = 'scaleX(1)'; // Возвращаем в исходное состояние
+            } else {
+                centerImage.style.transform = 'scaleX(-1)'; // Отражаем по горизонтали
+            }
+            
+            isFlipped = !isFlipped;
+            lastFlipTime = timestamp;
+        }
+
         if (!isGameOver && isGameStarted) {
             requestAnimationFrame(animateWater);
         }
@@ -2366,10 +2411,24 @@ function renderMyLotsMenu(filteredSkins = null, sort = null) {
     if (!menu) return;
     menu.innerHTML = '';
     let boughtSkins = [];
-    for (let i = 1; i <= skinCounter; i++) {
-        if (localStorage.getItem(`skin_${i}_purchased`) === 'true') {
-            const data = JSON.parse(localStorage.getItem(`skin_${i}_data`));
-            if (data) boughtSkins.push({ ...data, skinNumber: i });
+    // Собираем все купленные скины (даже если их нет в магазине)
+    for (let key in localStorage) {
+        if (key.startsWith('skin_') && key.endsWith('_data')) {
+            const skinNumber = parseInt(key.split('_')[1]);
+            const data = JSON.parse(localStorage.getItem(key));
+            if (data && localStorage.getItem(`skin_${skinNumber}_purchased`) === getSkinHash(data)) {
+                boughtSkins.push({ ...data, skinNumber });
+            }
+        }
+    }
+    // Гарантируем, что стандартный скин всегда есть
+    const standardKey = Object.keys(localStorage).find(key => key.startsWith('skin_') && key.endsWith('_data') && (JSON.parse(localStorage.getItem(key))?.name === 'Standard'));
+    if (standardKey) {
+        const skinNumber = parseInt(standardKey.split('_')[1]);
+        const data = JSON.parse(localStorage.getItem(standardKey));
+        const alreadyIn = boughtSkins.some(s => s.skinNumber === skinNumber);
+        if (!alreadyIn) {
+            boughtSkins.unshift({ ...data, skinNumber });
         }
     }
     // Гарантируем, что Standard всегда первый
@@ -2413,10 +2472,10 @@ function renderMyLotsMenu(filteredSkins = null, sort = null) {
                 const top = topBase;
                 style = `position:absolute;left:20px;top:${top}%;width:40%;height:31%;z-index:2;`;
             } else {
-                const isRight = idx % 2 === 0;
+                const isLeft = idx % 2 === 0;
                 const row = Math.floor(idx / 2);
                 const top = topBase + row * topStep;
-                style = `position:absolute;${isRight ? 'right:20px;' : 'left:20px;'}top:${top}%;width:40%;height:31%;z-index:2;`;
+                style = `position:absolute;${isLeft ? 'left:20px;' : 'right:20px;'}top:${top}%;width:40%;height:31%;z-index:2;`;
             }
             // Структура формы
             const form = document.createElement('div');
@@ -2459,18 +2518,31 @@ function searchMyLotsSkins() {
     const input = document.querySelector('.SearchPanelonNFTMarket');
     if (!input) return;
     // Очищаем строку поиска от потенциально опасных символов
-    const query = input.value.replace(/[^a-zA-Z0-9а-яА-ЯёЁ\\s\\-]/g, '').trim().toLowerCase();
+    const query = input.value.replace(/[^a-zA-Z0-9а-яА-ЯёЁ\s\-]/g, '').trim().toLowerCase();
     lastSearchQuery = query;
     if (query === '') {
         renderMyLotsMenu(null, sortByStars);
         return;
     }
-    // Дальше только поиск по названию, никаких команд!
+    // Поиск только среди купленных скинов + стандартный
     let boughtSkins = [];
-    for (let i = 1; i <= skinCounter; i++) {
-        if (localStorage.getItem(`skin_${i}_purchased`) === 'true') {
-            const data = JSON.parse(localStorage.getItem(`skin_${i}_data`));
-            if (data) boughtSkins.push({ ...data, skinNumber: i });
+    for (let key in localStorage) {
+        if (key.startsWith('skin_') && key.endsWith('_data')) {
+            const skinNumber = parseInt(key.split('_')[1]);
+            const data = JSON.parse(localStorage.getItem(key));
+            if (data && localStorage.getItem(`skin_${skinNumber}_purchased`) === getSkinHash(data)) {
+                boughtSkins.push({ ...data, skinNumber });
+            }
+        }
+    }
+    // Добавляем стандартный скин, если его нет
+    const standardKey = Object.keys(localStorage).find(key => key.startsWith('skin_') && key.endsWith('_data') && (JSON.parse(localStorage.getItem(key))?.name === 'Standard'));
+    if (standardKey) {
+        const skinNumber = parseInt(standardKey.split('_')[1]);
+        const data = JSON.parse(localStorage.getItem(standardKey));
+        const alreadyIn = boughtSkins.some(s => s.skinNumber === skinNumber);
+        if (!alreadyIn) {
+            boughtSkins.unshift({ ...data, skinNumber });
         }
     }
     const found = boughtSkins.filter(skin => skin.name.toLowerCase().includes(query));
@@ -2553,4 +2625,25 @@ if (myLotsSortBtn) {
             renderMyLotsMenu(null, sortByStars);
         }
     });
+}
+
+// --- ФУНКЦИЯ ДЛЯ УНИКАЛЬНОГО HASH СКИНА ---
+function getSkinHash(skinData) {
+    return btoa(encodeURIComponent(
+        (skinData.name || '') + '|' + (skinData.imagePath || '') + '|' + (skinData.priceROW || '') + '|' + (skinData.priceTON || '')
+    ));
+}
+
+// --- Фильтрация скинов для магазина по relevance ---
+function renderShopSkins() {
+    let shopSkins = [];
+    for (let key in localStorage) {
+        if (key.startsWith('skin_') && key.endsWith('_data')) {
+            const data = JSON.parse(localStorage.getItem(key));
+            if (data && (data.relevance === 'Actively' || !data.relevance)) {
+                shopSkins.push({ ...data });
+            }
+        }
+    }
+
 }
