@@ -1277,14 +1277,33 @@ async function purchaseSkin(skinNumber) {
 function selectSkin(skinNumber) {
     selectedSkin = skinNumber;
     
-    // Обновляем фон в соответствии с выбранным скином
+    // Обновляем фон профиля
     const backBlock = getElement('.BackBlockProfileSkin');
     if (backBlock) {
         const skinData = JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`)) || {};
         backBlock.style.background = skinData.gradient || 
             'linear-gradient(205.61deg, rgba(25, 25, 25, 0.75) 0%, rgba(73, 73, 73, 1) 100%)';
     }
-     
+    
+    // Обновляем изображение в профиле
+    const profileSkins = document.querySelectorAll('.BackBlockProfileSkin img');
+    profileSkins.forEach(skin => {
+        skin.style.display = 'none';
+    });
+    
+    const selectedSkinImg = document.getElementById(`dynamicSkin${skinNumber}`);
+    if (selectedSkinImg) {
+        selectedSkinImg.style.display = 'block';
+    }
+    
+    // Обновляем изображение в мини-игре (с fallback на стандартный скин)
+    const skinData = JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`)) || {};
+    const centerImage = document.getElementById('centerImageOnCenterColomnFiled');
+    if (centerImage) {
+        centerImage.setAttribute('xlink:href', skinData.miniGameImagePath || "MiniGameImage/StandardSkinOnMiniGame2.png");
+    }
+    
+    
     updateSkinDisplay();
     updateSkinButtons();
     localStorage.setItem('lastSelectedSkin', skinNumber);
@@ -1292,23 +1311,24 @@ function selectSkin(skinNumber) {
 }
 
 // Skin management
-function addSkin(name, imagePath, options = {}) {
+function addSkin(name, imagePath, miniGameImagePath, options = {}) {
     const panel = getElement('.SkinSelectionPanel');
     if (!panel) return;
 
     skinCounter++;
     const skinNumber = skinCounter;
 
-    // Сохраняем данные скина
+    // Сохраняем данные скина с проверкой пути для мини-игры
     const skinData = {
         name,
         imagePath,
+        miniGameImagePath: miniGameImagePath || "MiniGameImage/StandardSkinOnMiniGame2.png",
         priceTON: options.priceTON || null,
         priceROW: options.priceROW || null,
         gradient: options.gradient || 'linear-gradient(205deg, #1E0033 0%, #4B0082 100%)',
         borderColor: options.borderColor || '#9400D3',
         stars: options.stars || '☆☆☆☆☆',
-        relevance: options.relevance || 'Actively' // по умолчанию актуальный
+        relevance: options.relevance || 'Actively'
     };
     localStorage.setItem(`skin_${skinNumber}_data`, JSON.stringify(skinData));
 
@@ -1317,7 +1337,7 @@ function addSkin(name, imagePath, options = {}) {
         position: 'absolute',
         width: '36.8%',
         height: '250px',
-        left: `${6.4 + ((skinNumber - 1) * 42.5)}%`, // Начинаем с 6.4% и добавляем 42.5% для каждого следующего
+        left: `${6.4 + ((skinNumber - 1) * 42.5)}%`,
         top: '0'
     });
 
@@ -1325,7 +1345,7 @@ function addSkin(name, imagePath, options = {}) {
     skinContent.innerHTML = `
         <div class="dynamicSkinPanel${skinNumber}">
             <div class="dynamicSkinName${skinNumber}"><p>${name}</p></div>
-            <img src="${imagePath}" class="dynamicSkinImg${skinNumber}">
+            <img src="${imagePath}" class="dynamicSkinImg${skinNumber}" onerror="this.onerror=null;this.src='MiniGameImage/StandardSkinOnMiniGame2.png'">
         </div>
         <div class="dynamicSkinBtn${skinNumber}">
             <p>${options.priceROW ? `${options.priceROW} ROW` : (options.priceTON ? `${options.priceTON} TON` : 'Free')}</p>
@@ -1428,12 +1448,18 @@ function addSkin(name, imagePath, options = {}) {
         display: 'none'
     });
     skinImg.src = imagePath;
+    skinImg.onerror = function() {
+        this.onerror = null;
+        this.src = "MiniGameImage/StandardSkinOnMiniGame2.png";
+    };
     
     const skinContainer = getElement('.BackBlockProfileSkin');
     if (skinContainer) {
         skinContainer.appendChild(skinImg);
     }
 }
+
+
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
@@ -1456,7 +1482,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addSkin(
         "Standard", 
-        "Skins/StandartSkin1.svg", 
+        "Skins/StandartSkin1.svg",
+        null,
         {
             gradient: 'linear-gradient(205.61deg, rgba(25, 25, 25, 0.75) 0%, rgba(73, 73, 73, 1) 100%)',
             borderColor: '#565656',
@@ -1467,7 +1494,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Скин за TON
     addSkin(
         "GoodMan", 
-        "Skins/GoodManSkin1.svg", 
+        "Skins/GoodManSkin1.svg",
+        "MiniGameImage/GoodManRowingSkin.png",
         {
             priceTON: 0.45,
             gradient: 'linear-gradient(206.02deg, #272727 0%, #0087CF 167.73%)',
@@ -1479,7 +1507,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Скин за ROW
     addSkin(
         "Champ", 
-        "Skins/ChampSkin1.svg", 
+        "Skins/ChampSkin1.svg",
+        "MiniGameImage/ChampRowingSkin.png",
         {
             priceROW: 1000,
             gradient: 'linear-gradient(205deg, rgb(44, 51, 0) 0%, rgb(130, 104, 0) 100%)',
@@ -1490,7 +1519,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addSkin(
         "buyforROW", 
-        "Skins/ChampSkin1.svg", 
+        "Skins/ChampSkin1.svg",
+        null,
         {
             priceROW: 5000,
             gradient: 'linear-gradient(205deg, rgb(0, 51, 4) 0%, rgb(0, 130, 7) 100%)',
@@ -1501,7 +1531,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addSkin(
         "Omg", 
-        "Skins/ChampSkin1.svg", 
+        "Skins/ChampSkin1.svg",
+        null,
         {
             priceROW: 50,
             gradient: 'linear-gradient(205deg, rgba(26, 51, 0, 1) 0%, rgba(130, 33, 0, 1) 100%)',
