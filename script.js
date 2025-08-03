@@ -1311,14 +1311,17 @@ function selectSkin(skinNumber) {
 }
 
 // Skin management
-function addSkin(name, imagePath, miniGameImagePath, options = {}) {
-    const panel = getElement('.SkinSelectionPanel');
+function addSkin(name, imagePath, miniGameImagePath, options = {}, limitedOptions = {}) {
+    const panel = document.querySelector('.SkinSelectionPanel');
     if (!panel) return;
 
     skinCounter++;
     const skinNumber = skinCounter;
 
-    // Сохраняем данные скина с проверкой пути для мини-игры
+    // Проверяем, истек ли срок для лимитированного скина
+    const isPurchased = localStorage.getItem(`skin_${skinNumber}_purchased`) === getSkinHash({name, imagePath, miniGameImagePath, ...options});
+    const isExpired = limitedOptions.isLimited && limitedOptions.endTime && limitedOptions.endTime <= Date.now() && !isPurchased;
+
     const skinData = {
         name,
         imagePath,
@@ -1328,32 +1331,58 @@ function addSkin(name, imagePath, miniGameImagePath, options = {}) {
         gradient: options.gradient || 'linear-gradient(205deg, #1E0033 0%, #4B0082 100%)',
         borderColor: options.borderColor || '#9400D3',
         stars: options.stars || '☆☆☆☆☆',
-        relevance: options.relevance || 'Actively'
+        relevance: isExpired ? 'NoActively' : (options.relevance || 'Actively'),
+        isLimited: limitedOptions.isLimited || false,
+        endTime: limitedOptions.endTime || null,
+        originalEndTime: limitedOptions.endTime || null // Сохраняем оригинальное время
     };
+
     localStorage.setItem(`skin_${skinNumber}_data`, JSON.stringify(skinData));
 
-    // Создаем контейнер для скина
-    const skinContent = createElement('div', `dynamicSkinContent${skinNumber}`, {
-        position: 'absolute',
-        width: '36.8%',
-        height: '250px',
-        left: `${6.4 + ((skinNumber - 1) * 42.5)}%`,
-        top: '0'
-    });
+    // Если скин NoActively и не куплен - не отображаем
+    if (skinData.relevance === "NoActively" && !isPurchased) {
+        return;
+    }
 
-    // Добавляем HTML структуру скина
+    // Получаем ВИДИМЫЕ скины (исключая скрытые)
+    const visibleSkins = Array.from(panel.querySelectorAll('[class^="dynamicSkinContent"]'))
+        .filter(skin => window.getComputedStyle(skin).display !== 'none');
+
+    // Правильное позиционирование:
+    const leftPosition = 6.4 + (visibleSkins.length * 42.5);
+
+    // Создаем контейнер скина
+    const skinContent = document.createElement('div');
+    skinContent.className = `dynamicSkinContent${skinNumber}`;
+    skinContent.dataset.skinNumber = skinNumber;
+    skinContent.style.cssText = `
+        position: absolute;
+        width: 36.8%;
+        height: 250px;
+        left: ${leftPosition}%;
+        top: 0;
+    `;
+
+    // HTML структура скина
     skinContent.innerHTML = `
         <div class="dynamicSkinPanel${skinNumber}">
             <div class="dynamicSkinName${skinNumber}"><p>${name}</p></div>
-            <img src="${imagePath}" class="dynamicSkinImg${skinNumber}" onerror="this.onerror=null;this.src='MiniGameImage/StandardSkinOnMiniGame2.png'">
+            <img src="${imagePath}" class="dynamicSkinImg${skinNumber}" 
+                 onerror="this.onerror=null;this.src='MiniGameImage/StandardSkinOnMiniGame2.png'">
+            ${skinData.isLimited && !isPurchased ? `
+            <div class="dynamicSkinTimerContainer${skinNumber}">
+                <div class="dynamicSkinTimerDays${skinNumber}"><p>0 DAYS</p></div>
+                <div class="dynamicSkinTimerTime${skinNumber}"><p>0 HOURS</p></div>
+            </div>
+            ` : ''}
         </div>
         <div class="dynamicSkinBtn${skinNumber}">
-            <p>${options.priceROW ? `${options.priceROW} ROW` : (options.priceTON ? `${options.priceTON} TON` : 'Free')}</p>
+            <p>${isPurchased ? 'EQUIP' : (options.priceROW ? `${options.priceROW} ROW` : (options.priceTON ? `${options.priceTON} TON` : 'Free'))}</p>
         </div>
     `;
 
-    // Добавляем стили для скина
-    const style = createElement('style');
+    // Стили скина
+    const style = document.createElement('style');
     style.textContent = `
         .dynamicSkinPanel${skinNumber} {
             position: absolute;
@@ -1408,6 +1437,7 @@ function addSkin(name, imagePath, miniGameImagePath, options = {}) {
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
+            background: ${isPurchased ? '#4CAF50' : '#9400D3'};
         }
         .dynamicSkinBtn${skinNumber} p {
             color: #FFF;
@@ -1418,47 +1448,167 @@ function addSkin(name, imagePath, miniGameImagePath, options = {}) {
         .dynamicSkinBtn${skinNumber}:active {
             transform: scale(0.95);
         }
+        .dynamicSkinTimerContainer${skinNumber} {
+            position: absolute;
+            display: flex;
+            gap: 5px;
+            left: 10px;
+            bottom: 7px;
+            z-index: 6;
+        }
+        .dynamicSkinTimerDays${skinNumber}, 
+        .dynamicSkinTimerTime${skinNumber} {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            padding: 2px 5px;
+        }
+        .dynamicSkinTimerDays${skinNumber} p, 
+        .dynamicSkinTimerTime${skinNumber} p {
+            color: #FFF;
+            font-size: 0.6rem;
+            margin: 0;
+        }
     `;
     document.head.appendChild(style);
-    
-    // Добавляем обработчик клика на кнопку
-    const btn = skinContent.querySelector(`.dynamicSkinBtn${skinNumber}`);
-    if (btn) {
-        btn.addEventListener('click', () => {
-            const skinData = JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`)) || {};
-            const isPurchased = localStorage.getItem(`skin_${skinNumber}_purchased`) === getSkinHash(skinData);
-            if (!isPurchased && (skinData.priceTON || skinData.priceROW)) {
-                purchaseSkin(skinNumber);
-            } else {
-                selectSkin(skinNumber);
-            }
-        });
-    }
-    
+
+    // Обработчик клика на кнопку
+    skinContent.querySelector(`.dynamicSkinBtn${skinNumber}`).addEventListener('click', () => {
+        const currentSkinData = JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`)) || {};
+        const isPurchasedNow = localStorage.getItem(`skin_${skinNumber}_purchased`) === getSkinHash(currentSkinData);
+        
+        if (currentSkinData.relevance === "NoActively" && !isPurchasedNow) {
+            console.log("Этот скин временно недоступен");
+            return;
+        }
+
+        if (!isPurchasedNow && (currentSkinData.priceTON || currentSkinData.priceROW)) {
+            purchaseSkin(skinNumber);
+        } else {
+            selectSkin(skinNumber);
+        }
+    });
+
+    // Добавляем скин на панель
     panel.appendChild(skinContent);
     updateSkinButtons();
-    
-    // Добавляем скин в список выбора
-    const skinImg = createElement('img', `dynamicSkin${skinNumber}`, {
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-        objectFit: 'contain',
-        zIndex: '5',
-        display: 'none'
-    });
+
+    // Добавляем изображение для профиля
+    const skinImg = document.createElement('img');
+    skinImg.className = `dynamicSkin${skinNumber}`;
+    skinImg.style.cssText = `
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        z-index: 5;
+        display: none;
+    `;
     skinImg.src = imagePath;
     skinImg.onerror = function() {
         this.onerror = null;
         this.src = "MiniGameImage/StandardSkinOnMiniGame2.png";
     };
     
-    const skinContainer = getElement('.BackBlockProfileSkin');
-    if (skinContainer) {
-        skinContainer.appendChild(skinImg);
+    document.querySelector('.BackBlockProfileSkin')?.appendChild(skinImg);
+
+    // Запускаем таймер только если скин лимитированный и не куплен
+    if (skinData.isLimited && skinData.endTime && !isPurchased) {
+        startSkinTimer(skinNumber, skinData.endTime);
     }
 }
 
+// Глобальный объект для хранения таймеров
+const skinTimers = {};
+
+function startSkinTimer(skinNumber, endTime) {
+    // Останавливаем предыдущий таймер, если был
+    if (skinTimers[skinNumber]) {
+        clearInterval(skinTimers[skinNumber]);
+    }
+
+    function updateTimer() {
+        const now = Date.now();
+        const timeLeft = endTime - now;
+        const skinElement = document.querySelector(`.dynamicSkinContent${skinNumber}`);
+        const isPurchased = localStorage.getItem(`skin_${skinNumber}_purchased`) === getSkinHash(JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`)) || {});
+
+        // Если скин куплен - останавливаем таймер
+        if (isPurchased) {
+            clearInterval(skinTimers[skinNumber]);
+            const timerContainer = skinElement?.querySelector(`.dynamicSkinTimerContainer${skinNumber}`);
+            if (timerContainer) timerContainer.style.display = 'none';
+            return;
+        }
+
+        if (timeLeft <= 0) {
+            // Обновляем данные скина
+            const skinData = JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`) || {});
+            skinData.relevance = "NoActively";
+            localStorage.setItem(`skin_${skinNumber}_data`, JSON.stringify(skinData));
+
+            // Скрываем скин, если он не куплен
+            if (skinElement && !isPurchased) {
+                skinElement.style.display = 'none';
+                updateSkinButtons();
+            }
+
+            clearInterval(skinTimers[skinNumber]);
+            delete skinTimers[skinNumber];
+            return;
+        }
+
+        // Рассчитываем оставшееся время
+        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+        // Обновляем отображение таймера
+        const daysElement = document.querySelector(`.dynamicSkinTimerDays${skinNumber} p`);
+        const timeElement = document.querySelector(`.dynamicSkinTimerTime${skinNumber} p`);
+
+        if (daysElement && timeElement) {
+            daysElement.textContent = days > 0 ? `${days} DAY${days !== 1 ? 'S' : ''}` : '';
+            
+            if (days > 0) {
+                timeElement.textContent = `${Math.floor(hours)} HOUR${Math.floor(hours) !== 1 ? 'S' : ''}`;
+            } else if (hours > 0) {
+                timeElement.textContent = `${Math.floor(hours)} HOUR${Math.floor(hours) !== 1 ? 'S' : ''}`;
+            } else if (minutes > 0) {
+                timeElement.textContent = `${Math.floor(minutes)} MIN${Math.floor(minutes) !== 1 ? 'S' : ''}`;
+            } else {
+                timeElement.textContent = `${seconds} SEC${seconds !== 1 ? 'S' : ''}`;
+            }
+        }
+    }
+
+    // Обновляем сразу и затем каждую секунду
+    updateTimer();
+    skinTimers[skinNumber] = setInterval(updateTimer, 1000);
+}
+
+// При загрузке страницы запускаем таймеры для всех лимитированных скинов
+function initializeSkinTimers() {
+    const skins = Object.keys(localStorage)
+        .filter(key => key.startsWith('skin_') && key.endsWith('_data'))
+        .map(key => {
+            const number = key.match(/skin_(\d+)_data/)[1];
+            return {
+                number,
+                data: JSON.parse(localStorage.getItem(key))
+            };
+        });
+
+    skins.forEach(({number, data}) => {
+        if (data.isLimited && data.endTime && !localStorage.getItem(`skin_${number}_purchased`)) {
+            startSkinTimer(number, data.endTime);
+        }
+    });
+}
+
+// Вызываем инициализацию при загрузке
+window.addEventListener('DOMContentLoaded', initializeSkinTimers);
+ 
 
 
 // Initialization
@@ -1540,6 +1690,23 @@ document.addEventListener('DOMContentLoaded', () => {
             stars: "★★★☆☆"
         }
     );
+
+    addSkin(
+        "Limit", 
+        "Skins/ChampSkin1.svg",
+        null,
+        {
+            priceROW: 50000,
+            gradient: 'linear-gradient(205deg, rgba(26, 51, 0, 1) 0%, rgba(130, 33, 0, 1) 100%)',
+            borderColor: '#9d0000ff',
+            stars: "★★★☆☆"
+        },
+        {
+            isLimited: true,
+            endTime: Date.now() + 360000000 // 4 дня 4 часа (Для лимитированных скинов нужно доработать связь глобального времяни из сервера к фронту)
+        }
+    );
+
 
     
     renderMyLotsMenu();
@@ -2678,3 +2845,254 @@ function renderShopSkins() {
     }
 
 }
+
+
+
+//Мгновенное добавление квестов
+
+
+// Загрузка состояния игры при старте
+function loadGameState() {
+    const savedState = localStorage.getItem('gameState');
+    if (savedState) {
+        gameState = JSON.parse(savedState);
+        if (rowscoreElement) {
+            rowscoreElement.textContent = gameState.rowscore;
+        }
+    }
+}
+
+// Сохранение состояния игры
+function saveGameState() {
+    localStorage.setItem('gameState', JSON.stringify(gameState));
+}
+
+// Функция добавления квеста
+function addTask(name, imagePath, reward, onClickCode) {
+    const taskMain = document.getElementById('taskMain');
+    if (!taskMain) {
+        console.error('Элемент taskMain не найден');
+        return;
+    }
+
+    // Создаем уникальный ID для задания
+    const taskId = `task_${name.replace(/\s+/g, '_').toLowerCase()}`;
+    
+    // Проверяем, не выполнено ли уже это задание
+    if (localStorage.getItem(`completed_${taskId}`) === 'true') {
+        console.log(`Задание "${name}" уже выполнено`);
+        return;
+    }
+    
+    // Считаем количество видимых задач
+    const visibleTasks = Array.from(taskMain.querySelectorAll('.taskCentred'))
+        .filter(task => task.style.display !== 'none');
+    const taskCount = visibleTasks.length;
+    const topPosition = 40 + (taskCount * 15.7);
+
+    // Создаем уникальные классы
+    const taskNumber = taskCount + 1;
+    const taskClass = `taskNumb${taskNumber}`;
+    const centredClass = `taskNumb${taskNumber}Centred`;
+    const separatorClass = `taskSeparator${taskNumber}`;
+
+    // HTML структура задачи
+    const taskHTML = `
+        <div class="${centredClass} taskCentred" data-task-id="${taskId}">
+            <div class="${taskClass}">
+                <img src="${imagePath}" alt="logo" class="Task${taskNumber}logo">
+                <p class="TaskName${taskNumber}">${name}</p>
+                <p class="TaskReward${taskNumber}"><span>+${reward}</span><span>ROW</span></p>
+                <svg class="arrowTask${taskNumber}" width="9" height="15" viewBox="0 0 9 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1 14L8 7.5L1 1" stroke="#727272" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </div>
+        <div class="${separatorClass} taskSeparator" data-separator-id="${taskId}"></div>
+    `;
+
+    taskMain.insertAdjacentHTML('beforeend', taskHTML);
+
+    // Добавляем стили для этой задачи
+    const style = document.createElement('style');
+    style.textContent = `
+        .${centredClass} {
+            position: absolute;
+            width: 100%;
+            height: 13.7%;
+            top: ${topPosition}%;
+            display: flex;
+            justify-content: center;
+            transition: top 0.3s ease;
+        }
+
+        .${taskClass} {
+            width: 86.8%;
+            background-color: #131313;
+            top: 0px;
+            border-radius: 7px;
+            border: 2px solid #3A3A3A;
+            display: flex;
+            align-items: center;
+        }
+
+        .Task${taskNumber}logo {
+            position: absolute;
+            left: 10%;
+            width: 22%;
+            border-radius: 7px;
+        }
+
+        .arrowTask${taskNumber} {
+            position: absolute;
+            right: 14%;
+            height: 16%;
+        }
+
+        .TaskName${taskNumber} {
+            position: absolute;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #FFFFFF;
+            left: 35%;
+            top: 17%;
+        }
+
+        .TaskReward${taskNumber} {
+            position: absolute;
+            color: #7D7D7D;
+            left: 35%;
+            top: 40%;
+        }
+
+        .TaskReward${taskNumber} span:first-child {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .TaskReward${taskNumber} span:last-child {
+            font-weight: 400;
+            font-size: 0.7rem;
+        }
+
+        .${separatorClass} {
+            position: absolute;
+            width: 5px;
+            height: 13.7%;
+            left: 0;
+            top: ${topPosition + 15.7}%;
+            background-color: rgba(255, 255, 255, 0);
+            pointer-events: none;
+            transition: top 0.3s ease;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Функция disappears для этого квеста
+    const disappears = () => {
+        localStorage.setItem(`completed_${taskId}`, 'true');
+        
+        const taskToRemove = taskMain.querySelector(`[data-task-id="${taskId}"]`);
+        const separatorToRemove = taskMain.querySelector(`[data-separator-id="${taskId}"]`);
+        
+        if (taskToRemove) taskToRemove.remove();
+        if (separatorToRemove) separatorToRemove.remove();
+        
+        // Обновляем позиции оставшихся квестов
+        const remainingTasks = Array.from(taskMain.querySelectorAll('.taskCentred'))
+            .sort((a, b) => parseFloat(a.style.top) - parseFloat(b.style.top));
+        
+        remainingTasks.forEach((task, index) => {
+            const newTop = 40 + (index * 15.7);
+            task.style.top = `${newTop}%`;
+            
+            const separatorId = task.dataset.taskId;
+            const separator = taskMain.querySelector(`[data-separator-id="${separatorId}"]`);
+            if (separator) separator.style.top = `${newTop + 15.7}%`;
+        });
+    };
+
+    // Обработчик клика
+    const taskElement = taskMain.querySelector(`.${taskClass}`);
+    if (taskElement) {
+        taskElement.addEventListener('click', () => {
+            try {
+                // Создаем объект thisQuest для управления квестом
+                const thisQuest = {
+                    id: taskId,
+                    name: name,
+                    reward: reward,
+                    addReward: false,
+                    complete: false,
+                    element: taskElement,
+                    disappears: disappears,
+                    setAddReward: function(value) { 
+                        this.addReward = value; 
+                        if (value) {
+                            // Начисляем награду
+                            gameState.rowscore += this.reward;
+                            // Обновляем отображение
+                            if (rowscoreElement) {
+                                rowscoreElement.textContent = gameState.rowscore;
+                            }
+                            // Сохраняем состояние игры
+                            saveGameState();
+                        }
+                    },
+                    setComplete: function(value) { 
+                        this.complete = value; 
+                        if (value) {
+                            this.disappears();
+                        }
+                    }
+                };
+
+                // Выполняем пользовательский код с доступом к thisQuest
+                new Function('thisQuest', `
+                    try {
+                        ${onClickCode}
+                        
+                        // Автоматическое завершение квеста если установлены флаги
+                        if (thisQuest.addReward && thisQuest.complete) {
+                            thisQuest.setComplete(true);
+                        }
+                    } catch(e) {
+                        console.error('Ошибка в коде задания:', e);
+                    }
+                `)(thisQuest);
+                
+            } catch (error) {
+                console.error('Ошибка выполнения кода задачи:', error);
+            }
+        });
+    }
+
+    // Обработчик ошибки изображения
+    const imgElement = taskMain.querySelector(`.Task${taskNumber}logo`);
+    if (imgElement) {
+        imgElement.onerror = function() {
+            this.onerror = null;
+            this.src = "Rowlogo.png";
+        };
+    }
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    loadGameState();
+    
+    addTask(
+    "Test quest3", 
+    "Rowlogo.png",
+    20,
+    `// Устанавливаем флаги
+    thisQuest.setAddReward(true);
+    thisQuest.setComplete(true);
+    
+    // Или напрямую (награда также начислится автоматически)
+    // thisQuest.addReward = true;
+    // thisQuest.complete = true;
+    `
+);
+});
+
