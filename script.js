@@ -2868,7 +2868,7 @@ function saveGameState() {
 }
 
 // Функция добавления квеста
-function addTask(name, imagePath, reward, onClickCode) {
+function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask = 0, onClickCode) {
     const taskMain = document.getElementById('taskMain');
     if (!taskMain) {
         console.error('Элемент taskMain не найден');
@@ -2884,26 +2884,61 @@ function addTask(name, imagePath, reward, onClickCode) {
         return;
     }
     
+    // Для лимитированных квестов
+    let endTime = 0;
+    if (isLimitedTask) {
+        try {
+            const savedData = localStorage.getItem(`task_${taskId}_data`);
+            const taskData = savedData ? JSON.parse(savedData) : {};
+            
+            endTime = taskData.endTime || (Date.now() + limitTimeTask);
+            
+            // Если время вышло - не создаем квест
+            if (endTime <= Date.now()) {
+                console.log(`Лимитированное задание "${name}" истекло`);
+                return;
+            }
+            
+            // Сохраняем данные квеста
+            localStorage.setItem(`task_${taskId}_data`, JSON.stringify({
+                endTime: endTime,
+                isLimited: true
+            }));
+        } catch (e) {
+            console.error('Ошибка обработки данных квеста:', e);
+            endTime = Date.now() + limitTimeTask;
+            localStorage.setItem(`task_${taskId}_data`, JSON.stringify({
+                endTime: endTime,
+                isLimited: true
+            }));
+        }
+    }
+    
     // Считаем количество видимых задач
     const visibleTasks = Array.from(taskMain.querySelectorAll('.taskCentred'))
-        .filter(task => task.style.display !== 'none');
+        .filter(task => window.getComputedStyle(task).display !== 'none');
     const taskCount = visibleTasks.length;
     const topPosition = 40 + (taskCount * 15.7);
 
     // Создаем уникальные классы
-    const taskNumber = taskCount + 1;
-    const taskClass = `taskNumb${taskNumber}`;
-    const centredClass = `taskNumb${taskNumber}Centred`;
-    const separatorClass = `taskSeparator${taskNumber}`;
+    const taskClass = `taskNumb${taskCount + 1}`;
+    const centredClass = `taskNumb${taskCount + 1}Centred`;
+    const separatorClass = `taskSeparator${taskCount + 1}`;
 
     // HTML структура задачи
     const taskHTML = `
         <div class="${centredClass} taskCentred" data-task-id="${taskId}">
             <div class="${taskClass}">
-                <img src="${imagePath}" alt="logo" class="Task${taskNumber}logo">
-                <p class="TaskName${taskNumber}">${name}</p>
-                <p class="TaskReward${taskNumber}"><span>+${reward}</span><span>ROW</span></p>
-                <svg class="arrowTask${taskNumber}" width="9" height="15" viewBox="0 0 9 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <img src="${imagePath}" alt="logo" class="Task${taskCount + 1}logo">
+                <p class="TaskName${taskCount + 1}">${name}</p>
+                <p class="TaskReward${taskCount + 1}"><span>+${reward}</span><span>ROW</span></p>
+                ${isLimitedTask ? `
+                <div class="taskTimerContainer">
+                    <div class="taskTimerDays"><p>0 DAYS</p></div>
+                    <div class="taskTimerTime"><p>0 HOURS</p></div>
+                </div>
+                ` : ''}
+                <svg class="arrowTask${taskCount + 1}" width="9" height="15" viewBox="0 0 9 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M1 14L8 7.5L1 1" stroke="#727272" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </div>
@@ -2928,51 +2963,57 @@ function addTask(name, imagePath, reward, onClickCode) {
 
         .${taskClass} {
             width: 86.8%;
+            height: 100%;
             background-color: #131313;
-            top: 0px;
             border-radius: 7px;
             border: 2px solid #3A3A3A;
             display: flex;
             align-items: center;
+            position: relative;
         }
 
-        .Task${taskNumber}logo {
+        .Task${taskCount + 1}logo {
             position: absolute;
-            left: 10%;
-            width: 22%;
+            left: 3%;
+            width: 70px;
+
+            object-fit: contain;
             border-radius: 7px;
         }
 
-        .arrowTask${taskNumber} {
+        .arrowTask${taskCount + 1} {
             position: absolute;
-            right: 14%;
+            right: 8%;
             height: 16%;
         }
 
-        .TaskName${taskNumber} {
+        .TaskName${taskCount + 1} {
             position: absolute;
             font-size: 1rem;
             font-weight: 500;
             color: #FFFFFF;
-            left: 35%;
+            left: 31%;
             top: 17%;
+            margin: 0;
         }
 
-        .TaskReward${taskNumber} {
+        .TaskReward${taskCount + 1} {
             position: absolute;
             color: #7D7D7D;
-            left: 35%;
+            left: 31%;
             top: 40%;
+            margin: 0;
         }
 
-        .TaskReward${taskNumber} span:first-child {
+        .TaskReward${taskCount + 1} span:first-child {
             font-size: 1rem;
             font-weight: 600;
         }
 
-        .TaskReward${taskNumber} span:last-child {
+        .TaskReward${taskCount + 1} span:last-child {
             font-weight: 400;
             font-size: 0.7rem;
+            margin-left: 2px;
         }
 
         .${separatorClass} {
@@ -2984,6 +3025,32 @@ function addTask(name, imagePath, reward, onClickCode) {
             background-color: rgba(255, 255, 255, 0);
             pointer-events: none;
             transition: top 0.3s ease;
+        }
+
+        /* Стили для таймера */
+        .taskTimerContainer {
+            position: absolute;
+            display: flex;
+            gap: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 10px;
+        }
+        
+        .taskTimerDays, 
+        .taskTimerTime {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            padding: 2px 5px;
+            border: 1px solid #266187;
+        }
+        
+        .taskTimerDays p, 
+        .taskTimerTime p {
+            color: #FFF;
+            font-size: 0.6rem;
+            margin: 0;
+            white-space: nowrap;
         }
     `;
     document.head.appendChild(style);
@@ -3068,31 +3135,161 @@ function addTask(name, imagePath, reward, onClickCode) {
     }
 
     // Обработчик ошибки изображения
-    const imgElement = taskMain.querySelector(`.Task${taskNumber}logo`);
+    const imgElement = taskMain.querySelector(`.Task${taskCount + 1}logo`);
     if (imgElement) {
         imgElement.onerror = function() {
             this.onerror = null;
             this.src = "Rowlogo.png";
         };
     }
+
+    // Запускаем таймер для лимитированного квеста
+    if (isLimitedTask && endTime > Date.now()) {
+        startTaskTimer(taskId, endTime, disappears);
+    }
 }
+
+// Глобальный объект для хранения таймеров квестов
+const taskTimers = {};
+
+function startTaskTimer(taskId, endTime, disappearsCallback) {
+    // Останавливаем предыдущий таймер, если был
+    if (taskTimers[taskId]) {
+        clearInterval(taskTimers[taskId]);
+        delete taskTimers[taskId];
+    }
+
+    function updateTimer() {
+        const now = Date.now();
+        const timeLeft = endTime - now;
+        const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+        const isCompleted = localStorage.getItem(`completed_${taskId}`) === 'true';
+
+        // Если квест выполнен - останавливаем таймер
+        if (isCompleted) {
+            clearInterval(taskTimers[taskId]);
+            delete taskTimers[taskId];
+            return;
+        }
+
+        if (timeLeft <= 0) {
+            // Удаляем квест
+            disappearsCallback();
+            clearInterval(taskTimers[taskId]);
+            delete taskTimers[taskId];
+            return;
+        }
+
+        // Рассчитываем оставшееся время
+        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+        // Обновляем отображение таймера
+        const daysElement = taskElement?.querySelector('.taskTimerDays p');
+        const timeElement = taskElement?.querySelector('.taskTimerTime p');
+
+        if (daysElement && timeElement) {
+            if (days > 0) {
+                daysElement.textContent = `${days} DAY${days !== 1 ? 'S' : ''}`;
+                timeElement.textContent = `${Math.floor(hours)} HOUR${Math.floor(hours) !== 1 ? 'S' : ''}`;
+            } else if (hours > 0) {
+                daysElement.textContent = `${Math.floor(hours)} HOUR${Math.floor(hours) !== 1 ? 'S' : ''}`;
+                timeElement.textContent = `${Math.floor(minutes)} MIN${Math.floor(minutes) !== 1 ? 'S' : ''}`;
+            } else {
+                daysElement.textContent = `${Math.floor(minutes)} MIN${Math.floor(minutes) !== 1 ? 'S' : ''}`;
+                timeElement.textContent = `${seconds} SEC${seconds !== 1 ? 'S' : ''}`;
+            }
+        }
+    }
+
+    // Обновляем сразу и затем каждую секунду
+    updateTimer();
+    taskTimers[taskId] = setInterval(updateTimer, 1000);
+}
+
+// Инициализация таймеров при загрузке страницы
+function initializeTaskTimers() {
+    const taskKeys = Object.keys(localStorage).filter(key => key.startsWith('task_') && key.endsWith('_data'));
+
+    for (const key of taskKeys) {
+        try {
+            const taskId = key.replace('_data', '');
+            const savedData = localStorage.getItem(key);
+            
+            if (!savedData) continue;
+            
+            const taskData = JSON.parse(savedData);
+            
+            if (taskData.isLimited && taskData.endTime && !localStorage.getItem(`completed_${taskId}`)) {
+                const disappears = () => {
+                    const taskMain = document.getElementById('taskMain');
+                    if (!taskMain) return;
+                    
+                    const taskToRemove = taskMain.querySelector(`[data-task-id="${taskId}"]`);
+                    const separatorToRemove = taskMain.querySelector(`[data-separator-id="${taskId}"]`);
+                    
+                    if (taskToRemove) taskToRemove.remove();
+                    if (separatorToRemove) separatorToRemove.remove();
+                    
+                    // Обновляем позиции оставшихся квестов
+                    const remainingTasks = Array.from(taskMain.querySelectorAll('.taskCentred'))
+                        .sort((a, b) => parseFloat(a.style.top) - parseFloat(b.style.top));
+                    
+                    remainingTasks.forEach((task, index) => {
+                        const newTop = 40 + (index * 15.7);
+                        task.style.top = `${newTop}%`;
+                        
+                        const separatorId = task.dataset.taskId;
+                        const separator = taskMain.querySelector(`[data-separator-id="${separatorId}"]`);
+                        if (separator) separator.style.top = `${newTop + 15.7}%`;
+                    });
+                };
+                
+                if (taskData.endTime > Date.now()) {
+                    startTaskTimer(taskId, taskData.endTime, disappears);
+                } else {
+                    // Время вышло - удаляем квест
+                    disappears();
+                    localStorage.removeItem(key);
+                }
+            }
+        } catch (e) {
+            console.error('Ошибка инициализации таймера для квеста:', key, e);
+        }
+    }
+}
+
+// Вызываем инициализацию при загрузке
+window.addEventListener('DOMContentLoaded', initializeTaskTimers);
 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     loadGameState();
     
     addTask(
-    "Test quest3", 
-    "Rowlogo.png",
-    20,
-    `// Устанавливаем флаги
-    thisQuest.setAddReward(true);
-    thisQuest.setComplete(true);
-    
-    // Или напрямую (награда также начислится автоматически)
-    // thisQuest.addReward = true;
-    // thisQuest.complete = true;
-    `
-);
+        "Test quest35", 
+        "Rowlogo.png",
+        20,
+        false,
+        0,
+        `// Устанавливаем флаги
+        thisQuest.setAddReward(true);
+        thisQuest.setComplete(true);
+        `
+    );
+
+    addTask(
+        "Test quest47", 
+        "Rowlogo.png",
+        20,
+        true, // isLimitedTask
+        3600000, // limitTimeTask в миллисекундах (1 час)
+        `
+        thisQuest.setAddReward(true); 
+        thisQuest.setComplete(true);
+        `
+    );
 });
 
