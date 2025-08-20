@@ -1311,6 +1311,118 @@ function selectSkin(skinNumber) {
 }
 
 // Skin management
+// Глобальный объект для хранения таймеров скинов
+const skinTimers = {};
+
+function startSkinTimer(skinNumber, endTime) {
+    // Останавливаем предыдущий таймер, если был
+    if (skinTimers[skinNumber]) {
+        clearInterval(skinTimers[skinNumber]);
+        delete skinTimers[skinNumber];
+    }
+
+    function updateTimer() {
+        const now = Date.now();
+        const timeLeft = endTime - now;
+        const skinElement = document.querySelector(`.dynamicSkinContent${skinNumber}`);
+        const isPurchased = localStorage.getItem(`skin_${skinNumber}_purchased`) === getSkinHash(JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`)) || {});
+
+        // Если скин куплен - останавливаем таймер
+        if (isPurchased) {
+            clearInterval(skinTimers[skinNumber]);
+            delete skinTimers[skinNumber];
+            
+            // Скрываем таймер
+            const timerContainer = skinElement?.querySelector(`.dynamicSkinTimerContainer${skinNumber}`);
+            if (timerContainer) timerContainer.style.display = 'none';
+            return;
+        }
+
+        if (timeLeft <= 0) {
+            // Обновляем данные скина
+            const skinData = JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`) || {});
+            skinData.relevance = "NoActively";
+            localStorage.setItem(`skin_${skinNumber}_data`, JSON.stringify(skinData));
+
+            // Скрываем скин, если он не куплен
+            if (skinElement && !isPurchased) {
+                skinElement.style.display = 'none';
+                updateSkinButtons();
+            }
+
+            clearInterval(skinTimers[skinNumber]);
+            delete skinTimers[skinNumber];
+            return;
+        }
+
+        // Рассчитываем оставшееся время
+        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+        // Обновляем отображение таймера
+        const daysElement = document.querySelector(`.dynamicSkinTimerDays${skinNumber} p`);
+        const timeElement = document.querySelector(`.dynamicSkinTimerTime${skinNumber} p`);
+
+        if (daysElement && timeElement) {
+            if (days > 0) {
+                daysElement.textContent = `${days} DAY${days !== 1 ? 'S' : ''}`;
+                timeElement.textContent = `${Math.floor(hours)} HOUR${Math.floor(hours) !== 1 ? 'S' : ''}`;
+            } else if (hours > 0) {
+                daysElement.textContent = `${Math.floor(hours)} HOUR${Math.floor(hours) !== 1 ? 'S' : ''}`;
+                timeElement.textContent = `${Math.floor(minutes)} MIN${Math.floor(minutes) !== 1 ? 'S' : ''}`;
+            } else {
+                daysElement.textContent = `${Math.floor(minutes)} MIN${Math.floor(minutes) !== 1 ? 'S' : ''}`;
+                timeElement.textContent = `${seconds} SEC${seconds !== 1 ? 'S' : ''}`;
+            }
+        }
+    }
+
+    // Обновляем сразу и затем каждую секунду
+    updateTimer();
+    skinTimers[skinNumber] = setInterval(updateTimer, 1000);
+}
+
+// Инициализация таймеров при загрузке страницы
+function initializeSkinTimers() {
+    const skinKeys = Object.keys(localStorage).filter(key => key.startsWith('skin_') && key.endsWith('_data'));
+
+    for (const key of skinKeys) {
+        try {
+            const skinNumber = key.match(/skin_(\d+)_data/)[1];
+            const savedData = localStorage.getItem(key);
+            
+            if (!savedData) continue;
+            
+            const skinData = JSON.parse(savedData);
+            
+            if (skinData.isLimited && skinData.endTime && !localStorage.getItem(`skin_${skinNumber}_purchased`)) {
+                if (skinData.endTime > Date.now()) {
+                    startSkinTimer(skinNumber, skinData.endTime);
+                } else {
+                    // Время вышло - обновляем данные скина
+                    skinData.relevance = "NoActively";
+                    localStorage.setItem(`skin_${skinNumber}_data`, JSON.stringify(skinData));
+                    
+                    // Скрываем скин
+                    const skinElement = document.querySelector(`.dynamicSkinContent${skinNumber}`);
+                    if (skinElement) {
+                        skinElement.style.display = 'none';
+                        updateSkinButtons();
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Ошибка инициализации таймера для скина:', key, e);
+        }
+    }
+}
+
+// Вызываем инициализацию при загрузке
+window.addEventListener('DOMContentLoaded', initializeSkinTimers);
+
+// Функция addSkin с правильной работой таймера
 function addSkin(name, imagePath, miniGameImagePath, options = {}, limitedOptions = {}) {
     const panel = document.querySelector('.SkinSelectionPanel');
     if (!panel) return;
@@ -1320,7 +1432,27 @@ function addSkin(name, imagePath, miniGameImagePath, options = {}, limitedOption
 
     // Проверяем, истек ли срок для лимитированного скина
     const isPurchased = localStorage.getItem(`skin_${skinNumber}_purchased`) === getSkinHash({name, imagePath, miniGameImagePath, ...options});
-    const isExpired = limitedOptions.isLimited && limitedOptions.endTime && limitedOptions.endTime <= Date.now() && !isPurchased;
+    
+    // Для лимитированных скинов проверяем время
+    let endTime = limitedOptions.endTime || 0;
+    let isExpired = false;
+    
+    if (limitedOptions.isLimited && endTime) {
+        try {
+            const savedData = localStorage.getItem(`skin_${skinNumber}_data`);
+            const existingData = savedData ? JSON.parse(savedData) : {};
+            
+            // Используем сохраненное время или устанавливаем новое
+            endTime = existingData.endTime || endTime;
+            
+            // Проверяем истекло ли время
+            isExpired = endTime <= Date.now() && !isPurchased;
+            
+        } catch (e) {
+            console.error('Ошибка обработки данных скина:', e);
+            isExpired = endTime <= Date.now() && !isPurchased;
+        }
+    }
 
     const skinData = {
         name,
@@ -1333,8 +1465,7 @@ function addSkin(name, imagePath, miniGameImagePath, options = {}, limitedOption
         stars: options.stars || '☆☆☆☆☆',
         relevance: isExpired ? 'NoActively' : (options.relevance || 'Actively'),
         isLimited: limitedOptions.isLimited || false,
-        endTime: limitedOptions.endTime || null,
-        originalEndTime: limitedOptions.endTime || null // Сохраняем оригинальное время
+        endTime: endTime || null
     };
 
     localStorage.setItem(`skin_${skinNumber}_data`, JSON.stringify(skinData));
@@ -1461,6 +1592,7 @@ function addSkin(name, imagePath, miniGameImagePath, options = {}, limitedOption
             background: rgba(0, 0, 0, 0.5);
             border-radius: 4px;
             padding: 2px 5px;
+
         }
         .dynamicSkinTimerDays${skinNumber} p, 
         .dynamicSkinTimerTime${skinNumber} p {
@@ -1511,103 +1643,11 @@ function addSkin(name, imagePath, miniGameImagePath, options = {}, limitedOption
     
     document.querySelector('.BackBlockProfileSkin')?.appendChild(skinImg);
 
-    // Запускаем таймер только если скин лимитированный и не куплен
-    if (skinData.isLimited && skinData.endTime && !isPurchased) {
+    // Запускаем таймер только если скин лимитированный, не куплен и время не истекло
+    if (skinData.isLimited && skinData.endTime && !isPurchased && skinData.endTime > Date.now()) {
         startSkinTimer(skinNumber, skinData.endTime);
     }
 }
-
-// Глобальный объект для хранения таймеров
-const skinTimers = {};
-
-function startSkinTimer(skinNumber, endTime) {
-    // Останавливаем предыдущий таймер, если был
-    if (skinTimers[skinNumber]) {
-        clearInterval(skinTimers[skinNumber]);
-    }
-
-    function updateTimer() {
-        const now = Date.now();
-        const timeLeft = endTime - now;
-        const skinElement = document.querySelector(`.dynamicSkinContent${skinNumber}`);
-        const isPurchased = localStorage.getItem(`skin_${skinNumber}_purchased`) === getSkinHash(JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`)) || {});
-
-        // Если скин куплен - останавливаем таймер
-        if (isPurchased) {
-            clearInterval(skinTimers[skinNumber]);
-            const timerContainer = skinElement?.querySelector(`.dynamicSkinTimerContainer${skinNumber}`);
-            if (timerContainer) timerContainer.style.display = 'none';
-            return;
-        }
-
-        if (timeLeft <= 0) {
-            // Обновляем данные скина
-            const skinData = JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`) || {});
-            skinData.relevance = "NoActively";
-            localStorage.setItem(`skin_${skinNumber}_data`, JSON.stringify(skinData));
-
-            // Скрываем скин, если он не куплен
-            if (skinElement && !isPurchased) {
-                skinElement.style.display = 'none';
-                updateSkinButtons();
-            }
-
-            clearInterval(skinTimers[skinNumber]);
-            delete skinTimers[skinNumber];
-            return;
-        }
-
-        // Рассчитываем оставшееся время
-        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-
-        // Обновляем отображение таймера
-        const daysElement = document.querySelector(`.dynamicSkinTimerDays${skinNumber} p`);
-        const timeElement = document.querySelector(`.dynamicSkinTimerTime${skinNumber} p`);
-
-        if (daysElement && timeElement) {
-            daysElement.textContent = days > 0 ? `${days} DAY${days !== 1 ? 'S' : ''}` : '';
-            
-            if (days > 0) {
-                timeElement.textContent = `${Math.floor(hours)} HOUR${Math.floor(hours) !== 1 ? 'S' : ''}`;
-            } else if (hours > 0) {
-                timeElement.textContent = `${Math.floor(hours)} HOUR${Math.floor(hours) !== 1 ? 'S' : ''}`;
-            } else if (minutes > 0) {
-                timeElement.textContent = `${Math.floor(minutes)} MIN${Math.floor(minutes) !== 1 ? 'S' : ''}`;
-            } else {
-                timeElement.textContent = `${seconds} SEC${seconds !== 1 ? 'S' : ''}`;
-            }
-        }
-    }
-
-    // Обновляем сразу и затем каждую секунду
-    updateTimer();
-    skinTimers[skinNumber] = setInterval(updateTimer, 1000);
-}
-
-// При загрузке страницы запускаем таймеры для всех лимитированных скинов
-function initializeSkinTimers() {
-    const skins = Object.keys(localStorage)
-        .filter(key => key.startsWith('skin_') && key.endsWith('_data'))
-        .map(key => {
-            const number = key.match(/skin_(\d+)_data/)[1];
-            return {
-                number,
-                data: JSON.parse(localStorage.getItem(key))
-            };
-        });
-
-    skins.forEach(({number, data}) => {
-        if (data.isLimited && data.endTime && !localStorage.getItem(`skin_${number}_purchased`)) {
-            startSkinTimer(number, data.endTime);
-        }
-    });
-}
-
-// Вызываем инициализацию при загрузке
-window.addEventListener('DOMContentLoaded', initializeSkinTimers);
  
 
 
@@ -1692,21 +1732,22 @@ document.addEventListener('DOMContentLoaded', () => {
     );
 
     addSkin(
-        "Limit", 
+        "Limiваt", 
         "Skins/ChampSkin1.svg",
         null,
         {
-            priceROW: 50000,
-            gradient: 'linear-gradient(205deg, rgba(26, 51, 0, 1) 0%, rgba(130, 33, 0, 1) 100%)',
-            borderColor: '#9d0000ff',
+            priceROW: 1,
+            gradient: 'linear-gradient(205deg, rgba(51, 0, 30, 1) 0%, rgba(130, 0, 0, 1) 100%)',
+            borderColor: '#9d006eff',
             stars: "★★★☆☆"
         },
         {
             isLimited: true,
-            endTime: Date.now() + 360000000 // 4 дня 4 часа (Для лимитированных скинов нужно доработать связь глобального времяни из сервера к фронту)
+            endTime: Date.now() + 3600000 // 1 час (Для лимитированных скинов нужно доработать связь глобального времени из сервера к фронту)
         }
     );
 
+    
 
     
     renderMyLotsMenu();
@@ -3264,6 +3305,8 @@ function initializeTaskTimers() {
 // Вызываем инициализацию при загрузке
 window.addEventListener('DOMContentLoaded', initializeTaskTimers);
 
+
+
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     loadGameState();
@@ -3292,4 +3335,3 @@ document.addEventListener('DOMContentLoaded', function() {
         `
     );
 });
-
