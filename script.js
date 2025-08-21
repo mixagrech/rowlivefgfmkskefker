@@ -651,37 +651,34 @@ const RANKS = [
     { name: 'CHAMP 🏆 RANK', min: 50000, max: Infinity, bonus: 0 }
 ];
 
-// Загрузка текущего счета из localStorage при старте
-let currentRowScore = 0;
-
-// Инициализация цветов рангов
-function initRankColors() {
-    document.querySelector('.PathLine1').setAttribute('stroke', '#004C75');
-    document.querySelector('.PathLine2').setAttribute('stroke', '#004C75');
+// Функция для получения текущего ранга
+function getCurrentRank(score) {
+    // Ищем ранг, где score находится в диапазоне [min, max)
+    // Для CHAMP ранга используем отдельную проверку
+    for (let i = 0; i < RANKS.length; i++) {
+        const rank = RANKS[i];
+        
+        // Для последнего ранга (CHAMP) проверяем только нижнюю границу
+        if (i === RANKS.length - 1) {
+            if (score >= rank.min) return rank;
+        } 
+        // Для всех остальных рангов проверяем диапазон
+        else if (score >= rank.min && score < rank.max) {
+            return rank;
+        }
+    }
     
-    document.querySelector('.PathCircle3').setAttribute('fill', '#97DBFF');
-    document.querySelector('.PathCircle3').setAttribute('stroke', '#0087CF');
-    
-    document.querySelector('.PathCircle2').setAttribute('fill', '#97DBFF');
-    document.querySelector('.PathCircle2').setAttribute('stroke', '#0087CF');
-    
-    document.querySelector('.PathCircle1').setAttribute('fill', '#358344');
-    document.querySelector('.PathCircle1').setAttribute('stroke', '#57E873');
+    // Возвращаем первый ранг по умолчанию
+    return RANKS[0];
 }
 
 // Проверка и обновление ранга
 function updateRankSystem() {
-    // Загружаем актуальное значение из localStorage
-    const savedState = localStorage.getItem(STORAGE_KEY);
-    if (savedState) {
-        const parsed = JSON.parse(savedState);
-        currentRowScore = parseInt(parsed.rowscore) || 0;
-    }
+    // Используем актуальное значение из gameState
+    currentRowScore = gameState.rowscore || 0;
 
-    // Находим текущий ранг
-    const currentRank = RANKS.find(rank => 
-        currentRowScore >= rank.min && currentRowScore < rank.max
-    );
+    // Получаем текущий ранг
+    const currentRank = getCurrentRank(currentRowScore);
     
     // Обновляем отображение
     if (currentRank) {
@@ -691,7 +688,7 @@ function updateRankSystem() {
     }
 }
 
-// Функция обновления цветов ранга
+// Функция обновления цветов ранга (добавлены недостающие элементы)
 function updateRankColors(score) {
     // Базовые цвета
     const activeColors = {
@@ -708,52 +705,55 @@ function updateRankColors(score) {
     };
 
     // Сброс всех элементов к начальному состоянию
-    document.querySelector('.PathLine1').setAttribute('stroke', '#004C75');
-    document.querySelector('.PathLine2').setAttribute('stroke', '#004C75');
-    document.querySelector('.PathCircle3').setAttribute('fill', defaultColors.fill);
-    document.querySelector('.PathCircle3').setAttribute('stroke', defaultColors.stroke);
-    document.querySelector('.PathCircle2').setAttribute('fill', defaultColors.fill);
-    document.querySelector('.PathCircle2').setAttribute('stroke', defaultColors.stroke);
-    document.querySelector('.PathCircle1').setAttribute('fill', activeColors.fill);
-    document.querySelector('.PathCircle1').setAttribute('stroke', activeColors.stroke);
+    const elements = [
+        '.PathLine1', '.PathLine2', '.PathLine3', '.PathLine4',
+        '.PathCircle1', '.PathCircle2', '.PathCircle3', '.PathCircle4', '.PathCircle5'
+    ];
+    
+    elements.forEach(selector => {
+        const element = document.querySelector(selector);
+        if (element) {
+            if (selector.includes('Line')) {
+                element.setAttribute('stroke', '#004C75');
+            } else if (selector.includes('Circle')) {
+                element.setAttribute('fill', defaultColors.fill);
+                element.setAttribute('stroke', defaultColors.stroke);
+            }
+        }
+    });
 
-    // Последовательно применяем цвета в зависимости от счета
+    // Активируем элементы в зависимости от счета
     if (score >= 1000) {
-        // Активируем второй круг и первую линию
         document.querySelector('.PathCircle2').setAttribute('fill', activeColors.fill);
         document.querySelector('.PathCircle2').setAttribute('stroke', activeColors.stroke);
         document.querySelector('.PathLine1').setAttribute('stroke', '#404040');
-        document.querySelector('.PathCircle1').setAttribute('fill', activeColors.fill);
-        document.querySelector('.PathCircle1').setAttribute('stroke', activeColors.stroke);
     }
     
     if (score >= 5000) {
-        // Активируем третий круг и вторую линию
         document.querySelector('.PathCircle3').setAttribute('fill', activeColors.fill);
         document.querySelector('.PathCircle3').setAttribute('stroke', activeColors.stroke);
         document.querySelector('.PathLine2').setAttribute('stroke', '#404040');
-        // Предыдущие элементы остаются активными
-        document.querySelector('.PathCircle2').setAttribute('fill', activeColors.fill);
-        document.querySelector('.PathCircle2').setAttribute('stroke', activeColors.stroke);
-        document.querySelector('.PathCircle1').setAttribute('fill', activeColors.fill);
-        document.querySelector('.PathCircle1').setAttribute('stroke', activeColors.stroke);
     }
     
     if (score >= 15000) {
-        // Активируем четвертый круг и третью линию
-        document.querySelector('.PathCircle4').setAttribute('fill', activeColors.fill);
-        document.querySelector('.PathCircle4').setAttribute('stroke', activeColors.stroke);
-        document.querySelector('.PathLine3').setAttribute('stroke', '#404040');
-        // Все предыдущие элементы остаются активными
+        const circle4 = document.querySelector('.PathCircle4');
+        const line3 = document.querySelector('.PathLine3');
+        if (circle4) circle4.setAttribute('fill', activeColors.fill);
+        if (circle4) circle4.setAttribute('stroke', activeColors.stroke);
+        if (line3) line3.setAttribute('stroke', '#404040');
     }
     
     if (score >= 50000) {
-        // Активируем пятый круг и четвертую линию
-        document.querySelector('.PathCircle5').setAttribute('fill', activeColors.fill);
-        document.querySelector('.PathCircle5').setAttribute('stroke', activeColors.stroke);
-        document.querySelector('.PathLine4').setAttribute('stroke', '#404040');
-        // Все предыдущие элементы остаются активными
+        const circle5 = document.querySelector('.PathCircle5');
+        const line4 = document.querySelector('.PathLine4');
+        if (circle5) circle5.setAttribute('fill', activeColors.fill);
+        if (circle5) circle5.setAttribute('stroke', activeColors.stroke);
+        if (line4) line4.setAttribute('stroke', '#404040');
     }
+    
+    // Первый круг всегда активен (базовый уровень)
+    document.querySelector('.PathCircle1').setAttribute('fill', activeColors.fill);
+    document.querySelector('.PathCircle1').setAttribute('stroke', activeColors.stroke);
 }
 
 // Инициализация при загрузке страницы
@@ -1747,7 +1747,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     );
 
-    
+    addSkin(
+        "Omавыg", 
+        "Skins/ChampSkin1.svg",
+        null,
+        {
+            priceROW: 500,
+            gradient: 'linear-gradient(205deg, rgba(0, 37, 51, 1) 0%, rgba(130, 0, 7, 1) 100%)',
+            borderColor: '#009d0dff',
+            stars: "★★★☆☆"
+        }
+    );
 
     
     renderMyLotsMenu();
