@@ -1310,7 +1310,14 @@ function selectSkin(skinNumber) {
     loadSkinImages();
 }
 
-// Skin management
+
+
+// ===== Skin management =====
+
+
+
+
+
 // Глобальный объект для хранения таймеров скинов
 const skinTimers = {};
 
@@ -1422,18 +1429,29 @@ function initializeSkinTimers() {
 // Вызываем инициализацию при загрузке
 window.addEventListener('DOMContentLoaded', initializeSkinTimers);
 
-// Функция addSkin с правильной работой таймера
+// Функция addSkin
+
 function addSkin(name, imagePath, miniGameImagePath, options = {}, limitedOptions = {}) {
     const panel = document.querySelector('.SkinSelectionPanel');
-    if (!panel) return;
-
+    
     skinCounter++;
     const skinNumber = skinCounter;
 
-    // Проверяем, истек ли срок для лимитированного скина
-    const isPurchased = localStorage.getItem(`skin_${skinNumber}_purchased`) === getSkinHash({name, imagePath, miniGameImagePath, ...options});
+    // Определяем, является ли скин NFT (по наличию bonusPercent в options)
+    const isNFT = options.bonusPercent !== undefined;
+    const bonusPercent = isNFT ? options.bonusPercent : 0;
+
+    // Проверяем, куплен ли скин
+    let isPurchased = localStorage.getItem(`skin_${skinNumber}_purchased`) === getSkinHash({name, imagePath, miniGameImagePath, ...options});
     
-    // Для лимитированных скинов проверяем время
+    // Для NFT скинов автоматически помечаем как купленные
+    if (isNFT && !isPurchased) {
+        const hash = getSkinHash({name, imagePath, miniGameImagePath, ...options});
+        localStorage.setItem(`skin_${skinNumber}_purchased`, hash);
+        isPurchased = true;
+    }
+
+    // Проверяем, истек ли срок для лимитированного скина
     let endTime = limitedOptions.endTime || 0;
     let isExpired = false;
     
@@ -1442,10 +1460,7 @@ function addSkin(name, imagePath, miniGameImagePath, options = {}, limitedOption
             const savedData = localStorage.getItem(`skin_${skinNumber}_data`);
             const existingData = savedData ? JSON.parse(savedData) : {};
             
-            // Используем сохраненное время или устанавливаем новое
             endTime = existingData.endTime || endTime;
-            
-            // Проверяем истекло ли время
             isExpired = endTime <= Date.now() && !isPurchased;
             
         } catch (e) {
@@ -1463,9 +1478,12 @@ function addSkin(name, imagePath, miniGameImagePath, options = {}, limitedOption
         gradient: options.gradient || 'linear-gradient(205deg, #1E0033 0%, #4B0082 100%)',
         borderColor: options.borderColor || '#9400D3',
         stars: options.stars || '☆☆☆☆☆',
-        relevance: isExpired ? 'NoActively' : (options.relevance || 'Actively'),
+        // Для NFT скинов всегда ставим NoActively, для остальных как указано
+        relevance: isNFT ? 'NoActively' : (isExpired ? 'NoActively' : (options.relevance || 'Actively')),
         isLimited: limitedOptions.isLimited || false,
-        endTime: endTime || null
+        endTime: endTime || null,
+        isNFT: isNFT,
+        bonusPercent: bonusPercent
     };
 
     localStorage.setItem(`skin_${skinNumber}_data`, JSON.stringify(skinData));
@@ -1474,6 +1492,32 @@ function addSkin(name, imagePath, miniGameImagePath, options = {}, limitedOption
     if (skinData.relevance === "NoActively" && !isPurchased) {
         return;
     }
+
+    // Для NFT скинов не добавляем в панель выбора
+    if (isNFT) {
+        // Но добавляем изображение для профиля (для использования в инвентаре и т.д.)
+        const skinImg = document.createElement('img');
+        skinImg.className = `dynamicSkin${skinNumber}`;
+        skinImg.style.cssText = `
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            z-index: 5;
+            display: none;
+        `;
+        skinImg.src = imagePath;
+        skinImg.onerror = function() {
+            this.onerror = null;
+            this.src = "MiniGameImage/StandardSkinOnMiniGame2.png";
+        };
+        
+        document.querySelector('.BackBlockProfileSkin')?.appendChild(skinImg);
+        return; // Прерываем выполнение, не добавляя в панель выбора
+    }
+
+    // Обычные скины добавляем в панель выбора
+    if (!panel) return;
 
     // Получаем ВИДИМЫЕ скины (исключая скрытые)
     const visibleSkins = Array.from(panel.querySelectorAll('[class^="dynamicSkinContent"]'))
@@ -1759,6 +1803,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     );
 
+
+
+    addSkin(
+        "Test NFT", 
+        "Skins/ChampSkin1.svg",
+        null, // miniGameImagePath не нужен для NFT
+        {
+            bonusPercent: 20, // Это делает скин NFT
+            gradient: 'linear-gradient(205deg, rgb(44, 51, 0) 0%, rgb(130, 104, 0) 100%)',
+            stars: "★★★★★"
+        }
+    );
+
+
     
     renderMyLotsMenu();
 });
@@ -1895,7 +1953,7 @@ function renderMyLotsMenu(filteredSkins = null, sort = null) {
         otherSkins.sort((a, b) => countStars(a.stars) - countStars(b.stars));
     }
     boughtSkins = standardSkin ? [standardSkin, ...otherSkins] : otherSkins;
-    // ... остальной код renderMyLotsMenu ...
+    // додумать что там дальше надо
 }
 
 function showAllLotsPanel() {
@@ -1912,10 +1970,37 @@ function showMyLotsPanel() {
 }
 
 
-//Mini game
 
 
+// ===== Mini game =====
 
+
+// Total NFT bonus
+
+
+function getTotalNFTBonus() {
+    let totalBonus = 0;
+    
+    // Проверяем все скины в localStorage
+    for (let key in localStorage) {
+        if (key.startsWith('skin_') && key.endsWith('_data')) {
+            try {
+                const data = JSON.parse(localStorage.getItem(key));
+                const skinNumber = parseInt(key.split('_')[1]);
+                
+                // Проверяем, что скин является NFT и куплен
+                if (data && data.isNFT && 
+                    localStorage.getItem(`skin_${skinNumber}_purchased`) === getSkinHash(data)) {
+                    totalBonus += data.bonusPercent || 0;
+                }
+            } catch (e) {
+                console.error('Ошибка при обработке данных скина:', e);
+            }
+        }
+    }
+    
+    return totalBonus;
+}
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1965,7 +2050,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Лимиты игры
     const MAX_DISTANCE = 15000;
     const RESET_TIME = 12 * 60 * 60 * 1000;
-
+    
     // Состояние игры
     let waterPosition = 0;
     let obstacles = [];
@@ -2201,7 +2286,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // Движение монет
+        // Движение и начисление монет
         for (let i = coins.length - 1; i >= 0; i--) {
             const coin = coins[i];
             coin.top += difficultyLevels[currentDifficulty].speed;
@@ -2214,9 +2299,19 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (checkCollision(coin)) {
                 coin.element.remove();
                 coins.splice(i, 1);
-                score += 10;
-                // Добавляем ROW-монеты за сбор монеты в игре
-                addRow(10);
+                
+                // Рассчитываем бонус от NFT-скинов
+                const nftBonus = getTotalNFTBonus();
+                const baseReward = 10;
+                const bonusReward = Math.round(baseReward * (nftBonus / 100));
+                const totalReward = baseReward + bonusReward;
+                
+                score += totalReward;
+                
+                // С учетом бонуса
+                addRow(totalReward);
+                
+                // Фактическое количество с бустом
                 collectedCountElement.textContent = score;
             }
         }
@@ -2371,20 +2466,20 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(difficultyTimer);
         
         // Добавляем ROW-монеты за пройденное расстояние
-        const distanceReward = Math.floor(distance / 100) * 5; // 5 ROW за каждые 100 единиц расстояния
-        if (distanceReward > 0) {
-            addRow(distanceReward);
-        }
+        //const distanceReward = Math.floor(distance / 100) * 5; // 5 ROW за каждые 100 единиц расстояния
+        //if (distanceReward > 0) {
+        //    addRow(distanceReward);
+        //}
         
-        if (distance > bestDistance) {
-            bestDistance = distance;
-            localStorage.setItem('bestDistance', bestDistance);
-            // Бонус за новый рекорд
-            const recordBonus = Math.floor(distance / 100) * 10; // 10 ROW за каждые 100 единиц нового рекорда
-            if (recordBonus > 0) {
-                addRow(recordBonus);
-            }
-        }
+        //if (distance > bestDistance) {
+        //    bestDistance = distance;
+        //    localStorage.setItem('bestDistance', bestDistance);
+        //    // Бонус за новый рекорд
+        //    const recordBonus = Math.floor(distance / 100) * 10; // 10 ROW за каждые 100 единиц нового рекорда
+        //    if (recordBonus > 0) {
+        //        addRow(recordBonus);
+        //    }
+        //}
         
         lastPlayTime = Date.now();
         localStorage.setItem('lastPlayTime', lastPlayTime);
@@ -2653,14 +2748,15 @@ function ensureStandardSkin() {
     }
 }
 
-// --- МОДИФИЦИРОВАТЬ renderMyLotsMenu, чтобы Standard всегда был первым ---
+// --- renderMyLotsMenu ---
+
 function renderMyLotsMenu(filteredSkins = null, sort = null) {
-    ensureStandardSkin(); // Всегда вызываем перед рендером
+    ensureStandardSkin();
     const menu = document.querySelector('.MyLotsMenu');
     if (!menu) return;
     menu.innerHTML = '';
     let boughtSkins = [];
-    // Собираем все купленные скины (даже если их нет в магазине)
+    
     for (let key in localStorage) {
         if (key.startsWith('skin_') && key.endsWith('_data')) {
             const skinNumber = parseInt(key.split('_')[1]);
@@ -2670,6 +2766,7 @@ function renderMyLotsMenu(filteredSkins = null, sort = null) {
             }
         }
     }
+
     // Гарантируем, что стандартный скин всегда есть
     const standardKey = Object.keys(localStorage).find(key => key.startsWith('skin_') && key.endsWith('_data') && (JSON.parse(localStorage.getItem(key))?.name === 'Standard'));
     if (standardKey) {
@@ -2680,26 +2777,26 @@ function renderMyLotsMenu(filteredSkins = null, sort = null) {
             boughtSkins.unshift({ ...data, skinNumber });
         }
     }
-    // Гарантируем, что Standard всегда первый
+
     boughtSkins.sort((a, b) => {
         if (a.name === 'Standard') return -1;
         if (b.name === 'Standard') return 1;
         return 0;
     });
+
     if (filteredSkins !== null) {
         boughtSkins = filteredSkins;
     }
-    // Сортировка по количеству ★ (если не задано явно — не сортировать вообще)
+
     if (sort === 'desc') {
         boughtSkins.sort((a, b) => countStars(b.stars) - countStars(a.stars));
     } else if (sort === 'asc') {
         boughtSkins.sort((a, b) => countStars(a.stars) - countStars(b.stars));
     }
-    // Параметры позиционирования
-    const topBase = 58; // стартовый top в %
-    const topStep = 36; // шаг вниз между рядами в %
 
-    // nonSearchSkin сообщение
+    const topBase = 58;
+    const topStep = 36;
+
     const backPanel2 = document.querySelector('.BackPanrlAllMarket2');
     let nonSearchMsg = backPanel2 ? backPanel2.querySelector('.nonSearchSkin') : null;
     if (!nonSearchMsg && backPanel2) {
@@ -2717,7 +2814,6 @@ function renderMyLotsMenu(filteredSkins = null, sort = null) {
         boughtSkins.forEach((skin, idx) => {
             let style;
             if (boughtSkins.length === 1) {
-                // Если только один скин (поиск) — всегда слева
                 const top = topBase;
                 style = `position:absolute;left:20px;top:${top}%;width:40%;height:31%;z-index:2;`;
             } else {
@@ -2726,7 +2822,7 @@ function renderMyLotsMenu(filteredSkins = null, sort = null) {
                 const top = topBase + row * topStep;
                 style = `position:absolute;${isLeft ? 'left:20px;' : 'right:20px;'}top:${top}%;width:40%;height:31%;z-index:2;`;
             }
-            // Структура формы
+
             const form = document.createElement('div');
             form.className = 'MyLotsOnMarketplase';
             form.style = style;
@@ -2737,13 +2833,13 @@ function renderMyLotsMenu(filteredSkins = null, sort = null) {
                 <p class="SkinNameShopMy">${skin.name}</p>
                 <p class="RarityOfTheSkinMyLots">${skin.stars || '☆☆☆☆☆'}</p>
                 <div class="BoostPercentageSkinMArkMyLots">
-                    <p class="BoostPercentForm2">+0%</p>
+                    <p class="BoostPercentForm2">${skin.isNFT ? `+${skin.bonusPercent}%` : '+0%'}</p>
                 </div>
-                <div class="PriceBtnMyLotsMarket">
-                    <p class="PriceMyLotsMarket"><b>Withdraw</b></p>
+                <div class="PriceBtnMyLotsMarket" style="${skin.isNFT ? 'background: linear-gradient(90.01deg, #494949 0.01%, #151515 171.13%) !important;' : ''}">
+                    <p class="PriceMyLotsMarket"><b>${skin.isNFT ? 'Mint' : 'Withdraw'}</b></p>
                 </div>
             `;
-            // Анимация нажатия на кнопку
+
             const btn = form.querySelector('.PriceBtnMyLotsMarket');
             if (btn) {
                 btn.addEventListener('mousedown', () => {
@@ -2751,16 +2847,38 @@ function renderMyLotsMenu(filteredSkins = null, sort = null) {
                     setTimeout(() => {
                         btn.style.transform = 'scale(1)';
                     }, 100);
+                    
+                    // Обработка нажатия на кнопку Mint для NFT
+                    if (skin.isNFT) {
+                        mintNFT(skin.skinNumber);
+                    } else {
+                        // Логика для обычных скинов (Withdraw)
+                        withdrawSkin(skin.skinNumber);
+                    }
                 });
             }
             menu.appendChild(form);
         });
     }
-    // Обновляем количество лотов
+
     const lotsNumb = document.querySelector('.AllLotsNumb');
     if (lotsNumb) {
         lotsNumb.textContent = `Total: ${boughtSkins.length} lot`;
     }
+}
+
+// Функция для минта NFT (заглушка)
+function mintNFT(skinNumber) {
+    console.log(`Minting NFT for skin ${skinNumber}`);
+    // Здесь будет логика минта NFT на блокчейн
+}
+
+// Функция для вывода обычного скина (заглушка)
+function withdrawSkin(skinNumber) {
+
+    console.log(`Withdrawing skin ${skinNumber}`);
+
+    // Здесь будет логика вывода скина
 }
 
 function searchMyLotsSkins() {
