@@ -3440,12 +3440,23 @@ document.addEventListener('DOMContentLoaded', function() {
     loadGameState();
     
     addTask(
-        "Test quest35", 
+        "NFT Task", 
         "Rowlogo.png",
         20,
         false,
         0,
         `// Устанавливаем флаги
+        addSkin(
+            "Test NFT2", 
+            "Skins/ChampSkin1.svg",
+            null, // miniGameImagePath не нужен для NFT
+            {
+                bonusPercent: 0, // Это делает скин NFT
+                gradient: 'linear-gradient(205deg, rgba(0, 51, 28, 1) 0%, rgba(0, 82, 130, 1) 100%)',
+                stars: "★★★★★"
+            }
+        );
+
         thisQuest.setAddReward(true);
         thisQuest.setComplete(true);
         `
