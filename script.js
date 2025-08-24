@@ -109,12 +109,12 @@ function shouldShowDailyReward() {
         return true;
     }
     
-    // Проверяем, новый ли это день (сравниваем даты, а не время)
-    const lastClaimDate = new Date(lastClaim.getFullYear(), lastClaim.getMonth(), lastClaim.getDate());
-    const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // Проверяем, прошло ли более 24 часов с последнего получения
+    if (hoursPassed >= REWARD_COOLDOWN_HOURS) {
+        return true;
+    }
     
-    // Если это новый день - награда доступна
-    return currentDate > lastClaimDate;
+    return false;
 }
 
 // Получение текущей награды
@@ -151,7 +151,7 @@ function updateUI() {
 
 // Показать экран награды
 function showDailyReward() {
-    if (!dailyRewardScreen) return;
+    if (!dailyRewwardScreen) return;
     
     if (dayNumberElement) {
         dayNumberElement.textContent = gameState.dailyStreak + 1;
@@ -191,8 +191,12 @@ function claimDailyReward() {
     // Обновляем дату получения
     gameState.lastDailyClaim = now.toISOString();
     
-    // Увеличиваем счетчик дней
-    gameState.dailyStreak++;
+    // Увеличиваем счетчик дней ТОЛЬКО если это действительно новый день
+    // (а не просто повторный клик в течение того же дня)
+    const hoursSinceLastClaim = lastClaim ? (now - lastClaim) / (1000 * 60 * 60) : 24;
+    if (hoursSinceLastClaim >= REWARD_COOLDOWN_HOURS) {
+        gameState.dailyStreak++;
+    }
     
     saveGameState();
     showMainScreen();
@@ -792,7 +796,56 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 4. Первоначальная проверка видимости
     checkFriendsVisibility();
+
+    // 5. Проверка награды за 5 друзей при загрузке
+    checkFiveFriendsReward();
 });
+
+// Проверка и выдача награды за 5 друзей
+async function checkFiveFriendsReward() {
+    try {
+        const userId = localStorage.getItem('userId');
+        if (!userId) return;
+
+        const response = await fetch(`/get-referral-code/${userId}`);
+        if (!response.ok) return;
+        
+        const data = await response.json();
+        if (!data.code) return;
+
+        const referralsResponse = await fetch(`/get-referrals/${data.code}`);
+        if (!referralsResponse.ok) return;
+        
+        const referralsData = await referralsResponse.json();
+        const friendsCount = referralsData.referrals?.length || 0;
+
+        // Проверяем, достигнуто ли 5 друзей и еще не выдана награда
+        const rewardGiven = localStorage.getItem('fiveFriendsRewardGiven');
+        if (friendsCount >= 5 && !rewardGiven) {
+            awardFiveFriendsNFT();
+        }
+    } catch (error) {
+        console.error('Ошибка проверки награды за 5 друзей:', error);
+    }
+}
+
+// Выдача NFT за 5 друзей
+function awardFiveFriendsNFT() {
+    addSkin(
+        "Friend NFT", 
+        "Skins/ChampSkin1.svg",
+        null,
+        {
+            bonusPercent: 0,
+            gradient: 'linear-gradient(205deg, rgba(51, 0, 31, 1) 0%, rgba(0, 82, 130, 1) 100%)',
+            stars: "★★★★★"
+        }
+    );
+    
+    // Помечаем награду как выданную
+    localStorage.setItem('fiveFriendsRewardGiven', 'true');
+    
+}
 
 
 
@@ -866,8 +919,17 @@ async function loadReferrals(code, shouldShow = false) {
         const referralsList = document.getElementById('referralsList');
         const noFriendsText = rowContainer.querySelector('.TextonDontHaveFriend');
 
+        // Получаем текущее количество друзей
+        const friendsCount = data.referrals?.length || 0;
+        
         // Обновляем счетчик
-        updateFriendsCounter(data.referrals?.length || 0);
+        updateFriendsCounter(friendsCount);
+
+        // Проверяем награду за 5 друзей
+        const rewardGiven = localStorage.getItem('fiveFriendsRewardGiven');
+        if (friendsCount >= 5 && !rewardGiven) {
+            awardFiveFriendsNFT();
+        }
 
         if (data.referrals?.length) {
             noFriendsText.style.display = 'none';
@@ -3044,6 +3106,12 @@ function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask =
         return;
     }
 
+    // Проверяем, является ли это разделом
+    if (name === "chapter") {
+        addChapterSeparator();
+        return;
+    }
+
     // Создаем уникальный ID для задания
     const taskId = `task_${name.replace(/\s+/g, '_').toLowerCase()}`;
     
@@ -3083,36 +3151,45 @@ function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask =
         }
     }
     
-    // Считаем количество видимых задач
-    const visibleTasks = Array.from(taskMain.querySelectorAll('.taskCentred'))
-        .filter(task => window.getComputedStyle(task).display !== 'none');
-    const taskCount = visibleTasks.length;
-    const topPosition = 40 + (taskCount * 15.7);
+    // Получаем все элементы и вычисляем позицию
+    const allElements = Array.from(taskMain.children);
+    let currentPosition = 40;
+    let taskIndex = 0;
+
+    // Проходим по всем элементам и вычисляем позицию для нового элемента
+    for (const element of allElements) {
+        if (element.classList.contains('taskCentred') && !element.classList.contains('chapter-separator')) {
+            currentPosition += 15.7;
+            taskIndex++;
+        } else if (element.classList.contains('chapter-separator')) {
+            currentPosition += 4;
+        }
+    }
 
     // Создаем уникальные классы
-    const taskClass = `taskNumb${taskCount + 1}`;
-    const centredClass = `taskNumb${taskCount + 1}Centred`;
-    const separatorClass = `taskSeparator${taskCount + 1}`;
+    const taskClass = `taskNumb${taskIndex + 1}`;
+    const centredClass = `taskNumb${taskIndex + 1}Centred`;
+    const separatorClass = `taskSeparator${taskIndex + 1}`;
 
     // HTML структура задачи
     const taskHTML = `
-        <div class="${centredClass} taskCentred" data-task-id="${taskId}">
+        <div class="${centredClass} taskCentred" data-task-id="${taskId}" style="top: ${currentPosition}%">
             <div class="${taskClass}">
-                <img src="${imagePath}" alt="logo" class="Task${taskCount + 1}logo">
-                <p class="TaskName${taskCount + 1}">${name}</p>
-                <p class="TaskReward${taskCount + 1}"><span>+${reward}</span><span>ROW</span></p>
+                <img src="${imagePath}" alt="logo" class="Task${taskIndex + 1}logo">
+                <p class="TaskName${taskIndex + 1}">${name}</p>
+                <p class="TaskReward${taskIndex + 1}"><span>+${reward}</span><span>ROW</span></p>
                 ${isLimitedTask ? `
                 <div class="taskTimerContainer">
                     <div class="taskTimerDays"><p>0 DAYS</p></div>
                     <div class="taskTimerTime"><p>0 HOURS</p></div>
                 </div>
                 ` : ''}
-                <svg class="arrowTask${taskCount + 1}" width="9" height="15" viewBox="0 0 9 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg class="arrowTask${taskIndex + 1}" width="9" height="15" viewBox="0 0 9 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M1 14L8 7.5L1 1" stroke="#727272" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </div>
         </div>
-        <div class="${separatorClass} taskSeparator" data-separator-id="${taskId}"></div>
+        <div class="${separatorClass} taskSeparator" data-separator-id="${taskId}" style="top: ${currentPosition + 15.7}%"></div>
     `;
 
     taskMain.insertAdjacentHTML('beforeend', taskHTML);
@@ -3124,7 +3201,6 @@ function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask =
             position: absolute;
             width: 100%;
             height: 13.7%;
-            top: ${topPosition}%;
             display: flex;
             justify-content: center;
             transition: top 0.3s ease;
@@ -3141,22 +3217,21 @@ function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask =
             position: relative;
         }
 
-        .Task${taskCount + 1}logo {
+        .Task${taskIndex + 1}logo {
             position: absolute;
             left: 3%;
             width: 70px;
-
             object-fit: contain;
             border-radius: 7px;
         }
 
-        .arrowTask${taskCount + 1} {
+        .arrowTask${taskIndex + 1} {
             position: absolute;
             right: 8%;
             height: 16%;
         }
 
-        .TaskName${taskCount + 1} {
+        .TaskName${taskIndex + 1} {
             position: absolute;
             font-size: 1rem;
             font-weight: 500;
@@ -3166,7 +3241,7 @@ function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask =
             margin: 0;
         }
 
-        .TaskReward${taskCount + 1} {
+        .TaskReward${taskIndex + 1} {
             position: absolute;
             color: #7D7D7D;
             left: 31%;
@@ -3174,12 +3249,12 @@ function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask =
             margin: 0;
         }
 
-        .TaskReward${taskCount + 1} span:first-child {
+        .TaskReward${taskIndex + 1} span:first-child {
             font-size: 1rem;
             font-weight: 600;
         }
 
-        .TaskReward${taskCount + 1} span:last-child {
+        .TaskReward${taskIndex + 1} span:last-child {
             font-weight: 400;
             font-size: 0.7rem;
             margin-left: 2px;
@@ -3190,7 +3265,6 @@ function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask =
             width: 5px;
             height: 13.7%;
             left: 0;
-            top: ${topPosition + 15.7}%;
             background-color: rgba(255, 255, 255, 0);
             pointer-events: none;
             transition: top 0.3s ease;
@@ -3231,21 +3305,26 @@ function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask =
         const taskToRemove = taskMain.querySelector(`[data-task-id="${taskId}"]`);
         const separatorToRemove = taskMain.querySelector(`[data-separator-id="${taskId}"]`);
         
-        if (taskToRemove) taskToRemove.remove();
-        if (separatorToRemove) separatorToRemove.remove();
+        if (taskToRemove) {
+            // Плавное исчезновение
+            taskToRemove.style.opacity = '0';
+            taskToRemove.style.transform = 'translateY(-20px)';
+        }
+        if (separatorToRemove) {
+            separatorToRemove.style.opacity = '0';
+        }
         
-        // Обновляем позиции оставшихся квестов
-        const remainingTasks = Array.from(taskMain.querySelectorAll('.taskCentred'))
-            .sort((a, b) => parseFloat(a.style.top) - parseFloat(b.style.top));
-        
-        remainingTasks.forEach((task, index) => {
-            const newTop = 40 + (index * 15.7);
-            task.style.top = `${newTop}%`;
+        // Ждем завершения анимации и затем удаляем
+        setTimeout(() => {
+            if (taskToRemove) taskToRemove.remove();
+            if (separatorToRemove) separatorToRemove.remove();
             
-            const separatorId = task.dataset.taskId;
-            const separator = taskMain.querySelector(`[data-separator-id="${separatorId}"]`);
-            if (separator) separator.style.top = `${newTop + 15.7}%`;
-        });
+            // Плавно обновляем позиции ВСЕХ оставшихся элементов
+            updateAllTaskPositionsWithAnimation();
+            
+            // Проверяем, можно ли скрыть разделы
+            checkAndHideChapters();
+        }, 300);
     };
 
     // Обработчик клика
@@ -3304,7 +3383,7 @@ function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask =
     }
 
     // Обработчик ошибки изображения
-    const imgElement = taskMain.querySelector(`.Task${taskCount + 1}logo`);
+    const imgElement = taskMain.querySelector(`.Task${taskIndex + 1}logo`);
     if (imgElement) {
         imgElement.onerror = function() {
             this.onerror = null;
@@ -3317,6 +3396,156 @@ function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask =
         startTaskTimer(taskId, endTime, disappears);
     }
 }
+
+// Функция для добавления разделителя раздела
+function addChapterSeparator() {
+    const taskMain = document.getElementById('taskMain');
+    if (!taskMain) return;
+
+    const chapterId = `chapter_${Date.now()}`;
+    const allElements = Array.from(taskMain.children);
+    let currentPosition = 40;
+
+    // Вычисляем позицию для нового разделителя
+    for (const element of allElements) {
+        if (element.classList.contains('taskCentred') && !element.classList.contains('chapter-separator')) {
+            currentPosition += 15.7;
+        } else if (element.classList.contains('chapter-separator')) {
+            currentPosition += 4;
+        }
+    }
+
+    const chapterHTML = `
+        <div class="chapter-separator" data-chapter-id="${chapterId}" style="top: ${currentPosition}%">
+            <div class="chapter-line"></div>
+        </div>
+    `;
+
+    taskMain.insertAdjacentHTML('beforeend', chapterHTML);
+}
+
+// Функция для плавного обновления позиций ВСЕХ элементов
+function updateAllTaskPositionsWithAnimation() {
+    const taskMain = document.getElementById('taskMain');
+    if (!taskMain) return;
+
+    const allElements = Array.from(taskMain.children)
+        .filter(el => window.getComputedStyle(el).display !== 'none')
+        .sort((a, b) => parseFloat(a.style.top || 0) - parseFloat(b.style.top || 0));
+    
+    let currentPosition = 40;
+    
+    allElements.forEach(element => {
+        const targetPosition = currentPosition;
+        
+        if (element.classList.contains('taskCentred') && !element.classList.contains('chapter-separator')) {
+            // Плавное перемещение квеста
+            animateElementToPosition(element, targetPosition);
+            
+            const separatorId = element.dataset.taskId;
+            const separator = taskMain.querySelector(`[data-separator-id="${separatorId}"]`);
+            if (separator) {
+                animateElementToPosition(separator, targetPosition + 15.7);
+            }
+            
+            currentPosition += 15.7;
+        } else if (element.classList.contains('chapter-separator')) {
+            // Плавное перемещение разделителя
+            animateElementToPosition(element, targetPosition);
+            currentPosition += 4;
+        }
+    });
+}
+
+// Функция для плавной анимации перемещения элемента
+function animateElementToPosition(element, targetPosition) {
+    const startPosition = parseFloat(element.style.top || 0);
+    
+    if (Math.abs(startPosition - targetPosition) < 0.1) {
+        element.style.top = `${targetPosition}%`;
+        return;
+    }
+    
+    element.style.top = `${targetPosition}%`;
+}
+
+// Функция для проверки и скрытия разделов
+function checkAndHideChapters() {
+    const taskMain = document.getElementById('taskMain');
+    if (!taskMain) return;
+
+    const chapters = Array.from(taskMain.querySelectorAll('.chapter-separator'))
+        .filter(chapter => window.getComputedStyle(chapter).display !== 'none');
+    
+    chapters.forEach(chapter => {
+        const chapterPosition = parseFloat(chapter.style.top || 0);
+        const tasksAfterChapter = Array.from(taskMain.querySelectorAll('.taskCentred:not(.chapter-separator)'))
+            .filter(task => {
+                const taskPosition = parseFloat(task.style.top || 0);
+                return taskPosition > chapterPosition && window.getComputedStyle(task).display !== 'none';
+            });
+        
+        // Если после раздела нет задач или все задачи завершены
+        const allCompleted = tasksAfterChapter.every(task => {
+            const taskId = task.dataset.taskId;
+            return localStorage.getItem(`completed_${taskId}`) === 'true';
+        });
+        
+        if (tasksAfterChapter.length === 0 || allCompleted) {
+            // Плавное скрытие раздела
+            chapter.style.opacity = '0';
+            chapter.style.transition = 'opacity 0.3s ease';
+            
+            setTimeout(() => {
+                chapter.style.display = 'none';
+                // После скрытия раздела плавно обновляем позиции
+                updateAllTaskPositionsWithAnimation();
+            }, 300);
+        }
+    });
+}
+
+
+
+// === Функция для удаления разделителя выше определенного квеста ===
+
+
+function removeChapterAboveTask(taskId) {
+    const taskMain = document.getElementById('taskMain');
+    if (!taskMain) return;
+
+    const taskElement = taskMain.querySelector(`[data-task-id="${taskId}"]`);
+    if (!taskElement) return;
+
+    const taskPosition = parseFloat(taskElement.style.top || 0);
+    
+    // Находим все разделители выше этой позиции
+    const chaptersAbove = Array.from(taskMain.querySelectorAll('.chapter-separator'))
+        .filter(chapter => {
+            const chapterPosition = parseFloat(chapter.style.top || 0);
+            return chapterPosition < taskPosition && window.getComputedStyle(chapter).display !== 'none';
+        })
+        .sort((a, b) => parseFloat(b.style.top || 0) - parseFloat(a.style.top || 0)); // Сортируем сверху вниз
+
+    if (chaptersAbove.length === 0) return;
+
+    // Удаляем самый нижний разделитель (ближайший к заданию)
+    const chapterToRemove = chaptersAbove[0];
+    
+    // Плавно скрываем разделитель
+    chapterToRemove.style.opacity = '0';
+    chapterToRemove.style.transition = 'opacity 0.3s ease';
+    
+    setTimeout(() => {
+        chapterToRemove.style.display = 'none';
+        
+        // После скрытия разделителя обновляем позиции всех элементов
+        updateAllTaskPositionsWithAnimation();
+    }, 300);
+}
+
+
+
 
 // Глобальный объект для хранения таймеров квестов
 const taskTimers = {};
@@ -3440,7 +3669,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadGameState();
     
     addTask(
-        "NFT Task", 
+        "NFT Taso", 
         "Rowlogo.png",
         20,
         false,
@@ -3463,11 +3692,63 @@ document.addEventListener('DOMContentLoaded', function() {
     );
 
     addTask(
-        "Test quest47", 
+        "Test quest4k67", 
         "Rowlogo.png",
         20,
         true, // isLimitedTask
         3600000, // limitTimeTask в миллисекундах (1 час)
+        `
+        thisQuest.setAddReward(true); 
+        thisQuest.setComplete(true);
+        `
+    );
+
+
+    // Обычные квесты
+    addTask(
+        "NFT Taskавf5ыc", 
+        "Rowlogo.png",
+        20,
+        false,
+        0,
+        `// Устанавливаем флаги
+        thisQuest.setAddReward(true);
+        thisQuest.setComplete(true);
+        `
+    );
+
+    // Раздел
+    addTask("chapter");
+
+    // Квест после раздела
+    addTask(
+        "Test quest4f7dsиgд", 
+        "Rowlogo.png",
+        20,
+        false,
+        0,
+        `
+        thisQuest.setAddReward(true); 
+        thisQuest.setComplete(true);
+        `
+    );
+    addTask(
+        "Test quest47ffdдвsg", 
+        "Rowlogo.png",
+        20,
+        false,
+        0,
+        `
+        thisQuest.setAddReward(true); 
+        thisQuest.setComplete(true);
+        `
+    );
+    addTask(
+        "Test quest47ffdпвsдg", 
+        "Rowlogo.png",
+        20,
+        false,
+        0,
         `
         thisQuest.setAddReward(true); 
         thisQuest.setComplete(true);
