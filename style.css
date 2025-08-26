@@ -2331,3 +2331,352 @@ a, button, div, span, [onclick] {
     transform-box: fill-box;
 }
 
+
+/* Settings */
+
+
+.TopSettingsPanel {
+    position: absolute;
+    width: 100%;
+    height: 60px;
+    background-color: rgba(25, 25, 25, 50%);
+    top: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.TextOnTopSettings {
+    color: #FFFFFF;
+    font-size: 1.8rem;
+    font-weight: 500;
+}
+
+.BackBtnOnSettings {
+    position: absolute;
+    top: 10.8vh;
+    width: 57px;
+    height: 31px;
+    background: linear-gradient(254.05deg, #005887 0%, #620080 100%);
+    border-radius: 150px;
+    left: 6.3%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.BackBtnOnSettings svg {
+    margin-top: 1px;
+}
+
+.SettingsCardCenter {
+    position: absolute;
+    top: 17.4vh;
+    width: 100%;
+    height: 25.7vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.SettingsCard {
+    width: 87.4vw;
+    height: 25.7vh;
+    background-color: #1C1C1C;
+    border-radius: 7px;
+}
+
+.ChangeLanguageCenter {
+    position: absolute;
+    top: 44.5vh;
+    width: 100%;
+    height: 12vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ChangeLanguage {
+    width: 87.4vw;
+    height: 12vh;
+    background: linear-gradient(93.62deg, #1C1C1C 0%, #2F2F2F 100%);
+    border-radius: 7px;
+}
+
+.TgProfile {
+    position: absolute;
+    height: 6.6vh;
+    width: 41.6vw;
+    top: 57.9vh;
+    left: 6.3vw;
+    background-color: #1C1C1C;
+    border-radius: 7px;
+    overflow: hidden;
+}
+
+.linesOnCardSettings {
+    border-top-left-radius: 7px;
+}
+
+
+.UserAvatarSettings {
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 2px solid #42ACEF;
+    top: 13.2%;
+    left: 14.6%;
+    background: #29688f;
+    z-index: 2;
+}
+.circleWidthAvatar1 {
+    position: absolute;
+    top: 34.5%;
+    left: 12%;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #42ACEF;
+}
+.circleWidthAvatar2 {
+    position: absolute;
+    top: 9.1%;
+    left: 25%;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #42ACEF;
+}
+.circleWidthAvatar3 {
+    position: absolute;
+    top: 36%;
+    left: 32%;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #42ACEF;
+}
+
+
+.firstAndLastNameSettings {
+    position: absolute;
+    right: 11%;
+    top: 15%;
+    width: 40%;
+    height: 14.2%;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.blur-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #1C1C1C;
+    filter: blur(10px);
+    z-index: 1;
+}
+.firstAndLastNameSettings p {
+    position: relative;
+    z-index: 2;
+    color: #FFFFFF;
+    margin: 0;
+}
+
+.usernameSettings {
+    position: absolute;
+    left: 12%;
+    top: 70%;
+    color: #FFFFFF;
+    font-size: 0.8rem;
+}
+
+.IDsettings {
+    position: absolute;
+    border: 1px solid #42ACEF;
+    width: 27%;
+    height: 20px;
+    left: 12%;
+    top: 83%;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.balanceSettings {
+    position: absolute;
+    width: 36%;
+    height: 24.8%;
+    border-radius: 7px;
+    right: 13%;
+    top: 51%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.CentredBalance {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.CentredBalance svg {
+    z-index: 2;
+    position: relative;
+    width: 50px;
+    height: 50px;
+    margin-left: 30px;
+}
+
+.CentredBalance p {
+    position: absolute;
+    color: #FFFFFF;
+    z-index: 3;
+    margin: 0;
+    top: 50%;
+    left: 50%;
+    font-size: 1.3rem;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+}
+
+.CentredBalance span:first-child {
+    font-size: 0.9rem;
+}
+
+.CentredBalance span:last-child {
+    font-size: 1.4rem;
+    margin-left: 3px;
+}
+
+
+.IsPremium {
+    position: absolute;
+    right: 9%;
+    bottom: 5%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.IsPremium svg {
+    width: 15px;
+    height: 15px;
+    margin-left: 2px;
+    z-index: 2;
+}
+
+.PremiumText {
+    background-image: linear-gradient(93.73deg, #559FF6 0%, #ED35AF 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: bold;
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 400;
+    z-index: 2;
+}
+
+.Paddle1 {
+    position: absolute;
+    left: 9.3%;
+    top: 24.2%;
+    width: 43%;
+    height: 40%;
+}
+.Paddle2 {
+    position: absolute;
+    right: 9.4%;
+    top: 27.3%;
+    width: 38.7%;
+    height: 46%;
+}
+
+.RuLang {
+    position: absolute;
+    color: #FFFFFF;
+    top: 33%;
+    left: 26%;
+    font-size: 0.8rem;
+    z-index: 2;
+}
+.EnLang {
+    position: absolute;
+    color: #FFFFFF;
+    top: 38%;
+    right: 20%;
+    font-size: 1rem;
+    z-index: 2;
+}
+
+
+.TgProfile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.TgProfile svg {
+    position: absolute;
+    bottom: 0px;
+    width: 42px;
+    height: 42px;
+    left: 0px;
+}
+.TgProfile p {
+    z-index: 2;
+    font-size: 0.9rem;
+    background: linear-gradient(111.31deg, #A6DCFF -3.51%, #42ACEF 113.56%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+
+.BottomPanelSettings {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    height: 8vh;
+    background-color: #1C1C1C;
+    display: flex;
+    align-items: center;
+}
+
+.Support {
+    position: absolute;
+    left: 5%;
+    line-height: 0.8;
+    margin-bottom: 1%;
+}
+
+.Support span:first-child {
+    font-size: 0.65rem;
+    color: #5F5F5F;
+}
+
+.Support span:last-child {
+    font-size: 0.8rem;
+    color: #008AB4;
+}
+
+.Version {
+    position: absolute;
+    right: 7%;
+    color: #5F5F5F;
+    font-size: 0.9rem;
+}
