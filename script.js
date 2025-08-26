@@ -3750,3 +3750,22 @@ document.addEventListener('DOMContentLoaded', function() {
         `
     );
 });
+
+
+
+// ===== Settings screen =====
+
+const BtnSettingsOnProfile = document.querySelector('.BtnSettingsOnProfile');
+const SettingsScreen = document.getElementById('SettingsScreen').style.display = 'none';
+
+BtnSettingsOnProfile.addEventListener('click', () => {
+    document.getElementById('SettingsScreen').style.display = 'block';
+    document.getElementById('ProfileMain').style.display = 'none';
+});
+
+const BackBtnOnSettings = document.querySelector('.BackBtnOnSettings');
+
+BackBtnOnSettings.addEventListener('click', () => {
+    document.getElementById('SettingsScreen').style.display = 'none';
+    document.getElementById('ProfileMain').style.display = 'block';
+});
