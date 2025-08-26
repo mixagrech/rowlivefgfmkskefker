@@ -151,7 +151,7 @@ function updateUI() {
 
 // Показать экран награды
 function showDailyReward() {
-    if (!dailyRewwardScreen) return;
+    if (!dailyRewardScreen) return; // ← Исправлено здесь
     
     if (dayNumberElement) {
         dayNumberElement.textContent = gameState.dailyStreak + 1;
@@ -2084,7 +2084,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { x: 145, path: "M226 50C226 22.3858 203.614 0 176 0C148.386 0 126 22.3858 126 50V340C126 367.614 148.386 390 176 390C203.614 390 226 367.614 226 340V50Z" },
         { x: 270, path: "M352 50C352 22.3858 329.614 0 302 0C274.386 0 252 22.3858 252 50V340C252 367.614 274.386 390 302 390C329.614 390 352 367.614 352 340V50Z" }
     ];
-
+    
     // Границы gameObjectsLayer
     const GAME_LAYER_LEFT = 0.18 * 352;
     const GAME_LAYER_WIDTH = 0.64 * 352;
@@ -2250,28 +2250,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const height = spawnType === 'obstacle' ? OBSTACLE_HEIGHT : COIN_HEIGHT;
         const yOffset = -height;
 
-        let xPos;
-        if (lane === 0) { // Левая колонка
-            const randomMultiplier = 0.272 + Math.random() * (0.242 - 0.222);
-            xPos = column.x + (GAME_LAYER_WIDTH * randomMultiplier); 
-        } else if (lane === 1) { // Центральная колонка
-            const randomMultiplier = 1.6 + Math.random() * (1.9 - 1.4);
-            xPos = column.x + (PLAYER_WIDTH - width) / randomMultiplier;
-        } else { // Правая колонка
-            const randomMultiplier = 0.262 + Math.random() * (0.025);
-            xPos = column.x + PLAYER_WIDTH - width - (GAME_LAYER_WIDTH * randomMultiplier);
+        // Вычисляем позицию объекта относительно игрового слоя
+        const columnPosInLayer = column.x - GAME_LAYER_LEFT;
+        let adjustedXPos;
+
+        if (lane === 0) { // Левая колонка - смещаем на 3vw к центру
+            const centerOffset = window.innerWidth * 0.15; // 3vw в пикселях
+            adjustedXPos = columnPosInLayer + (PLAYER_WIDTH - width) / 2 + centerOffset;
+        } else if (lane === 1) { // Центральная колонка - без смещения
+            adjustedXPos = columnPosInLayer + (PLAYER_WIDTH - width) / 2;
+        } else { // Правая колонка - смещаем на 3vw к центру
+            const centerOffset = window.innerWidth * 0.15; // 3vw в пикселях
+            adjustedXPos = columnPosInLayer + (PLAYER_WIDTH - width) / 2 - centerOffset;
         }
 
         const FINAL_CORRECTION = -7;
-        xPos += FINAL_CORRECTION;
-
-        const adjustedXPos = xPos - GAME_LAYER_LEFT;
-
-        // Проверка границ
-        if (adjustedXPos < 0 || adjustedXPos + width > GAME_LAYER_WIDTH) {
-            console.warn(`Объект выходит за границы: ${adjustedXPos}`);
-            return;
-        }
+        adjustedXPos += FINAL_CORRECTION;
 
         // Создание элемента
         const element = document.createElement('div');
@@ -2283,6 +2277,7 @@ document.addEventListener('DOMContentLoaded', () => {
         element.style.zIndex = '10';
         element.style.backgroundSize = 'cover';
         element.style.backgroundPosition = 'center';
+        element.style.position = 'absolute';
         
         if (spawnType === 'obstacle') {
             const obstacleImages = [
@@ -2298,7 +2293,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 element: element,
                 lane: lane,
                 top: yOffset,
-                x: xPos,
+                x: adjustedXPos, // Используем относительную позицию
                 width: width,
                 height: height,
                 bottom: yOffset + height
@@ -2309,7 +2304,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 element: element,
                 lane: lane,
                 top: yOffset,
-                x: xPos,
+                x: adjustedXPos, // Используем относительную позицию
                 width: width,
                 height: height,
                 bottom: yOffset + height
