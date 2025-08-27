@@ -95,21 +95,20 @@ function resetGameState() {
 
 // Проверка, нужно ли показать награду
 function shouldShowDailyReward() {
-    // Если награда еще не получалась
     if (!gameState.lastDailyClaim) return true;
     
     const lastClaim = new Date(gameState.lastDailyClaim);
     const now = new Date();
-    
-    // Проверяем, прошло ли больше 48 часов (сброс streak)
     const hoursPassed = (now - lastClaim) / (1000 * 60 * 60);
+    
+    // Прошло более 48 часов - сбрасываем стрик и показываем награду
     if (hoursPassed >= RESET_HOURS) {
         gameState.dailyStreak = 0;
         saveGameState();
         return true;
     }
     
-    // Проверяем, прошло ли более 24 часов с последнего получения
+    // Прошло более 24 часов - показываем награду
     if (hoursPassed >= REWARD_COOLDOWN_HOURS) {
         return true;
     }
@@ -177,7 +176,7 @@ function claimDailyReward() {
     const now = new Date();
     const lastClaim = gameState.lastDailyClaim ? new Date(gameState.lastDailyClaim) : null;
     
-    // Проверяем, не пропустил ли игрок более 48 часов (сброс streak)
+    // Проверяем сброс стрика (более 48 часов)
     if (lastClaim) {
         const hoursPassed = (now - lastClaim) / (1000 * 60 * 60);
         if (hoursPassed >= RESET_HOURS) {
@@ -187,15 +186,12 @@ function claimDailyReward() {
     
     // Выдаем награду
     addRow(getDailyReward());
-    
-    // Обновляем дату получения
     gameState.lastDailyClaim = now.toISOString();
     
-    // Увеличиваем счетчик дней ТОЛЬКО если это действительно новый день
-    // (а не просто повторный клик в течение того же дня)
-    const hoursSinceLastClaim = lastClaim ? (now - lastClaim) / (1000 * 60 * 60) : 24;
-    if (hoursSinceLastClaim >= REWARD_COOLDOWN_HOURS) {
-        gameState.dailyStreak++;
+    // Увеличиваем стрик ТОЛЬКО если это новый день
+    // (прошло более 24 часов с последнего клейма)
+    if (!lastClaim || (now - new Date(lastClaim)) / (1000 * 60 * 60) >= REWARD_COOLDOWN_HOURS) {
+        gameState.dailyStreak = Math.min(gameState.dailyStreak + 1, DAILY_REWARDS.length);
     }
     
     saveGameState();
@@ -3769,3 +3765,37 @@ BackBtnOnSettings.addEventListener('click', () => {
     document.getElementById('SettingsScreen').style.display = 'none';
     document.getElementById('ProfileMain').style.display = 'block';
 });
+
+
+//avatar
+
+function setupUserAvatarSettings() {
+    const avatarContainer = document.getElementById("UserAvatarSettings");
+    if (!avatarContainer || !window.Telegram?.WebApp) return;
+
+    const user = Telegram.WebApp.initDataUnsafe?.user;
+
+    // Если есть фото — вставляем изображение
+    if (user?.photo_url) {
+        const img = document.createElement("img");
+        img.src = user.photo_url;
+        img.onerror = () => showFallbackAvatarSettings(user); // Если фото не загрузилось
+        avatarContainer.appendChild(img);
+    } else {
+        showFallbackAvatarSettings(user); // Показываем заглушку
+    }
+}
+
+function showFallbackAvatarSettings(user) { // Добавлен параметр user
+    const avatarContainer = document.getElementById("UserAvatarSettings");
+    if (!avatarContainer) return;
+
+    avatarContainer.innerHTML = `
+        <svg width="39" height="42" viewBox="0 0 39 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19.5 0C16.9976 0 14.5976 1.00695 12.8281 2.79932C11.0586 4.59169 10.0645 7.02267 10.0645 9.55747C10.0645 12.0923 11.0586 14.5233 12.8281 16.3156C14.5976 18.108 16.9976 19.1149 19.5 19.1149C22.0024 19.1149 24.4024 18.108 26.1719 16.3156C27.9414 14.5233 28.9355 12.0923 28.9355 9.55747C28.9355 7.02267 27.9414 4.59169 26.1719 2.79932C24.4024 1.00695 22.0024 0 19.5 0ZM9.43548 24.2123C6.93304 24.2123 4.53309 25.2192 2.76359 27.0116C0.994093 28.804 0 31.2349 0 33.7697V36.7975C0 38.7192 1.37381 40.3555 3.24581 40.6639C14.0098 42.4454 24.9902 42.4454 35.7542 40.6639C36.6595 40.513 37.4827 40.0416 38.077 39.3336C38.6714 38.6256 38.9985 37.7269 39 36.7975V33.7697C39 31.2349 38.0059 28.804 36.2364 27.0116C34.4669 25.2192 32.067 24.2123 29.5645 24.2123H28.709C28.2394 24.214 27.7831 24.287 27.3403 24.4315L25.1613 25.1527C21.4826 26.3692 17.5174 26.3692 13.8387 25.1527L11.6597 24.4315C11.2181 24.288 10.7573 24.214 10.2935 24.2123H9.43548Z" fill="white"/>
+        </svg>
+    `;
+}
+
+// Инициализация аватарки при загрузке страницы
+document.addEventListener("DOMContentLoaded", setupUserAvatarSettings);
