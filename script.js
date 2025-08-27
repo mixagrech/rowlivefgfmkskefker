@@ -4084,12 +4084,6 @@ if (isPremium || !user) {
     }
 }
 
-// ### Open TG profile ###
-
-document.querySelector('.TgProfile').addEventListener('click', () => {
-    window.open('tg://settings', '_blank');
-});
-
 // ### Open Support contact ###
 
 document.querySelector('.Support').addEventListener('click', () => {
