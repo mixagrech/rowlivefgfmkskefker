@@ -2469,7 +2469,6 @@ a, button, div, span, [onclick] {
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
 }
 .blur-background {
     position: absolute;
@@ -2631,9 +2630,9 @@ a, button, div, span, [onclick] {
 }
 .TgProfile svg {
     position: absolute;
-    bottom: 0px;
-    width: 42px;
-    height: 42px;
+    bottom: -2px;
+    width: 50px;
+    height: 50px;
     left: 0px;
 }
 .TgProfile p {
