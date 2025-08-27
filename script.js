@@ -3767,45 +3767,4 @@ BackBtnOnSettings.addEventListener('click', () => {
 });
 
 
-// ### avatar ###
-
-function setupUserAvatarSettings() {
-    const avatarContainer = document.querySelector(".UserAvatarSettings");
-    if (!avatarContainer || !window.Telegram?.WebApp) return;
-
-    const user = Telegram.WebApp.initDataUnsafe?.user;
-
-    if (user?.photo_url) {
-        const img = document.createElement("img");
-        img.src = user.photo_url;
-        img.onerror = () => showFallbackAvatarSettings(user); // Если фото не загрузилось
-        avatarContainer.appendChild(img);
-    } else {
-        showFallbackAvatarSettings(user); // Показываем заглушку
-    }
-}
-
-showFallbackAvatar
-function showFallbackAvatarSettings() {
-    const avatarContainer = document.querySelector(".UserAvatarSettings");
-    if (!avatarContainer) return;
-
-    avatarContainer.innerHTML = `
-        <svg width="29" height="31" viewBox="0 0 29 31" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M14.5 0C12.6392 0 10.8546 0.743222 9.53885 2.06616C8.22307 3.38911 7.48387 5.1834 7.48387 7.05433C7.48387 8.92525 8.22307 10.7195 9.53885 12.0425C10.8546 13.3654 12.6392 14.1087 14.5 14.1087C16.3608 14.1087 18.1454 13.3654 19.4612 12.0425C20.7769 10.7195 21.5161 8.92525 21.5161 7.05433C21.5161 5.1834 20.7769 3.38911 19.4612 2.06616C18.1454 0.743222 16.3608 0 14.5 0ZM7.01613 17.871C5.15534 17.871 3.37076 18.6142 2.05498 19.9371C0.739197 21.2601 0 23.0544 0 24.9253V27.1601C0 28.5785 1.02155 29.7862 2.41355 30.0138C10.4175 31.3287 18.5825 31.3287 26.5865 30.0138C27.2597 29.9024 27.8717 29.5545 28.3137 29.0319C28.7557 28.5094 28.9989 27.8461 29 27.1601V24.9253C29 23.0544 28.2608 21.2601 26.945 19.9371C25.6292 18.6142 23.8447 17.871 21.9839 17.871H21.3477C20.9985 17.8722 20.6592 17.9261 20.3299 18.0327L18.7097 18.5651C15.9743 19.463 13.0257 19.463 10.2903 18.5651L8.67006 18.0327C8.34166 17.9268 7.99901 17.8723 7.65413 17.871H7.01613Z" fill="white"/>
-        </svg>
-    `;
-}
-
-setupUserAvatarSettings();
-
-
-// ### First and last name ### 
-
-
-
-// ### Open Support contact ###
-
-document.querySelector('.Support').addEventListener('click', () => {
-    window.open('https://t.me/RL_Cooperation', '_blank');
-});
+document.querySelector('.Version').innerHTML = 'Test';
