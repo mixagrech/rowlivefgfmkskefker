@@ -3775,13 +3775,12 @@ function setupUserAvatarSettings() {
     if (user?.photo_url) {
         const img = document.createElement("img");
         img.src = user.photo_url;
-        img.onerror = () => showFallbackAvatarSettings(user); // Если фото не загрузилось
+        img.onerror = () => showFallbackAvatarSettings(user);
         avatarContainer.appendChild(img);
     } else {
-        showFallbackAvatarSettings(user); // Показываем заглушку
+        showFallbackAvatarSettings(user);
     }
 }
-
 
 function showFallbackAvatarSettings() {
     const avatarContainer = document.querySelector(".UserAvatarSettings");
@@ -3794,65 +3793,6 @@ function showFallbackAvatarSettings() {
     `;
 }
 
-// Инициализация аватарки при загрузке страницы
-document.addEventListener("DOMContentLoaded", setupUserAvatarSettings);
-
-
-// ### First and last name ### 
-
-const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
-
-if (user && user.first_name) {
-    const fullName = `${user.first_name} ${user.last_name || ''}`.trim();
-    
-    document.querySelector('.firstAndLastNameP').forEach(element => {
-        element.textContent = fullName;
-    });
-} else {
-    console.log('Данные пользователя не найдены');
-}
-
-// ### Username ###
-
-// Безопасный вариант для UserName
-const usernameElements = document.querySelectorAll('.UserName');
-
-if (usernameElements && usernameElements.length > 0) {
-    const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
-    const username = user?.username;
-    
-    usernameElements.forEach(element => {
-        element.textContent = username ? `@${username}` : '@username';
-    });
-} else {
-    console.log('Элементы с классом UserName не найдены');
-}
-
-
-// ### User ID ###
-
-const userIdElements2 = document.querySelectorAll('.UserIDsettings');
-
-if (userIdElements2 && userIdElements2.length > 0) {
-    const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
-    const userId = user?.id ? user.id.toString() : 'error';
-    
-    userIdElements2.forEach(element => {
-        element.textContent = userId;
-        
-        element.addEventListener('click', function() {
-            copyToClipboard(userId);
-            
-            showCopyNotification(element, 'ID скопирован!');
-        });
-        
-        element.style.cursor = 'pointer';
-        element.title = 'Нажмите чтобы скопировать ID';
-    });
-} else {
-    console.log('Элементы с классом UserIDsettings не найдены');
-}
-
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
         console.log('ID скопирован: ', text);
@@ -3862,7 +3802,6 @@ function copyToClipboard(text) {
     });
 }
 
-// Резервный метод для копирования
 function fallbackCopyToClipboard(text) {
     const textArea = document.createElement('textarea');
     textArea.value = text;
@@ -3882,7 +3821,6 @@ function fallbackCopyToClipboard(text) {
     document.body.removeChild(textArea);
 }
 
-//Уведомление
 function showCopyNotification(element, message) {
     const notification = document.createElement('div');
     notification.textContent = message;
@@ -3907,9 +3845,6 @@ function showCopyNotification(element, message) {
         }
     }, 2000);
 }
-
-
-// ### Wallet balance ###
 
 function formatBalance(balanceInTON) {
     const balance = parseFloat(balanceInTON);
@@ -3969,8 +3904,11 @@ async function getTonToUsdtRate() {
 
 async function getWalletBalance() {
     try {
-        if (!tonConnectUI.connected) {
-            console.log('Кошелек не подключен');
+        // Проверяем доступность tonConnectUI в Mini App
+        const tcUI = window.tonConnectUI || tonConnectUI;
+        
+        if (!tcUI || !tcUI.connected) {
+            console.log('Кошелек не подключен или tonConnectUI недоступен');
             updateBalanceDisplay({
                 ton: '0',
                 usd: '0',
@@ -3979,7 +3917,7 @@ async function getWalletBalance() {
             return;
         }
 
-        const walletInfo = tonConnectUI.wallet;
+        const walletInfo = tcUI.wallet;
         const address = walletInfo.account.address;
         
         console.log('Адрес кошелька:', address);
@@ -3997,7 +3935,6 @@ async function getWalletBalance() {
             
             console.log('Баланс TON:', balanceInTON, 'TON');
 
-            // Получаем курс TON к USD
             const tonRate = await getTonToUsdtRate();
             
             let balanceInUSD = null;
@@ -4041,48 +3978,118 @@ async function getWalletBalance() {
     }
 }
 
-tonConnectUI.onStatusChange((wallet) => {
-    if (wallet) {
-        console.log('Кошелек подключен, получаем баланс...');
-        getWalletBalance();
-    } else {
-        console.log('Кошелек отключен');
-        updateBalanceDisplay({
-            ton: '0',
-            usd: '0',
-            rate: null
+// Функция для инициализации баланса с проверкой доступности tonConnectUI
+function initializeBalance() {
+    function checkTonConnectUI() {
+        const tcUI = window.tonConnectUI || tonConnectUI;
+        
+        if (tcUI) {
+            console.log('tonConnectUI найден');
+            
+            if (tcUI.connected) {
+                getWalletBalance();
+            }
+            
+            // Подписываемся на изменения статуса
+            tcUI.onStatusChange((wallet) => {
+                if (wallet) {
+                    getWalletBalance();
+                } else {
+                    updateBalanceDisplay({
+                        ton: '0',
+                        usd: '0',
+                        rate: null
+                    });
+                }
+            });
+            
+        } else {
+            console.log('tonConnectUI еще не загружен, проверяем снова...');
+            setTimeout(checkTonConnectUI, 500);
+        }
+    }
+    
+    // Начинаем проверку доступности tonConnectUI
+    checkTonConnectUI();
+}
+
+// Основная функция инициализации
+function initializeUserSettings() {
+    const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+    
+    if (!user) {
+        console.log('Данные пользователя не найдены');
+        // Все равно показываем интерфейс, но с заглушками
+    }
+
+    // First and last name
+    const fullName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim();
+    const nameElements = document.querySelectorAll('.firstAndLastNameP');
+    if (nameElements.length > 0) {
+        nameElements.forEach(element => {
+            element.textContent = fullName || 'Пользователь';
         });
     }
-});
 
-if (tonConnectUI.connected) {
-    console.log('Кошелек уже подключен, получаем баланс...');
-    getWalletBalance();
-} else {
-    updateBalanceDisplay({
-        ton: '0',
-        usd: '0',
-        rate: null
-    });
-}
+    // Username
+    const usernameElements = document.querySelectorAll('.UserName');
+    if (usernameElements.length > 0) {
+        usernameElements.forEach(element => {
+            element.textContent = user?.username ? `@${user.username}` : '@username';
+        });
+    }
 
+    // User ID
+    const userIdElements = document.querySelectorAll('.UserIDsettings');
+    if (userIdElements.length > 0) {
+        const userId = user?.id ? user.id.toString() : 'ERROR';
+        userIdElements.forEach(element => {
+            element.textContent = userId;
+            
+            element.addEventListener('click', function() {
+                copyToClipboard(userId);
+                showCopyNotification(element, 'ID скопирован!');
+            });
+            
+            element.style.cursor = 'pointer';
+            element.title = 'Нажмите чтобы скопировать ID';
+        });
+    }
 
-window.checkBalance = getWalletBalance;
-
-// ### Is Premium ###
-
-const isPremium = user && user.is_premium;
-
-// Если пользователь премиум или данные не найдены, скрываем элемент
-if (isPremium || !user) {
+    // Is Premium
     const premiumElement = document.querySelector('.IsPremium');
     if (premiumElement) {
-        premiumElement.style.display = 'none';
+        if (user && user.is_premium) {
+            // Если пользователь премиум - ПОКАЗЫВАЕМ элемент
+            premiumElement.style.display = ''; // или 'block' в зависимости от исходного стиля
+            console.log('Премиум пользователь - показываем элемент');
+        } else {
+            // Если пользователь НЕ премиум или данные не найдены - СКРЫВАЕМ
+            premiumElement.style.display = 'none';
+            console.log('Обычный пользователь или данные недоступны - скрываем элемент');
+        }
+    } else {
+        console.log('Элемент с классом IsPremium не найден');
     }
+
+    // Support contact
+    const supportElement = document.querySelector('.Support');
+    if (supportElement) {
+        supportElement.addEventListener('click', () => {
+            window.open('https://t.me/RL_Cooperation', '_blank');
+        });
+    }
+
+    // Инициализируем баланс
+    initializeBalance();
 }
 
-// ### Open Support contact ###
-
-document.querySelector('.Support').addEventListener('click', () => {
-    window.open('https://t.me/RL_Cooperation', '_blank');
+// Инициализация при загрузке страницы
+document.addEventListener("DOMContentLoaded", function() {
+    console.log('DOM загружен, инициализируем...');
+    setupUserAvatarSettings();
+    initializeUserSettings();
 });
+
+// Глобальная функция для проверки баланса
+window.checkBalance = getWalletBalance;
