@@ -4086,3 +4086,4 @@ if (isPremium || !user) {
 document.querySelector('.Support').addEventListener('click', () => {
     window.open('https://t.me/RL_Cooperation', '_blank');
 });
+
