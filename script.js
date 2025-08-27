@@ -3797,8 +3797,7 @@ function showFallbackAvatarSettings() {
     `;
 }
 
-// Инициализация аватарки при загрузке страницы
-document.addEventListener("DOMContentLoaded", setupUserAvatarSettings);
+setupUserAvatarSettings();
 
 
 // ### First and last name ### 
