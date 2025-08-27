@@ -2432,6 +2432,7 @@ a, button, div, span, [onclick] {
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
 }
 .circleWidthAvatar1 {
     position: absolute;
@@ -2511,12 +2512,16 @@ a, button, div, span, [onclick] {
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: transform 0.1s;
+}
+.IDsettings:active {
+    transform: scale(0.9); 
 }
 
 
 .balanceSettings {
     position: absolute;
-    width: 36%;
+    width: 32%;
     height: 24.8%;
     border-radius: 7px;
     right: 13%;
@@ -2540,7 +2545,7 @@ a, button, div, span, [onclick] {
     position: relative;
     width: 50px;
     height: 50px;
-    margin-left: 30px;
+    margin-top: 10px;
 }
 
 .CentredBalance p {
@@ -2550,19 +2555,16 @@ a, button, div, span, [onclick] {
     margin: 0;
     top: 50%;
     left: 50%;
-    font-size: 1.3rem;
+    font-size: 1.7rem;
+    font-weight: 500;
     transform: translate(-50%, -50%);
     white-space: nowrap;
 }
 
 .CentredBalance span:first-child {
-    font-size: 0.9rem;
+    font-size: 1rem;
 }
 
-.CentredBalance span:last-child {
-    font-size: 1.4rem;
-    margin-left: 3px;
-}
 
 
 .IsPremium {
@@ -2615,6 +2617,10 @@ a, button, div, span, [onclick] {
     left: 26%;
     font-size: 0.8rem;
     z-index: 2;
+    transition: transform 0.1s;
+}
+.RuLang:active {
+    transform: scale(0.9); 
 }
 .EnLang {
     position: absolute;
@@ -2623,14 +2629,23 @@ a, button, div, span, [onclick] {
     right: 20%;
     font-size: 1rem;
     z-index: 2;
+    transition: transform 0.1s;
 }
-
+.EnLang:active {
+    transform: scale(0.9); 
+}
 
 .TgProfile {
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: transform 0.1s;
 }
+
+.TgProfile:active {
+    transform: scale(0.9); 
+}
+
 .TgProfile svg {
     position: absolute;
     bottom: -2px;
