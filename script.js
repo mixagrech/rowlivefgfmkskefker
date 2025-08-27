@@ -3767,14 +3767,14 @@ BackBtnOnSettings.addEventListener('click', () => {
 });
 
 
-//avatar
+// ### avatar ###
 
 function setupUserAvatarSettings() {
     const avatarContainer = document.querySelector(".UserAvatarSettings");
     if (!avatarContainer || !window.Telegram?.WebApp) return;
 
     const user = Telegram.WebApp.initDataUnsafe?.user;
-    
+
     if (user?.photo_url) {
         const img = document.createElement("img");
         img.src = user.photo_url;
@@ -3799,3 +3799,299 @@ function showFallbackAvatarSettings() {
 
 // Инициализация аватарки при загрузке страницы
 document.addEventListener("DOMContentLoaded", setupUserAvatarSettings);
+
+
+// ### First and last name ### 
+
+const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+
+if (user && user.first_name) {
+    const fullName = `${user.first_name} ${user.last_name || ''}`.trim();
+    
+    document.querySelector('.firstAndLastNameP').forEach(element => {
+        element.textContent = fullName;
+    });
+} else {
+    console.log('Данные пользователя не найдены');
+}
+
+// ### Username ###
+
+// Безопасный вариант для UserName
+const usernameElements = document.querySelectorAll('.UserName');
+
+if (usernameElements && usernameElements.length > 0) {
+    const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+    const username = user?.username;
+    
+    usernameElements.forEach(element => {
+        element.textContent = username ? `@${username}` : '@username';
+    });
+} else {
+    console.log('Элементы с классом UserName не найдены');
+}
+
+
+// ### User ID ###
+
+const userIdElements2 = document.querySelectorAll('.UserIDsettings');
+
+if (userIdElements2 && userIdElements2.length > 0) {
+    const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+    const userId = user?.id ? user.id.toString() : 'error';
+    
+    userIdElements2.forEach(element => {
+        element.textContent = userId;
+        
+        element.addEventListener('click', function() {
+            copyToClipboard(userId);
+            
+            showCopyNotification(element, 'ID скопирован!');
+        });
+        
+        element.style.cursor = 'pointer';
+        element.title = 'Нажмите чтобы скопировать ID';
+    });
+} else {
+    console.log('Элементы с классом UserIDsettings не найдены');
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        console.log('ID скопирован: ', text);
+    }).catch(err => {
+        console.error('Ошибка при копировании: ', err);
+        fallbackCopyToClipboard(text);
+    });
+}
+
+// Резервный метод для копирования
+function fallbackCopyToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.opacity = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
+        console.log('ID скопирован (fallback): ', text);
+    } catch (err) {
+        console.error('Fallback copy failed: ', err);
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+//Уведомление
+function showCopyNotification(element, message) {
+    const notification = document.createElement('div');
+    notification.textContent = message;
+    notification.style.position = 'absolute';
+    notification.style.background = 'rgba(0, 0, 0, 0.8)';
+    notification.style.color = 'white';
+    notification.style.padding = '8px 12px';
+    notification.style.borderRadius = '4px';
+    notification.style.fontSize = '14px';
+    notification.style.zIndex = '1000';
+    notification.style.pointerEvents = 'none';
+    
+    const rect = element.getBoundingClientRect();
+    notification.style.top = (rect.top - 50) + 'px';
+    notification.style.left = rect.left + 'px';
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 2000);
+}
+
+
+// ### Wallet balance ###
+
+function formatBalance(balanceInTON) {
+    const balance = parseFloat(balanceInTON);
+    
+    const parts = balance.toFixed(9).split('.');
+    const integerPart = parts[0];
+    const fractionalPart = parts[1].substring(0, 2);
+    
+    return {
+        integer: integerPart,
+        fractional: fractionalPart
+    };
+}
+
+function updateBalanceDisplay(balanceData) {
+    const balanceElement = document.querySelector('.CryptoBalance');
+    
+    if (!balanceElement) {
+        console.log('Элемент для отображения баланса не найден');
+        return;
+    }
+    
+    if (balanceData.ton === 'Ошибка') {
+        balanceElement.innerHTML = 'Ошибка<span></span>';
+        return;
+    }
+
+    const formattedBalance = formatBalance(balanceData.ton);
+    
+    balanceElement.innerHTML = `${formattedBalance.integer}<span>.${formattedBalance.fractional}</span>`;
+    
+    balanceElement.title = `Полный баланс: ${balanceData.ton} TON`;
+}
+
+async function getTonToUsdtRate() {
+    try {
+        const response = await fetch('https://tonapi.io/v2/rates?tokens=ton&currencies=usd');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data && data.rates && data.rates.TON && data.rates.TON.prices && data.rates.TON.prices.USD) {
+            return data.rates.TON.prices.USD;
+        } else {
+            console.log('Курс TON/USD не найден в ответе');
+            return null;
+        }
+
+    } catch (error) {
+        console.error('Ошибка получения курса:', error);
+        return null;
+    }
+}
+
+async function getWalletBalance() {
+    try {
+        if (!tonConnectUI.connected) {
+            console.log('Кошелек не подключен');
+            updateBalanceDisplay({
+                ton: '0',
+                usd: '0',
+                rate: null
+            });
+            return;
+        }
+
+        const walletInfo = tonConnectUI.wallet;
+        const address = walletInfo.account.address;
+        
+        console.log('Адрес кошелька:', address);
+
+        const balanceResponse = await fetch(`https://tonapi.io/v2/accounts/${address}`);
+        
+        if (!balanceResponse.ok) {
+            throw new Error(`HTTP error! status: ${balanceResponse.status}`);
+        }
+
+        const balanceData = await balanceResponse.json();
+        
+        if (balanceData && balanceData.balance !== undefined) {
+            const balanceInTON = (balanceData.balance / 1000000000).toFixed(9);
+            
+            console.log('Баланс TON:', balanceInTON, 'TON');
+
+            // Получаем курс TON к USD
+            const tonRate = await getTonToUsdtRate();
+            
+            let balanceInUSD = null;
+            if (tonRate) {
+                balanceInUSD = (balanceInTON * tonRate).toFixed(2);
+                console.log('Баланс USD:', balanceInUSD, 'USD');
+                console.log('Курс TON/USD:', tonRate);
+            } else {
+                console.log('Не удалось получить курс для конвертации в USD');
+            }
+            
+            const result = {
+                ton: balanceInTON,
+                usd: balanceInUSD,
+                rate: tonRate
+            };
+            
+            updateBalanceDisplay(result);
+            
+            return result;
+        } else {
+            console.log('Баланс не найден в ответе');
+            const result = {
+                ton: '0',
+                usd: '0',
+                rate: null
+            };
+            updateBalanceDisplay(result);
+            return result;
+        }
+
+    } catch (error) {
+        console.error('Ошибка получения баланса:', error);
+        const result = {
+            ton: 'Ошибка',
+            usd: 'Ошибка',
+            rate: null
+        };
+        updateBalanceDisplay(result);
+        return result;
+    }
+}
+
+tonConnectUI.onStatusChange((wallet) => {
+    if (wallet) {
+        console.log('Кошелек подключен, получаем баланс...');
+        getWalletBalance();
+    } else {
+        console.log('Кошелек отключен');
+        updateBalanceDisplay({
+            ton: '0',
+            usd: '0',
+            rate: null
+        });
+    }
+});
+
+if (tonConnectUI.connected) {
+    console.log('Кошелек уже подключен, получаем баланс...');
+    getWalletBalance();
+} else {
+    updateBalanceDisplay({
+        ton: '0',
+        usd: '0',
+        rate: null
+    });
+}
+
+
+window.checkBalance = getWalletBalance;
+
+// ### Is Premium ###
+
+const isPremium = user && user.is_premium;
+
+// Если пользователь премиум или данные не найдены, скрываем элемент
+if (isPremium || !user) {
+    const premiumElement = document.querySelector('.IsPremium');
+    if (premiumElement) {
+        premiumElement.style.display = 'none';
+    }
+}
+
+// ### Open TG profile ###
+
+document.querySelector('.TgProfile').addEventListener('click', () => {
+    window.open('tg://settings', '_blank');
+});
+
+// ### Open Support contact ###
+
+document.querySelector('.Support').addEventListener('click', () => {
+    window.open('https://t.me/RL_Cooperation', '_blank');
+});
