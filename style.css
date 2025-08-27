@@ -958,7 +958,7 @@ a, button, div, span, [onclick] {
     margin-top: -31px;
     width: 57px;
     height: 31px;
-    background-color: #191919;
+    background: linear-gradient(254.05deg, #005887 0%, #620080 100%);
     border-radius: 150px;
     text-align: center;
     right: 7%;
@@ -2429,6 +2429,9 @@ a, button, div, span, [onclick] {
     left: 14.6%;
     background: #29688f;
     z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .circleWidthAvatar1 {
     position: absolute;
@@ -2659,7 +2662,7 @@ a, button, div, span, [onclick] {
 .Support {
     position: absolute;
     left: 5%;
-    line-height: 0.8;
+    line-height: 0.9;
     margin-bottom: 1%;
 }
 
