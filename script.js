@@ -3831,7 +3831,7 @@ if (usernameElements && usernameElements.length > 0) {
 
 // ### User ID ###
 
-const userIdElements2 = document.querySelector('.UserIDsettings');
+const userIdElements2 = document.querySelectorAll('.UserIDsettings');
 
 if (userIdElements2 && userIdElements2.length > 0) {
     const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
