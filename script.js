@@ -758,7 +758,6 @@ function updateRankColors(score) {
 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
-    initRankColors();
     updateRankSystem();
 });
 
