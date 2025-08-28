@@ -4042,23 +4042,12 @@ function initializeUserSettings() {
     }
     // Tg profile
 
-    const tgElements = document.querySelectorAll('.TgProfile');
-
-    tgElements.forEach(element => {
-        element.addEventListener('click', () => {
-            if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
-                Telegram.WebApp.openLink('https://t.me');
-            } else {
-                try {
-                    window.location.href = 'tg://';
-                } catch (e) {
-                    window.open('https://t.me', '_blank');
-                }
-            }
+    const TgProfile = document.querySelector('.TgProfile');
+    if (TgProfile) {
+        TgProfile.addEventListener('click', () => {
+            window.open('https://t.me/ROWlive', '_blank');
         });
-        
-        element.style.cursor = 'pointer';
-    });
+    }
 
     // User ID
     const userIdElements = document.querySelectorAll('.UserIDsettings');
@@ -4100,7 +4089,7 @@ function initializeUserSettings() {
             window.open('https://t.me/RL_Cooperation', '_blank');
         });
     }
-
+    
     // Инициализируем баланс
     initializeBalance();
 }
@@ -4356,20 +4345,86 @@ const locales = {
     en: {
         '.TextOnTopSettings': 'Settings',
         '.PremiumText': 'PREMIUM',
-        '.Profile_Settings': 'Profile Settings',
+        '.Profile_Settings': 'TG channel',
         '.RuLang': 'RU',
         '.EnLang': 'EN',
-        '.Support': '<span>Support:</span><br><span>@RL_Cooperation</span>'
+        '.Support': '<span>Support:</span><br><span>@RL_Cooperation</span>',
+
+        '.TopProfileText': 'PROFILE',
+        '.TextUpdateSkin': 'Update your skin',
+        '.ProfileWillNFTtext': 'Skins will soon become NFT and...',
+        '.YourProfileText': 'Your profile',
+        '.textTotalScoreOnProfile': 'Total score',
+        '.ComingSoonTextProf': 'Coming soon',
+
+        '.AgeTextMain': 'Account age',
+        '.mainTextProfile': 'Profile',
+        '.JoinTGmainText': 'Join the tg channel',
+
+        '.AgeTextage': 'AGE',
+        '.ShareStoryText': 'Share story',
+        '.BackAgeBtn': 'Back',
+
+        '#days_text': 'days received',
+
+        '.YourRankText': 'Your rank',
+        '.PathText': 'PATH',
+
+        '.TopTextMarcetplase': 'NFT marketplace',
+        '.MarketplaseText': '<p class="MarketplaseText" style="position: absolute; font-size: 0.67rem; left: 3%; top: 7%;">Get NFT skins in mini-games and by adding<br style="display: none;">>friends. The cooler the NFT, the bigger the bonus<br>to earning income (daily reward, etc.). Sell your<br>skins for ROW or TON</p>',
+        '.AllLotsNFTMArket': 'All lots',
+        '.MyLotsNFTMArket': 'My lots',
+        '.TextOnAttentionMarket': '<div class="TextOnAttentionMarket" style="width: 90%; right: 5%; margin-top: 1%;">Commission 5% from<br>each transaction</div>',
     },
     ru: {
         '.TextOnTopSettings': 'Настройки',
         '.PremiumText': 'ПРЕМИУМ',
         '.Profile_Settings': {
-            text: 'Настройки профиля',
-            fontSize: '0.8rem'
+            text: 'TG канал',
+            fontSize: '1rem'
         },
         '.RuLang': 'РУ',
         '.EnLang': 'EN',
-        '.Support': '<span>Поддержка:</span><br><span>@RL_Cooperation</span>'
+        '.Support': '<span>Поддержка:</span><br><span>@RL_Cooperation</span>',
+
+        '.TopProfileText': '<p class="TopProfileText" style="margin-top: 2%; font-size: 2rem;">ПРОФИЛЬ</p>',
+        '.TextUpdateSkin': 'Обновите свой скин',
+        '.ProfileWillNFTtext': 'Скины скоро станут NFT и...',
+        '.YourProfileText': 'Ваш профиль',
+        '.textTotalScoreOnProfile': 'Общий балл',
+        '.ComingSoonTextProf': 'Вскоре',
+
+        '.AgeTextMain': 'Возраст аккаунта',
+        '.mainTextProfile': {
+            text: 'Профиль',
+            fontSize: '0.73rem'
+        },
+        '.JoinTGmainText': {
+            text: 'Присоединяйся к TG каналу',
+            fontSize: '0.8rem'
+        },
+
+        '.AgeTextage': 'ВОЗРАСТ',
+        '.line_under_text': '<div class="line_under_text" style="width: 155px;"></div>',
+        '.ShareStoryText': {
+            text: 'Поделиться историей',
+            fontSize: '0.9rem'
+        },
+        '.BackAgeBtn': 'Назад',
+
+        '#days_text': 'дней получено',
+
+        '.YourRankText': 'Ваш ранг',
+        '.PathText': 'ПУТЬ',
+
+        '.TopTextMarcetplase': {
+            text: 'Торговая площадка NFT',
+            fontSize: '1.3rem'
+        },
+        '.MarketplaseText': '<p class="MarketplaseText" style="position: absolute; font-size: 0.67rem; left: 3%; top: 7%;">Получайте NFT-скины в мини-играх и добавляя<br>друзей. Чем круче NFT, тем больше бонус<br>к доходу (ежедневная награда и т. д.). Продавайте свои<br>скины за ROW или TON</p>',
+        '.AllLotsNFTMArket': 'Все лоты',
+        '.MyLotsNFTMArket': 'Мои лоты',
+        '.TextOnAttentionMarket': '<div class="TextOnAttentionMarket" style="width: 90%; right: 5%; margin-top: 1%;">Комиссия 5% с<br style="display: none;">каждой транзакции</div>',
+        
     }
 };
