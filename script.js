@@ -4152,3 +4152,224 @@ function initPaddleAnimations() {
 }
 
 document.addEventListener('DOMContentLoaded', initPaddleAnimations);
+
+
+
+// ##### Translation #####
+
+
+
+
+// кнопки для смены языка
+
+document.addEventListener('DOMContentLoaded', function() {
+    const paddle1Group = document.querySelector('.Paddle1Grup');
+    const paddle2Group = document.querySelector('.Paddle2Grup');
+    const ruLang = document.querySelector('.RuLang');
+    const enLang = document.querySelector('.EnLang');
+    
+    let currentLanguage = 'en'; // Изначально английский выбран
+    let isAnimating = false;
+
+    function toggleLanguage(targetLanguage) {
+        if (isAnimating || currentLanguage === targetLanguage) return;
+        
+        isAnimating = true;
+        
+        // Анимация масштаба
+        paddle1Group.style.transform = 'scale(0.9)';
+        paddle2Group.style.transform = 'scale(0.9)';
+        
+        setTimeout(() => {
+            paddle1Group.style.transform = 'scale(1)';
+            paddle2Group.style.transform = 'scale(1)';
+            
+            // Меняем язык
+            setLanguage(targetLanguage);
+            currentLanguage = targetLanguage;
+            localStorage.setItem('userLanguage', currentLanguage);
+            
+            // Обновляем визуальное состояние
+            updateVisualState();
+            
+            isAnimating = false;
+        }, 300);
+    }
+    
+    function updateVisualState() {
+        if (currentLanguage === 'ru') {
+            // Русский активен - подсвечиваем левую кнопку
+            paddle1Group.style.opacity = '1';
+            paddle2Group.style.opacity = '0.6';
+            if (ruLang) {
+                ruLang.style.fontWeight = 'bold';
+                ruLang.style.color = '#40FF00'; // Зеленый для выбранного
+            }
+            if (enLang) {
+                enLang.style.fontWeight = 'normal';
+                enLang.style.color = '#FFFFFF'; // Белый для невыбранного
+            }
+        } else {
+            // Английский активен - подсвечиваем правую кнопку
+            paddle1Group.style.opacity = '0.6';
+            paddle2Group.style.opacity = '1';
+            if (ruLang) {
+                ruLang.style.fontWeight = 'normal';
+                ruLang.style.color = '#FFFFFF'; // Белый для невыбранного
+            }
+            if (enLang) {
+                enLang.style.fontWeight = 'bold';
+                enLang.style.color = '#40FF00'; // Зеленый для выбранного
+            }
+        }
+    }
+    
+    paddle1Group.addEventListener('click', () => toggleLanguage('ru'));
+    paddle2Group.addEventListener('click', () => toggleLanguage('en'));
+    
+    paddle1Group.style.cursor = 'pointer';
+    paddle2Group.style.cursor = 'pointer';
+    
+    // Инициализация - английский выбран по умолчанию
+    const savedLanguage = localStorage.getItem('userLanguage');
+    if (savedLanguage) {
+        currentLanguage = savedLanguage;
+        setLanguage(savedLanguage);
+    }
+    updateVisualState();
+});
+
+
+
+
+// Система перевода
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const paddle1Group = document.querySelector('.Paddle1Grup');
+    const paddle2Group = document.querySelector('.Paddle2Grup');
+    
+    // Обработчик для Paddle1Grup (русский -> английский)
+    if (paddle1Group) {
+        paddle1Group.addEventListener('click', function() {
+            setLanguage('en');
+            // Добавляем анимацию нажатия
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 100);
+        });
+        
+        paddle1Group.style.cursor = 'pointer';
+    }
+    
+    // Обработчик для Paddle2Grup (английский -> русский)
+    if (paddle2Group) {
+        paddle2Group.addEventListener('click', function() {
+            setLanguage('ru');
+            // Добавляем анимацию нажатия
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 100);
+        });
+        
+        paddle2Group.style.cursor = 'pointer';
+    }
+    
+    // Восстанавливаем язык при загрузке
+    const savedLanguage = localStorage.getItem('userLanguage');
+    if (savedLanguage) {
+        setLanguage(savedLanguage);
+    }
+});
+
+// Функция установки языка
+function setLanguage(lang) {
+    const selectedLang = lang.startsWith('ru') ? 'ru' : 'en';
+    const dictionary = locales[selectedLang];
+    
+    Object.entries(dictionary).forEach(([selector, value]) => {
+        const elements = document.querySelectorAll(selector);
+        
+        elements.forEach(element => {
+            // Проверяем, является ли значение объектом с текстом и размером шрифта
+            if (typeof value === 'object' && value.text !== undefined) {
+                // Для объектов используем innerHTML если есть HTML, иначе textContent
+                if (value.html) {
+                    element.innerHTML = value.html;
+                } else {
+                    element.textContent = value.text;
+                }
+                
+                if (value.fontSize) {
+                    element.style.fontSize = value.fontSize;
+                } else {
+                    element.style.fontSize = '';
+                }
+            } else {
+                // Обычный текст или HTML - проверяем наличие HTML-тегов
+                if (typeof value === 'string' && /<[a-z][\s\S]*>/i.test(value)) {
+                    element.innerHTML = value;
+                } else {
+                    element.textContent = value;
+                }
+                element.style.fontSize = '';
+            }
+            
+            // Автоподбор размера шрифта если текст не помещается (только для обычного текста)
+            if (typeof value === 'string' && element.scrollWidth > element.clientWidth) {
+                element.style.fontSize = '12px';
+            }
+        });
+    });
+    
+    localStorage.setItem('userLanguage', selectedLang);
+    
+    // Можно добавить визуальную индикацию текущего языка
+    updateLanguageIndicator(selectedLang);
+}
+
+// Функция для визуальной индикации текущего языка
+function updateLanguageIndicator(currentLang) {
+    const paddle1 = document.querySelector('.Paddle1Grup');
+    const paddle2 = document.querySelector('.Paddle2Grup');
+    const ruLang = document.querySelector('.RuLang');
+    const enLang = document.querySelector('.EnLang');
+    
+    if (currentLang === 'ru') {
+        // Подсвечиваем русский язык
+        if (ruLang) ruLang.style.fontWeight = 'bold';
+        if (enLang) enLang.style.fontWeight = 'normal';
+        if (paddle1) paddle1.style.opacity = '1';
+        if (paddle2) paddle2.style.opacity = '0.7';
+    } else {
+        // Подсвечиваем английский язык
+        if (ruLang) ruLang.style.fontWeight = 'normal';
+        if (enLang) enLang.style.fontWeight = 'bold';
+        if (paddle1) paddle1.style.opacity = '0.7';
+        if (paddle2) paddle2.style.opacity = '1';
+    }
+}
+
+const locales = {
+    en: {
+        '.TextOnTopSettings': 'Settings',
+        '.PremiumText': 'PREMIUM',
+        '.Profile_Settings': 'Profile Settings',
+        '.RuLang': 'RU',
+        '.EnLang': 'EN',
+        '.Support': '<span>Support:</span><br><span>@RL_Cooperation</span>'
+    },
+    ru: {
+        '.TextOnTopSettings': 'Настройки',
+        '.PremiumText': 'ПРЕМИУМ',
+        '.Profile_Settings': {
+            text: 'Настройки профиля',
+            fontSize: '0.8rem'
+        },
+        '.RuLang': 'РУ',
+        '.EnLang': 'EN',
+        '.Support': '<span>Поддержка:</span><br><span>@RL_Cooperation</span>'
+    }
+};
