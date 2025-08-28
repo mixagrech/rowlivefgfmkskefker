@@ -2237,28 +2237,31 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const spawnType = Math.random() < 0.7 ? 'obstacle' : 'coin';
         const lane = Math.floor(Math.random() * 3);
-        const column = COLUMNS[lane];
         
         const width = spawnType === 'obstacle' ? OBSTACLE_WIDTH : COIN_WIDTH;
         const height = spawnType === 'obstacle' ? OBSTACLE_HEIGHT : COIN_HEIGHT;
         const yOffset = -height;
 
-        // Вычисляем позицию объекта относительно игрового слоя
-        const columnPosInLayer = column.x - GAME_LAYER_LEFT;
-        let adjustedXPos;
-
-        if (lane === 0) { // Левая колонка - смещаем на 3vw к центру
-            const centerOffset = window.innerWidth * 0.15; // 3vw в пикселях
-            adjustedXPos = columnPosInLayer + (PLAYER_WIDTH - width) / 2 + centerOffset;
-        } else if (lane === 1) { // Центральная колонка - без смещения
-            adjustedXPos = columnPosInLayer + (PLAYER_WIDTH - width) / 2;
-        } else { // Правая колонка - смещаем на 3vw к центру
-            const centerOffset = window.innerWidth * 0.15; // 3vw в пикселях
-            adjustedXPos = columnPosInLayer + (PLAYER_WIDTH - width) / 2 - centerOffset;
-        }
-
-        const FINAL_CORRECTION = -7;
-        adjustedXPos += FINAL_CORRECTION;
+        // Получаем элементы колонок
+        const leftColumn = document.querySelector('.LeftColomn');
+        const centerColumn = document.querySelector('.CenterColomn');
+        const rightColumn = document.querySelector('.RightColomn');
+        
+        // Выбираем нужную колонку по lane
+        let targetColumn;
+        if (lane === 0) targetColumn = leftColumn;
+        else if (lane === 1) targetColumn = centerColumn;
+        else targetColumn = rightColumn;
+        
+        if (!targetColumn) return; // Защита от ошибок
+        
+        // Получаем позицию и размеры колонки
+        const columnRect = targetColumn.getBoundingClientRect();
+        const gameLayerRect = gameObjectsLayer.getBoundingClientRect();
+        
+        // Вычисляем позицию относительно gameObjectsLayer
+        const columnCenterX = columnRect.left - gameLayerRect.left + columnRect.width / 2;
+        const adjustedXPos = columnCenterX - width / 2;
 
         // Создание элемента
         const element = document.createElement('div');
@@ -2286,7 +2289,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 element: element,
                 lane: lane,
                 top: yOffset,
-                x: adjustedXPos, // Используем относительную позицию
+                x: adjustedXPos,
                 width: width,
                 height: height,
                 bottom: yOffset + height
@@ -2297,7 +2300,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 element: element,
                 lane: lane,
                 top: yOffset,
-                x: adjustedXPos, // Используем относительную позицию
+                x: adjustedXPos,
                 width: width,
                 height: height,
                 bottom: yOffset + height
@@ -3764,7 +3767,7 @@ BackBtnOnSettings.addEventListener('click', () => {
 });
 
 
-// ### avatar ###
+// ### Others ###
 
 function setupUserAvatarSettings() {
     const avatarContainer = document.querySelector(".UserAvatarSettings");
@@ -4019,7 +4022,6 @@ function initializeUserSettings() {
     
     if (!user) {
         console.log('Данные пользователя не найдены');
-        // Все равно показываем интерфейс, но с заглушками
     }
 
     // First and last name
@@ -4038,6 +4040,18 @@ function initializeUserSettings() {
             element.textContent = user?.username ? `@${user.username}` : '@username';
         });
     }
+    // Tg profile
+
+    const tgElements = document.querySelectorAll('.TgProfile');
+    
+    tgElements.forEach(element => {
+        element.addEventListener('click', () => {
+            window.location.href = 'tg://settings';
+        });
+        
+        // Делаем элемент визуально кликабельным
+        element.style.cursor = 'pointer';
+    });
 
     // User ID
     const userIdElements = document.querySelectorAll('.UserIDsettings');
@@ -4091,5 +4105,43 @@ document.addEventListener("DOMContentLoaded", function() {
     initializeUserSettings();
 });
 
-// Глобальная функция для проверки баланса
 window.checkBalance = getWalletBalance;
+
+
+function initPaddleAnimations() {
+    const paddles = [
+        { group: '.Paddle1Grup', svg: '.Paddle1', text: '.RuLang' },
+        { group: '.Paddle2Grup', svg: '.Paddle2', text: '.EnLang' }
+    ];
+    
+    paddles.forEach(paddle => {
+        const group = document.querySelector(paddle.group);
+        const svg = document.querySelector(paddle.svg);
+        const text = document.querySelector(paddle.text);
+        
+        if (group) {
+            // CSS transition для плавности
+            group.style.transition = 'transform 0.1s ease';
+            
+            const handlePress = () => {
+                group.style.transform = 'scale(0.9)';
+            };
+            
+            const handleRelease = () => {
+                group.style.transform = 'scale(1)';
+            };
+            
+            // События для мыши
+            group.addEventListener('mousedown', handlePress);
+            group.addEventListener('mouseup', handleRelease);
+            group.addEventListener('mouseleave', handleRelease);
+            
+            // События для touch
+            group.addEventListener('touchstart', handlePress);
+            group.addEventListener('touchend', handleRelease);
+            group.addEventListener('touchcancel', handleRelease);
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initPaddleAnimations);
