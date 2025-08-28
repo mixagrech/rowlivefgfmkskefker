@@ -131,13 +131,14 @@ a, button, div, span, [onclick] {
     background: rgba(13, 13, 13, 80%);
     font-size: 12px;
     padding: 20px 10px;
-    display: flex;
-    align-items: center;
     font-weight: 600;
     -webkit-tap-highlight-color: transparent;
     font-size: 1rem;
     color: #FFFFFF;
     right: 2.9%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .NftMarketMainBtn svg {
@@ -1784,6 +1785,7 @@ a, button, div, span, [onclick] {
     gap: 18px;
     padding: 0 18%;
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 
@@ -2595,45 +2597,50 @@ a, button, div, span, [onclick] {
     z-index: 2;
 }
 
-.Paddle1 {
+
+
+.Paddle1Grup, .Paddle2Grup {
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+
+.Paddle1Grup {
     position: absolute;
-    left: 9.3%;
+    left: 12.3%;
     top: 24.2%;
-    width: 43%;
-    height: 40%;
+    width: 39%;
+    height: 36%;
 }
-.Paddle2 {
+
+.Paddle2Grup {
     position: absolute;
-    right: 9.4%;
+    right: 12.4%;
     top: 27.3%;
-    width: 38.7%;
-    height: 46%;
+    width: 34.7%;
+    height: 42%;
 }
+
 
 .RuLang {
     position: absolute;
     color: #FFFFFF;
-    top: 33%;
-    left: 26%;
+    top: 22%;
+    left: 35%;
     font-size: 0.8rem;
     z-index: 2;
-    transition: transform 0.1s;
 }
-.RuLang:active {
-    transform: scale(0.9); 
-}
+
 .EnLang {
     position: absolute;
     color: #FFFFFF;
-    top: 38%;
-    right: 20%;
+    top: 25%;
+    right: 23%;
     font-size: 1rem;
     z-index: 2;
-    transition: transform 0.1s;
 }
-.EnLang:active {
-    transform: scale(0.9); 
-}
+
 
 .TgProfile {
     display: flex;
@@ -2696,4 +2703,32 @@ a, button, div, span, [onclick] {
     right: 7%;
     color: #5F5F5F;
     font-size: 0.9rem;
+}
+
+
+.LeftColomn {
+    position: absolute;
+    width: 18.3vw;
+    height: 71vw;
+    top: 21%;
+    left: 18vw;
+    border-radius: 1000px;
+    z-index: 2;
+}
+.CenterColomn {
+    position: absolute;
+    width: 18.3vw;
+    height: 71vw;
+    top: 21%;
+    border-radius: 1000px;
+    z-index: 2;
+}
+.RightColomn {
+    position: absolute;
+    width: 18.3vw;
+    height: 71vw;
+    top: 21%;
+    right: 18vw;
+    border-radius: 1000px;
+    z-index: 2;
 }
