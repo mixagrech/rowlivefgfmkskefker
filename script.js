@@ -4043,13 +4043,20 @@ function initializeUserSettings() {
     // Tg profile
 
     const tgElements = document.querySelectorAll('.TgProfile');
-    
+
     tgElements.forEach(element => {
         element.addEventListener('click', () => {
-            window.location.href = 'tg://settings';
+            if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+                Telegram.WebApp.openLink('https://t.me');
+            } else {
+                try {
+                    window.location.href = 'tg://';
+                } catch (e) {
+                    window.open('https://t.me', '_blank');
+                }
+            }
         });
         
-        // Делаем элемент визуально кликабельным
         element.style.cursor = 'pointer';
     });
 
