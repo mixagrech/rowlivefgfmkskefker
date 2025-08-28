@@ -146,14 +146,22 @@ a, button, div, span, [onclick] {
 }
 
 .age_middle_heder_text {
+    position: absolute;
     color: #ffffff;
     font-size: 1rem;
     font-weight: 400;
     z-index: 3;
-    margin-right: 40%;
+    left: 10%;
 }
+
+.IconAgeSVG {
+    position: absolute;
+    right: 10%;
+}
+
 .line_under_heder {
-    margin-right: 87%;
+    position: absolute;
+    left: 7%;
     width: 3px;
     height: 5%;
     background-color: #529DD6;
@@ -999,14 +1007,17 @@ a, button, div, span, [onclick] {
 }
 .textAfterSelectBlock {
     position: absolute;
+    width: 100%;
+    height: 8%;
     font-size: 0.8rem;
     font-weight: 500;
     z-index: 2;
-    top: 66.5%;
+    top: 64%;
     left: 0px;
     right: 0px;
-    display: block;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #FFFFFF;
 }
 .YourProfilePanel {
@@ -2731,4 +2742,5 @@ a, button, div, span, [onclick] {
     right: 18vw;
     border-radius: 1000px;
     z-index: 2;
+    
 }
