@@ -379,9 +379,9 @@ function saveAgeRewardState() {
 async function ageReward() {
     if (ageRewardState.claimed) {
         if (window.Telegram?.WebApp?.showAlert) {
-            console.log('Вы уже получали награду за возраст!');
+            console.log("You've already received an age award!");
         } else {
-            console.log('Вы уже получали награду за возраст!');
+            console.log("You've already received an age award!");
         }
         return;
     }
@@ -397,14 +397,14 @@ async function ageReward() {
         usernameonAgeRewardID.textContent = ageBasedReward;
         
         if (window.Telegram?.WebApp?.showAlert) {
-            console.log(`🎉 Вы получили ${ageBasedReward} монет!`);
+            console.log(`🎉 You have received ${ageBasedReward} coins!`);
         } else {
-            console.log(`🎉 Вы получили ${ageBasedReward} монет!`);
+            console.log(`🎉 You have received ${ageBasedReward} coins!`);
         }
     } catch (e) {
-        console.error('Ошибка:', e);
+        console.error('Error:', e);
         if (window.Telegram?.WebApp?.showAlert) {
-            console.log('⚠️ Ошибка при получении награды');
+            console.log('⚠️ Error when receiving reward');
         }
     }
 }
@@ -424,7 +424,7 @@ function initAgeReward() {
 if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
     const user = tg.initDataUnsafe.user;
     usernameonAgeID.innerHTML = `${user.first_name} ${user.last_name || ''}`;
-    console.log(`Возраст: ${calculateAgeFromId(user.id)}`);
+    console.log(`Age: ${calculateAgeFromId(user.id)}`);
 }
 
 document.addEventListener('DOMContentLoaded', initAgeReward);
@@ -653,7 +653,6 @@ const RANKS = [
 
 // Функция для получения текущего ранга
 function getCurrentRank(score) {
-    // Ищем ранг, где score находится в диапазоне [min, max)
     // Для CHAMP ранга используем отдельную проверку
     for (let i = 0; i < RANKS.length; i++) {
         const rank = RANKS[i];
@@ -818,7 +817,7 @@ async function checkFiveFriendsReward() {
             awardFiveFriendsNFT();
         }
     } catch (error) {
-        console.error('Ошибка проверки награды за 5 друзей:', error);
+        console.error('Error checking reward for 5 friends:', error);
     }
 }
 
@@ -872,7 +871,7 @@ async function setupReferralSystem(userId) {
         // Загрузка друзей (но не показываем сразу)
         await loadReferrals(data.code, false);
     } catch (error) {
-        console.error('Ошибка настройки системы:', error);
+        console.error('System setup error:', error);
     }
 }
 
@@ -941,7 +940,7 @@ async function loadReferrals(code, shouldShow = false) {
         }
 
     } catch (error) {
-        console.error('Ошибка загрузки друзей:', error);
+        console.error('Error loading friends:', error);
     }
 }
 
@@ -1025,7 +1024,7 @@ function generateUserId() {
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text)
         .then(() => showNotification('','success'))
-        .catch(err => console.error('Ошибка копирования:', err));
+        .catch(err => console.error('Copy error:', err));
 }
 
 function showNotification(message, type) {
@@ -1237,22 +1236,22 @@ async function purchaseSkin(skinNumber) {
     const skinData = JSON.parse(localStorage.getItem(`skin_${skinNumber}_data`)) || {};
     const skinHash = getSkinHash(skinData);
     
-    console.log('=== ПОКУПКА СКИНА ===');
-    console.log('Номер скина:', skinNumber);
-    console.log('Данные скина:', skinData);
-    console.log('Текущий баланс:', gameState.rowscore);
+    console.log('=== BUYING A SKIN ===');
+    console.log('Skin number:', skinNumber);
+    console.log('Skin details:', skinData);
+    console.log('Current balance:', gameState.rowscore);
     
     if (skinData.priceROW) {
         // Покупка за ROW
-        console.log('Попытка покупки за ROW:', skinData.priceROW);
+        console.log('Attempt to purchase for ROW:', skinData.priceROW);
         
         if (gameState.rowscore >= skinData.priceROW) {
-            console.log('Достаточно монет, списываем...');
+            console.log("Enough coins, let's write off...");
             gameState.rowscore -= skinData.priceROW;
             localStorage.setItem(`skin_${skinNumber}_purchased`, skinHash);
             selectSkin(skinNumber);
             
-            console.log('Новый баланс:', gameState.rowscore);
+            console.log('New balance:', gameState.rowscore);
             saveGameState();
             updateUI();
             
@@ -1264,7 +1263,7 @@ async function purchaseSkin(skinNumber) {
             }
             renderMyLotsMenu(); // <--- добавлено
         } else {
-            console.log('Недостаточно монет!');
+            console.log('Not enough coins!');
             const needed = skinData.priceROW - gameState.rowscore;
             
             if (typeof tg !== 'undefined' && tg.showAlert) {
@@ -1476,7 +1475,7 @@ function initializeSkinTimers() {
                 }
             }
         } catch (e) {
-            console.error('Ошибка инициализации таймера для скина:', key, e);
+            console.error('Error initializing timer for skin:', key, e);
         }
     }
 }
@@ -1519,7 +1518,7 @@ function addSkin(name, imagePath, miniGameImagePath, options = {}, limitedOption
             isExpired = endTime <= Date.now() && !isPurchased;
             
         } catch (e) {
-            console.error('Ошибка обработки данных скина:', e);
+            console.error('Error processing skin data:', e);
             isExpired = endTime <= Date.now() && !isPurchased;
         }
     }
@@ -1708,7 +1707,7 @@ function addSkin(name, imagePath, miniGameImagePath, options = {}, limitedOption
         const isPurchasedNow = localStorage.getItem(`skin_${skinNumber}_purchased`) === getSkinHash(currentSkinData);
         
         if (currentSkinData.relevance === "NoActively" && !isPurchasedNow) {
-            console.log("Этот скин временно недоступен");
+            console.log("This skin is temporarily unavailable.");
             return;
         }
 
@@ -2049,7 +2048,7 @@ function getTotalNFTBonus() {
                     totalBonus += data.bonusPercent || 0;
                 }
             } catch (e) {
-                console.error('Ошибка при обработке данных скина:', e);
+                console.error('Error processing skin data:', e);
             }
         }
     }
@@ -2162,7 +2161,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('keydown', handleKeyDown);
         
         if (!imageRowerMiniGame || !columnClipMiniGame) {
-            console.error("Элементы игрока или маски не найдены!");
+            console.error("Player elements or masks not found!");
             return;
         }
 
@@ -2403,12 +2402,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function updatePlayButton() {
         if (!playBtnText) return;
         
+        const currentLanguage = localStorage.getItem('userLanguage') || 'en';
+        
         if (remainingAttempts === 0 && !canPlayAgain()) {
-            playBtnText.textContent = 'Buy';
+            playBtnText.textContent = currentLanguage === 'ru' ? 'Купить' : 'Buy';
         } else if (remainingAttempts > 0) {
-            playBtnText.textContent = `Again`;
+            playBtnText.textContent = currentLanguage === 'ru' ? 'Снова' : 'Again';
         } else {
-            playBtnText.textContent = 'Play';
+            playBtnText.textContent = currentLanguage === 'ru' ? 'Играть' : 'Play';
         }
     }
 
@@ -2494,7 +2495,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         address: 'UQDDEEbNMPfVwpL2q1zi5oAbChXADLuZp4gCOdFoHDmHo4Nn',
                         amount: "50000000",
-                        message: "Покупка дополнительной попытки"
+                        message: "Purchasing an additional attempt"
                     }
                 ]
             };
@@ -2505,7 +2506,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updatePlayButton();
             }
         } catch (error) {
-            console.error("Ошибка при оплате:", error);
+            console.error("Payment error:", error);
         } finally {
             isProcessingTransaction = false;
             updatePlayButton();
@@ -2742,20 +2743,31 @@ document.addEventListener('DOMContentLoaded', () => {
     ShareAgeStory.addEventListener('click', async () => {
         const tg = window.Telegram?.WebApp;
         if (!tg || typeof tg.shareToStory !== 'function') return;
+        
         let userAge = 25;
         if (tg.initDataUnsafe?.user?.id) {
             userAge = Math.floor(tg.initDataUnsafe.user.id / 1000000000);
         }
+        
         ShareAgeStory.disabled = true;
+        
         try {
             const imageUrl = 'https://mixagrech.github.io/rowlivefgfmkskefker/telegramHistory2.png';
+            
+            // Получаем текущий язык из localStorage
+            const savedLanguage = localStorage.getItem('userLanguage') || 'ru';
+            const isRussian = savedLanguage === 'ru';
+            
             const params = {
-                text: `Моему аккаунту Telegram: ${userAge} лет 🎮\nПрисоединяйся! 🚣‍♂️`,
+                text: isRussian 
+                    ? `Моему аккаунту Telegram: ${userAge} лет 🎮\nПрисоединяйся! 🚣‍♂️`
+                    : `My Telegram account: ${userAge} years 🎮\nJoin us! 🚣‍♂️`,
                 widget_link: {
                     url: 'https://t.me/rowlivebot/row',
-                    name: 'Играть сейчас'
+                    name: isRussian ? 'Играть сейчас' : 'Play now'
                 }
             };
+            
             tg.shareToStory(
                 imageUrl,
                 params,
@@ -3090,25 +3102,33 @@ function saveGameState() {
 }
 
 // Функция добавления квеста
-function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask = 0, onClickCode) {
+function addTask(
+    nameEn, 
+    nameRu, 
+    imagePath, 
+    reward, 
+    isLimitedTask = false, 
+    limitTimeTask = 0, 
+    onClickCode
+) {
     const taskMain = document.getElementById('taskMain');
     if (!taskMain) {
-        console.error('Элемент taskMain не найден');
+        console.error('Element taskMain not found');
         return;
     }
 
     // Проверяем, является ли это разделом
-    if (name === "chapter") {
+    if (nameEn === "chapter") {
         addChapterSeparator();
         return;
     }
 
-    // Создаем уникальный ID для задания
-    const taskId = `task_${name.replace(/\s+/g, '_').toLowerCase()}`;
+    // Создаем уникальный ID для задания (используем английское название)
+    const taskId = `task_${nameEn.replace(/\s+/g, '_').toLowerCase()}`;
     
     // Проверяем, не выполнено ли уже это задание
     if (localStorage.getItem(`completed_${taskId}`) === 'true') {
-        console.log(`Задание "${name}" уже выполнено`);
+        console.log(`Task "${nameEn}" has already been completed`);
         return;
     }
     
@@ -3123,7 +3143,7 @@ function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask =
             
             // Если время вышло - не создаем квест
             if (endTime <= Date.now()) {
-                console.log(`Лимитированное задание "${name}" истекло`);
+                console.log(`Limited task "${nameEn}" expired`);
                 return;
             }
             
@@ -3133,7 +3153,7 @@ function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask =
                 isLimited: true
             }));
         } catch (e) {
-            console.error('Ошибка обработки данных квеста:', e);
+            console.error('Error processing quest data:', e);
             endTime = Date.now() + limitTimeTask;
             localStorage.setItem(`task_${taskId}_data`, JSON.stringify({
                 endTime: endTime,
@@ -3162,12 +3182,16 @@ function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask =
     const centredClass = `taskNumb${taskIndex + 1}Centred`;
     const separatorClass = `taskSeparator${taskIndex + 1}`;
 
+    // Получаем текущий язык
+    const currentLanguage = localStorage.getItem('userLanguage') || 'en';
+    const taskName = currentLanguage === 'ru' ? nameRu : nameEn;
+
     // HTML структура задачи
     const taskHTML = `
         <div class="${centredClass} taskCentred" data-task-id="${taskId}" style="top: ${currentPosition}%">
             <div class="${taskClass}">
                 <img src="${imagePath}" alt="logo" class="Task${taskIndex + 1}logo">
-                <p class="TaskName${taskIndex + 1}">${name}</p>
+                <p class="TaskName${taskIndex + 1}" data-name-en="${nameEn}" data-name-ru="${nameRu}">${taskName}</p>
                 <p class="TaskReward${taskIndex + 1}"><span>+${reward}</span><span>ROW</span></p>
                 ${isLimitedTask ? `
                 <div class="taskTimerContainer">
@@ -3326,7 +3350,7 @@ function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask =
                 // Создаем объект thisQuest для управления квестом
                 const thisQuest = {
                     id: taskId,
-                    name: name,
+                    name: currentLanguage === 'ru' ? nameRu : nameEn,
                     reward: reward,
                     addReward: false,
                     complete: false,
@@ -3363,12 +3387,12 @@ function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask =
                             thisQuest.setComplete(true);
                         }
                     } catch(e) {
-                        console.error('Ошибка в коде задания:', e);
+                        console.error('Error in task code:', e);
                     }
                 `)(thisQuest);
                 
             } catch (error) {
-                console.error('Ошибка выполнения кода задачи:', error);
+                console.error('Error executing task code:', error);
             }
         });
     }
@@ -3387,6 +3411,7 @@ function addTask(name, imagePath, reward, isLimitedTask = false, limitTimeTask =
         startTaskTimer(taskId, endTime, disappears);
     }
 }
+
 
 // Функция для добавления разделителя раздела
 function addChapterSeparator() {
@@ -3645,7 +3670,7 @@ function initializeTaskTimers() {
                 }
             }
         } catch (e) {
-            console.error('Ошибка инициализации таймера для квеста:', key, e);
+            console.error('Error initializing timer for quest:', key, e);
         }
     }
 }
@@ -3660,7 +3685,8 @@ document.addEventListener('DOMContentLoaded', function() {
     loadGameState();
     
     addTask(
-        "NFT Taso", 
+        "NFT Taso",
+        "NFT задание",
         "Rowlogo.png",
         20,
         false,
@@ -3683,7 +3709,8 @@ document.addEventListener('DOMContentLoaded', function() {
     );
 
     addTask(
-        "Test quest4k67", 
+        "Test quest4k67",
+        "Тест 4к67",
         "Rowlogo.png",
         20,
         true, // isLimitedTask
@@ -3697,7 +3724,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Обычные квесты
     addTask(
-        "NFT Taskавf5ыc", 
+        "NFT Taskавf5ыc",
+        "Тест ф5ыс",
         "Rowlogo.png",
         20,
         false,
@@ -3713,7 +3741,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Квест после раздела
     addTask(
-        "Test quest4f7dsиgд", 
+        "Test quest4f7dsиgд",
+        "Тест 4ф7д",
         "Rowlogo.png",
         20,
         false,
@@ -3724,7 +3753,8 @@ document.addEventListener('DOMContentLoaded', function() {
         `
     );
     addTask(
-        "Test quest47ffdдвsg", 
+        "Test quest47ffdдвsg",
+        "Тест 47фф",
         "Rowlogo.png",
         20,
         false,
@@ -3736,6 +3766,7 @@ document.addEventListener('DOMContentLoaded', function() {
     );
     addTask(
         "Test quest47ffdпвsдg", 
+        "Задание тест 47фа",
         "Rowlogo.png",
         20,
         false,
@@ -3798,9 +3829,9 @@ function showFallbackAvatarSettings() {
 
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
-        console.log('ID скопирован: ', text);
+        console.log('ID copied: ', text);
     }).catch(err => {
-        console.error('Ошибка при копировании: ', err);
+        console.error('Error copying: ', err);
         fallbackCopyToClipboard(text);
     });
 }
@@ -3816,7 +3847,7 @@ function fallbackCopyToClipboard(text) {
     
     try {
         document.execCommand('copy');
-        console.log('ID скопирован (fallback): ', text);
+        console.log('ID copied (fallback): ', text);
     } catch (err) {
         console.error('Fallback copy failed: ', err);
     }
@@ -3866,12 +3897,12 @@ function updateBalanceDisplay(balanceData) {
     const balanceElement = document.querySelector('.CryptoBalance');
     
     if (!balanceElement) {
-        console.log('Элемент для отображения баланса не найден');
+        console.log('Balance display element not found');
         return;
     }
     
-    if (balanceData.ton === 'Ошибка') {
-        balanceElement.innerHTML = 'Ошибка<span></span>';
+    if (balanceData.ton === 'Error') {
+        balanceElement.innerHTML = 'Error<span></span>';
         return;
     }
 
@@ -3879,7 +3910,7 @@ function updateBalanceDisplay(balanceData) {
     
     balanceElement.innerHTML = `${formattedBalance.integer}<span>.${formattedBalance.fractional}</span>`;
     
-    balanceElement.title = `Полный баланс: ${balanceData.ton} TON`;
+    balanceElement.title = `Full balance: ${balanceData.ton} TON`;
 }
 
 async function getTonToUsdtRate() {
@@ -3895,12 +3926,12 @@ async function getTonToUsdtRate() {
         if (data && data.rates && data.rates.TON && data.rates.TON.prices && data.rates.TON.prices.USD) {
             return data.rates.TON.prices.USD;
         } else {
-            console.log('Курс TON/USD не найден в ответе');
+            console.log('TON/USD rate not found in response');
             return null;
         }
 
     } catch (error) {
-        console.error('Ошибка получения курса:', error);
+        console.error('Error getting course:', error);
         return null;
     }
 }
@@ -3911,7 +3942,7 @@ async function getWalletBalance() {
         const tcUI = window.tonConnectUI || tonConnectUI;
         
         if (!tcUI || !tcUI.connected) {
-            console.log('Кошелек не подключен или tonConnectUI недоступен');
+            console.log('Wallet not connected or tonConnectUI unavailable');
             updateBalanceDisplay({
                 ton: '0',
                 usd: '0',
@@ -3923,7 +3954,7 @@ async function getWalletBalance() {
         const walletInfo = tcUI.wallet;
         const address = walletInfo.account.address;
         
-        console.log('Адрес кошелька:', address);
+        console.log('Wallet address:', address);
 
         const balanceResponse = await fetch(`https://tonapi.io/v2/accounts/${address}`);
         
@@ -3936,17 +3967,17 @@ async function getWalletBalance() {
         if (balanceData && balanceData.balance !== undefined) {
             const balanceInTON = (balanceData.balance / 1000000000).toFixed(9);
             
-            console.log('Баланс TON:', balanceInTON, 'TON');
+            console.log('TON Balance:', balanceInTON, 'TON');
 
             const tonRate = await getTonToUsdtRate();
             
             let balanceInUSD = null;
             if (tonRate) {
                 balanceInUSD = (balanceInTON * tonRate).toFixed(2);
-                console.log('Баланс USD:', balanceInUSD, 'USD');
-                console.log('Курс TON/USD:', tonRate);
+                console.log('Balance USD:', balanceInUSD, 'USD');
+                console.log('TON/USD rate:', tonRate);
             } else {
-                console.log('Не удалось получить курс для конвертации в USD');
+                console.log('Unable to get rate for conversion to USD');
             }
             
             const result = {
@@ -3959,7 +3990,7 @@ async function getWalletBalance() {
             
             return result;
         } else {
-            console.log('Баланс не найден в ответе');
+            console.log('Balance not found in response');
             const result = {
                 ton: '0',
                 usd: '0',
@@ -3970,10 +4001,10 @@ async function getWalletBalance() {
         }
 
     } catch (error) {
-        console.error('Ошибка получения баланса:', error);
+        console.error('Error getting balance:', error);
         const result = {
-            ton: 'Ошибка',
-            usd: 'Ошибка',
+            ton: 'Error',
+            usd: 'Error',
             rate: null
         };
         updateBalanceDisplay(result);
@@ -3987,7 +4018,7 @@ function initializeBalance() {
         const tcUI = window.tonConnectUI || tonConnectUI;
         
         if (tcUI) {
-            console.log('tonConnectUI найден');
+            console.log('tonConnectUI found');
             
             if (tcUI.connected) {
                 getWalletBalance();
@@ -4007,7 +4038,7 @@ function initializeBalance() {
             });
             
         } else {
-            console.log('tonConnectUI еще не загружен, проверяем снова...');
+            console.log('tonConnectUI is not loaded yet, check again...');
             setTimeout(checkTonConnectUI, 500);
         }
     }
@@ -4021,7 +4052,7 @@ function initializeUserSettings() {
     const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
     
     if (!user) {
-        console.log('Данные пользователя не найдены');
+        console.log('User data not found');
     }
 
     // First and last name
@@ -4029,7 +4060,7 @@ function initializeUserSettings() {
     const nameElements = document.querySelectorAll('.firstAndLastNameP');
     if (nameElements.length > 0) {
         nameElements.forEach(element => {
-            element.textContent = fullName || 'Пользователь';
+            element.textContent = fullName || 'User';
         });
     }
 
@@ -4058,11 +4089,11 @@ function initializeUserSettings() {
             
             element.addEventListener('click', function() {
                 copyToClipboard(userId);
-                showCopyNotification(element, 'ID скопирован!');
+                showCopyNotification(element, 'ID copied!');
             });
             
             element.style.cursor = 'pointer';
-            element.title = 'Нажмите чтобы скопировать ID';
+            element.title = 'Click to copy ID';
         });
     }
 
@@ -4072,14 +4103,14 @@ function initializeUserSettings() {
         if (user && user.is_premium) {
             // Если пользователь премиум - ПОКАЗЫВАЕМ элемент
             premiumElement.style.display = ''; // или 'block' в зависимости от исходного стиля
-            console.log('Премиум пользователь - показываем элемент');
+            console.log('Premium user - show element');
         } else {
             // Если пользователь НЕ премиум или данные не найдены - СКРЫВАЕМ
             premiumElement.style.display = 'none';
-            console.log('Обычный пользователь или данные недоступны - скрываем элемент');
+            console.log('Regular user or data not available - hide element');
         }
     } else {
-        console.log('Элемент с классом IsPremium не найден');
+        console.log('Element with class IsPremium not found');
     }
 
     // Support contact
@@ -4096,7 +4127,7 @@ function initializeUserSettings() {
 
 // Инициализация при загрузке страницы
 document.addEventListener("DOMContentLoaded", function() {
-    console.log('DOM загружен, инициализируем...');
+    console.log('DOM loaded, initializing...');
     setupUserAvatarSettings();
     initializeUserSettings();
 });
@@ -4230,7 +4261,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-
 // Система перевода
 
 
@@ -4238,42 +4268,78 @@ document.addEventListener('DOMContentLoaded', function() {
     const paddle1Group = document.querySelector('.Paddle1Grup');
     const paddle2Group = document.querySelector('.Paddle2Grup');
     
-    // Обработчик для Paddle1Grup (русский -> английский)
+    // Обработчики для переключения языка
     if (paddle1Group) {
         paddle1Group.addEventListener('click', function() {
             setLanguage('en');
-            // Добавляем анимацию нажатия
             this.style.transform = 'scale(0.95)';
             setTimeout(() => {
                 this.style.transform = 'scale(1)';
             }, 100);
         });
-        
         paddle1Group.style.cursor = 'pointer';
     }
     
-    // Обработчик для Paddle2Grup (английский -> русский)
     if (paddle2Group) {
         paddle2Group.addEventListener('click', function() {
             setLanguage('ru');
-            // Добавляем анимацию нажатия
             this.style.transform = 'scale(0.95)';
             setTimeout(() => {
                 this.style.transform = 'scale(1)';
             }, 100);
         });
-        
         paddle2Group.style.cursor = 'pointer';
     }
     
-    // Восстанавливаем язык при загрузке
-    const savedLanguage = localStorage.getItem('userLanguage');
-    if (savedLanguage) {
-        setLanguage(savedLanguage);
-    }
+    // Автоматическое определение языка при первом запуске
+    detectAndSetLanguage();
 });
 
-// Функция установки языка
+
+// Функция автоматического определения языка
+function detectAndSetLanguage() {
+    const savedLanguage = localStorage.getItem('userLanguage');
+    
+    // Если язык уже сохранен, используем его
+    if (savedLanguage) {
+        setLanguage(savedLanguage);
+        return;
+    }
+    
+    // Пытаемся получить язык из TMA
+    try {
+        // Проверяем, доступен ли объект Telegram WebApp
+        if (window.Telegram && window.Telegram.WebApp) {
+            const languageCode = window.Telegram.WebApp.initDataUnsafe?.user?.language_code;
+            
+            if (languageCode) {
+                // Если язык русский или начинается с ru (ru-RU, ru-UA и т.д.)
+                if (languageCode.startsWith('ru')) {
+                    setLanguage('ru');
+                } else {
+                    // Для всех остальных языков используем английский
+                    setLanguage('en');
+                }
+                return;
+            }
+        }
+        
+        // Альтернативный способ через navigator.language (если TMA не доступен)
+        const browserLanguage = navigator.language || navigator.userLanguage;
+        if (browserLanguage.startsWith('ru')) {
+            setLanguage('ru');
+        } else {
+            setLanguage('en');
+        }
+        
+    } catch (error) {
+        console.error('Error detecting language:', error);
+        // По умолчанию английский в случае ошибки
+        setLanguage('en');
+    }
+}
+
+// Функция установки языка 
 function setLanguage(lang) {
     const selectedLang = lang.startsWith('ru') ? 'ru' : 'en';
     const dictionary = locales[selectedLang];
@@ -4282,9 +4348,7 @@ function setLanguage(lang) {
         const elements = document.querySelectorAll(selector);
         
         elements.forEach(element => {
-            // Проверяем, является ли значение объектом с текстом и размером шрифта
             if (typeof value === 'object' && value.text !== undefined) {
-                // Для объектов используем innerHTML если есть HTML, иначе textContent
                 if (value.html) {
                     element.innerHTML = value.html;
                 } else {
@@ -4297,7 +4361,6 @@ function setLanguage(lang) {
                     element.style.fontSize = '';
                 }
             } else {
-                // Обычный текст или HTML - проверяем наличие HTML-тегов
                 if (typeof value === 'string' && /<[a-z][\s\S]*>/i.test(value)) {
                     element.innerHTML = value;
                 } else {
@@ -4306,17 +4369,27 @@ function setLanguage(lang) {
                 element.style.fontSize = '';
             }
             
-            // Автоподбор размера шрифта если текст не помещается (только для обычного текста)
             if (typeof value === 'string' && element.scrollWidth > element.clientWidth) {
                 element.style.fontSize = '12px';
             }
         });
     });
     
+    updateAllTasksLanguage(selectedLang);
     localStorage.setItem('userLanguage', selectedLang);
-    
-    // Можно добавить визуальную индикацию текущего языка
     updateLanguageIndicator(selectedLang);
+}
+
+// Функция обновления языка заданий 
+function updateAllTasksLanguage(language) {
+    const taskNameElements = document.querySelectorAll('[data-name-en][data-name-ru]');
+    
+    taskNameElements.forEach(element => {
+        const nameEn = element.getAttribute('data-name-en');
+        const nameRu = element.getAttribute('data-name-ru');
+        
+        element.textContent = language === 'ru' ? nameRu : nameEn;
+    });
 }
 
 // Функция для визуальной индикации текущего языка
@@ -4369,12 +4442,40 @@ const locales = {
 
         '.YourRankText': 'Your rank',
         '.PathText': 'PATH',
+        '.TableOnRank': '<div class="TableOnRank"><img src="TableOnRank.svg" class="TableOnRankClass"></div>',
 
         '.TopTextMarcetplase': 'NFT marketplace',
         '.MarketplaseText': '<p class="MarketplaseText" style="position: absolute; font-size: 0.67rem; left: 3%; top: 7%;">Get NFT skins in mini-games and by adding<br style="display: none;">>friends. The cooler the NFT, the bigger the bonus<br>to earning income (daily reward, etc.). Sell your<br>skins for ROW or TON</p>',
         '.AllLotsNFTMArket': 'All lots',
         '.MyLotsNFTMArket': 'My lots',
         '.TextOnAttentionMarket': '<div class="TextOnAttentionMarket" style="width: 90%; right: 5%; margin-top: 1%;">Commission 5% from<br>each transaction</div>',
+
+        '#tasktextTask': 'TASKS',
+        '#text2rewTask': 'GET REWARDS',
+        '#textrestTask': 'FOR COMPLETING QUESTS',
+        '.MiniGameText': 'Mini game',
+        '.SpecialsTextTask': 'Specials',
+
+        '.TopFriendText': 'FRIENDS',
+        '.jokeTextFriends': 'DO YOU HAVE THEM?',
+        '.NavigationTextFriends': '<p class="NavigationTextFriends"><b class="ShareMotFriendText">SHARE</b> YOUR INVITATION<br>LINK & <b class="GetMotFriendText">GET 20%</b> OF<br>FRIEND`S POINTS</p>',
+        '.TotalTextFriends': 'Total',
+        '#TotalNumberFriendsSpanID': '<span id="TotalNumberFriendsSpanID">0/15 friends</span>',
+        '.InviteTextFriend': 'Invite',
+        '.InviteText2': 'Invite',
+        '.SendMessageFriends': 'Send message',
+        '.CopyLinkText': 'Copy link',
+
+        '.topTextAirdrop': 'AIRDROP',
+        '.AirdropText': '<p class="AirdropText">Sooner or later YOU will get YOUR drop<br><b>But for now remember, ROW decides</b></p>',
+
+        '.PlayBtn1': 'Play',
+        '.LeftTextGame': 'Left:',
+        '.meter1': 'm',
+        '.CollectedTextGame': 'Collected:',
+        '.BestResultTextGame': 'Best result:',
+        '.meter2': 'm',
+        '.BackBtnGameText': 'Back',
     },
     ru: {
         '.TextOnTopSettings': 'Настройки',
@@ -4416,6 +4517,7 @@ const locales = {
 
         '.YourRankText': 'Ваш ранг',
         '.PathText': 'ПУТЬ',
+        '.TableOnRank': '<div class="TableOnRank"><img src="TableOnRankRU.svg" class="TableOnRankClass"></div>',
 
         '.TopTextMarcetplase': {
             text: 'Торговая площадка NFT',
@@ -4425,6 +4527,45 @@ const locales = {
         '.AllLotsNFTMArket': 'Все лоты',
         '.MyLotsNFTMArket': 'Мои лоты',
         '.TextOnAttentionMarket': '<div class="TextOnAttentionMarket" style="width: 90%; right: 5%; margin-top: 1%;">Комиссия 5% с<br style="display: none;">каждой транзакции</div>',
-        
+
+        '#tasktextTask': '<p id = "tasktextTask" style="font-size: 1.45rem; margin-top: 13%;">ЗАДАНИЯ</p>',
+        '#text2rewTask': '<p id = "text2rewTask" style="font-size: 0.9rem; margin-top: 4%;">ПОЛУЧИТЕ НАГРАДЫ</p>',
+        '#textrestTask': '<p id = "textrestTask" style="font-size: 1rem;">ЗА ВЫПОЛНЕНИЕ ЗАДАНИЙ</p>',
+        '.MiniGameText': 'Мини-игра',
+        '.SpecialsTextTask':  '<p class="SpecialsTextTask" style="margin-top: -3%;">Специальные задания</p>',
+
+        '.TopFriendText': 'ДРУЗЬЯ',
+        '.jokeTextFriends': 'У ВАС ОНИ ЕСТЬ?',
+        '.NavigationTextFriends': '<p class="NavigationTextFriends" style="font-size: 0.75em;"><b class="ShareMotFriendText">ПОДЕЛИТЕСЬ</b> СВОЕЙ ПРИГЛАСИТЕЛЬНОЙ<br>ССЫЛКОЙ  И <b class="GetMotFriendText">ПОЛУЧИТЕ 20%</b><br>БАЛЛОВ ДРУЗЕЙ</p>',
+        '.TotalTextFriends': 'Всего',
+        '#TotalNumberFriendsSpanID': '<span id="TotalNumberFriendsSpanID">0/15 друзей</span>',
+        '.InviteTextFriend': 'Пригласить',
+        '.InviteText2': 'Пригласить',
+        '.SendMessageFriends': {
+            text: 'Отправить сообщение',
+            fontSize: '0.75rem'
+        },
+        '.CopyLinkText': {
+            text: 'Копировать ссылку',
+            fontSize: '0.7rem'
+        },
+
+        '.topTextAirdrop': {
+            text: 'АИРДРОП',
+            fontSize: '2.2rem'
+        },
+        '.AirdropText': '<p class="AirdropText">Рано или поздно ТЫ получишь свой приз<br><b>Но сейчас помни, ROW решают</b></p>',
+
+        '.PlayBtn1': 'Играть',
+        '.LeftTextGame': {
+            text: 'Осталось:',
+            fontSize: '0.7rem'
+        },
+        '.meter1': 'м',
+        '.CollectedTextGame': 'Собрано:',
+        '.BestResultTextGame': '<p class="BestResultTextGame" style="font-size: 0.5rem; margin-bottom: 2%;">Лучший результат:</p>',
+        '.meter2': 'м',
+        '.BackBtnGameText': 'Назад',
     }
 };
+
