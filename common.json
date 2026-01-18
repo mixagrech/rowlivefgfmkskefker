@@ -1,6 +1,9 @@
 {
-  "name": "Test RLnft",
-  "image": "https://amethyst-real-bird-585.mypinata.cloud/ipfs/bafybeiayi5ebkhhf5on4uiwkcmtdmwy7zoxp5eknsodplvi6xlerhf7qxy",
-  "description": "This NFT is given for free in the ROW-LIVE game\nhttps://t.me/ROWlive",
-  "marketplace": "getgems.io"
+  "name": "TON NFT #1",
+  "description": "Example NFT from TON",
+  "image": "https://ipfs.io/ipfs/bafybeiedgof67e4um5ggfyq67pbsqr23kxut4csx6gefqagl62bireirqy",
+  "attributes": [
+    {"trait_type": "Background", "value": "Blue"},
+    {"trait_type": "Eyes", "value": "Green"}
+  ]
 }
